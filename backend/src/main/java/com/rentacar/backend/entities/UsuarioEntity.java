@@ -23,7 +23,10 @@ public class UsuarioEntity {
     private String usuarioRUT;
 
     // Nombre en pantalla del usuario
-    private int usuarioName;
+    private String usuarioName;
+
+    // Apellido en pantalla del usuario
+    private String usuarioApellido;
 
     // O es Cliente, Trabajador o Administrador.
     private String usuarioAccountType;
