@@ -29,7 +29,7 @@ public class UsuarioEntity {
     private String usuarioApellido;
 
     // O es Cliente, Trabajador o Administrador.
-    private String usuarioAccountType;
+    private Integer usuarioAccountType;
 
     // Aweonao
     private boolean usuarioIsBlacklisted;
