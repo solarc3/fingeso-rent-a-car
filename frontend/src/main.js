@@ -9,7 +9,7 @@ import { registerPlugins } from '@/plugins'
 
 // Components
 import App from './App.vue'
-
+import './assets/css/global.css'
 // Composables
 import { createApp } from 'vue'
 

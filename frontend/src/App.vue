@@ -1,11 +1,8 @@
 <template>
-  <v-app>
-    <v-main>
-      <router-view />
-    </v-main>
-  </v-app>
+<index></index>
 </template>
 
 <script setup>
   //
+import Index from "@/pages/index.vue";
 </script>

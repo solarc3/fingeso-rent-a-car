@@ -1,0 +1,29 @@
+body {
+    background-color: #282828; /* Cambia este color */
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+}
+
+:root {
+    --primary-a0: #deadff;
+    --primary-a20: #e2b6ff;
+    --primary-a40: #e6bfff;
+    --primary-a60: #eac8ff;
+    --primary-a80: #eed1ff;
+    --primary-a100: #f1daff;
+
+    --surface-a0: #121212;
+    --surface-a20: #282828;
+    --surface-a40: #3f3f3f;
+    --surface-a60: #575757;
+    --surface-a80: #717171;
+    --surface-a100: #8b8b8b;
+
+    --mixed-a0: #232026;
+    --mixed-a20: #38353a;
+    --mixed-a40: #4d4b50;
+    --mixed-a60: #646267;
+    --mixed-a80: #7c7a7e;
+    --mixed-a100: #959397;
+}
