@@ -28,4 +28,12 @@ public class ValoracionEntity {
 
     // ID del vehículo arrendado por el usuario
     private Integer idVehiculo;
+
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="id_usuario",referencedColumnName = "id")
+    private UsuarioEntity usuario;
+
+    @OnetoOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="id_vehiculo",referencedColumnName = "id")
+    private VehiculoEntity vehiculo;
 }

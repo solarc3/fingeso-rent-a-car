@@ -39,4 +39,6 @@ public class SucursalEntity {
     @OneToMany(mappedBy = "sucursal", cascade = CascadeType.ALL)
     private List<VehiculoEntity> vehiculos;
 
+    @OneToMany(mappedBy= "sucursal",cascade = CascadeType.ALL)
+    private List<ReservaEntity> reservas;
 }

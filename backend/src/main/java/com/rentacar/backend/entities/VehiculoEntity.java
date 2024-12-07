@@ -50,4 +50,7 @@ public class VehiculoEntity {
 
     // URL de una imagen del vehiculo
     private String urlImagen;
+
+    @OneToMany(mappedBy="valoracion",cascade = CascadeType.ALL)
+    private List<ValoracionEntity> reseñas;
 }

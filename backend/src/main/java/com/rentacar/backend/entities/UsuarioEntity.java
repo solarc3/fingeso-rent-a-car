@@ -33,4 +33,7 @@ public class UsuarioEntity {
 
     // Aweonao
     private boolean usuarioIsBlacklisted;
+
+    //la relacion con lista negra debería ir en lista negra, el usuario
+    //no necesita saber sobre listanegra.
 }

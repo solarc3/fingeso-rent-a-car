@@ -30,7 +30,13 @@ public class ReservaEntity {
 
     // tmb se deberia ver el tema del estado de la reserva
 
+    @OneToOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="id_usuario",referencedColumnName = "id")
+    private UsuarioEntity usuario;
 
+    @OnetoOne(cascade = CascadeType.ALL)
+    @JoinColumn(name="id_vehiculo",referencedColumnName = "id")
+    private VehiculoEntity vehiculo;
 
 
 }
