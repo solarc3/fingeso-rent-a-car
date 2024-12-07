@@ -1,0 +1,25 @@
+name: Sync branches con main
+on:
+  push:
+    branches:
+      - main
+  schedule:
+    - cron: '0 3 * * *' # 3 AM
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      - name: Fetch All Branches
+        run: git fetch --all
+
+      - name: Sync Branches
+        run: |
+          for branch in $(git branch -r | grep -v main | sed 's|origin/||'); do
+            echo "Updating $branch..."
+            git checkout $branch
+            git merge origin/main --no-edit || true
+            git push origin $branch || true
+          done
