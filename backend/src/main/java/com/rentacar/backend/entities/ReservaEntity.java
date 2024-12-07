@@ -5,38 +5,43 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 
 @Entity
-@Table(name = "reserva")
+@Table(name = "reservas")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class ReservaEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
     private Long id;
 
-    // Fecha - horarios de la reserva
-    private Date fecha;
+    @Column(nullable = false)
+    private LocalDateTime fechaInicio;
 
-    // Costo de la reserva del vehiculo
-    private Float costo;
+    @Column(nullable = false)
+    private LocalDateTime fechaFin;
 
-    // añadir el ID usuario e ID vehiculo
+    @Column(nullable = false)
+    private BigDecimal costo;
 
-    // tmb se deberia ver el tema del estado de la reserva
+    @Column(nullable = false)
+    private Integer estado; //PENDIENTE, CONFIRMADA, EN_PROGRESO, COMPLETADA, CANCELADA
 
-    @OneToOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="id_usuario",referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name = "usuario_id")
     private UsuarioEntity usuario;
 
-    @OnetoOne(cascade = CascadeType.ALL)
-    @JoinColumn(name="id_vehiculo",referencedColumnName = "id")
+    @ManyToOne
+    @JoinColumn(name = "vehiculo_id")
     private VehiculoEntity vehiculo;
 
+    @ManyToOne
+    @JoinColumn(name = "sucursal_id")
+    private SucursalEntity sucursal;
 
 }

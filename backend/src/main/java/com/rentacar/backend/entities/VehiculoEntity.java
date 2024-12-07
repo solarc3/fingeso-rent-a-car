@@ -5,52 +5,43 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+import java.util.List;
+
 @Entity
-@Table(name = "vehiculo")
+@Table(name = "vehiculos")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class VehiculoEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable =false)
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(unique = true, nullable = false)
+	private Long id;
+	@Column(nullable = false)
+	private String marca;
+	@Column(nullable = false)
+	private String modelo;
 
-    //Marca del vehiculo
-    private String marca;
+	@Column(unique = true, nullable = false, length = 6)
+	private String patente;
 
-    //Modelo del vehiculo
-    private String modelo;
+	// fab year
+	private int anio;
 
-    //Patente unica del vehiculo
-    @Column(unique = true, nullable = false)
-    private String patente;
+	@Column(name = "precio_arriendo", nullable = false)
+	private BigDecimal precioArriendo;
 
-    // Año de fabricacion del vehiulo
-    private int anio;
+	@ManyToOne
+	@JoinColumn(name = "sucursal_id")
+	private SucursalEntity sucursal;
 
-    // Tipo de combustible
-    private String tipoCombustible;
+	// Disponibilidad
+	private boolean disponible;
 
-    // Capacidad de pasajeros
-    private int capacidadPasajeros;
+	// Estado del vehiculo
+	private String estado;//DISPONIBLE, NO_DISPONIBLE, EN_MANTENCION, EN_REPARACION
 
-    // Precio de arriendo diario
-    private double precioArriendoDiario;
-
-    // Sucursal asociada
-    private String sucursal;
-
-    // Disponibilidad del vehiculo
-    private boolean disponible;
-
-    // Estado del vehiculo
-    private String estado;
-
-    // URL de una imagen del vehiculo
-    private String urlImagen;
-
-    @OneToMany(mappedBy="valoracion",cascade = CascadeType.ALL)
-    private List<ValoracionEntity> reseñas;
+	@OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL)
+	private List<ValoracionEntity> valoraciones;
 }

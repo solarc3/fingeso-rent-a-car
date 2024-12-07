@@ -6,34 +6,36 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @Entity
-@Table(name = "usuario")
+@Table(name = "usuarios")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-
 public class UsuarioEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
     private Long id;
 
-    // RUT asociado al usuario.
-    private String usuarioRUT;
+    @Column(unique = true, nullable = false)
+    private String rut;
 
-    // Nombre en pantalla del usuario
-    private String usuarioName;
+    @Column(nullable = false)
+    private String nombre;
 
-    // Apellido en pantalla del usuario
-    private String usuarioApellido;
+    @Column(nullable = false)
+    private String apellido;
 
-    // O es Cliente, Trabajador o Administrador.
-    private Integer usuarioAccountType;
+    private boolean estaEnListaNegra;
 
-    // Aweonao
-    private boolean usuarioIsBlacklisted;
+    @OneToMany(mappedBy = "usuario")
+    private List<ValoracionEntity> valoraciones;
 
-    //la relacion con lista negra debería ir en lista negra, el usuario
-    //no necesita saber sobre listanegra.
+    @OneToMany(mappedBy = "usuario")
+    private List<ReservaEntity> reservas;
+
+    @ManyToOne
+    @JoinColumn(name = "sucursal_id")
+    private SucursalEntity sucursal;  // cuando es un empleado, se quiere saber su sucursal
 }
