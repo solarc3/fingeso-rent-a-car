@@ -18,10 +18,16 @@ public class VehiculoEntity {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column(unique = true, nullable = false)
 	private Long id;
+
 	@Column(nullable = false)
 	private String marca;
+
 	@Column(nullable = false)
 	private String modelo;
+
+	// Código ACRISS asociado al vehículo
+	@Column(nullable = false, length = 4)
+	private String acriss;
 
 	@Column(unique = true, nullable = false, length = 6)
 	private String patente;
