@@ -15,7 +15,7 @@ public class VehiculoService {
     @Autowired
     private VehiculoRepository vehiculoRepository;
 
-    VehiculoEntity agregarVehiculo(VehiculoEntity vehiculo) {
+    VehiculoEntity crearVehiculo(VehiculoEntity vehiculo) {
         return vehiculoRepository.save(vehiculo);
     }
 
