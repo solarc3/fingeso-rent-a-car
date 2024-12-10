@@ -30,6 +30,7 @@
         text="ARRENDAR"
         class="text-white"
         variant="elevated"
+        to="/payment"
       />
     </v-card-actions>
   </v-card>

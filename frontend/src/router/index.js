@@ -1,6 +1,6 @@
-// router/index.js
 import {createRouter, createWebHistory} from 'vue-router'
-import Home from '@/pages/index.vue'
+import Home from '@/pages/Home.vue'
+import Payment from '@/pages/Payment.vue'
 
 const routes = [
   {
@@ -9,6 +9,14 @@ const routes = [
     component: Home,
     meta: {
       title: 'Home'
+    }
+  },
+  {
+    path: '/payment',
+    name: 'Payment',
+    component: Payment,
+    meta: {
+      title: 'Payment'
     }
   }
 ]
