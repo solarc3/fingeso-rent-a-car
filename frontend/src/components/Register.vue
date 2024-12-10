@@ -93,7 +93,12 @@ export default {
 
     const register = () => {
       if (password.value !== confirmPassword.value) {
-        alert("Las contraseñas no coinciden");
+        alert("Las contraseñas no coinciden, verifique que esté bien escrito.");
+        return;
+      }
+
+      if (!rut.value || !nombre.value || !apellidos.value || !telefono.value || !email.value){
+        alert("Queda información incompleta, por favor llene todos los campos.");
         return;
       }
       close();
