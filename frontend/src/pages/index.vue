@@ -20,9 +20,8 @@
     </v-dialog>
 
     <v-main>
-      <v-container>
-        <Buscador />
-      </v-container>
+      <Buscador />
+      <!-- aqui va todo lo de los autos abajo!!! -->
     </v-main>
   </v-app>
 </template>
