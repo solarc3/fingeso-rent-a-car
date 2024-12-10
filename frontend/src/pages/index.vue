@@ -12,14 +12,24 @@
       >
     </v-app-bar>
   </v-layout>
+  <v-container class="mt-12">
+    <Buscador />
+  </v-container>
 </template>
 
-<script setup>
+<script>
+// BUSCADOR PA Q NO SE M PIERDA
+import Buscador from "@/components/Buscador.vue";
+
+export default {
+  components: {
+    Buscador
+  }
+};
 </script>
 
-
 <style scoped>
-.img{
+.img {
   display: flex;
   object-fit: contain;
   height: 40px;
