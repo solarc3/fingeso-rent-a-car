@@ -1,4 +1,3 @@
-
 <template>
   <v-layout>
     <v-app-bar
@@ -11,15 +10,14 @@
           @click="goToHome"
         >
           Rent a Car
+          <img
+            src="@/assets/auto.png"
+            alt="Car"
+            class="car-img"
+          >
         </a>
-        <img
-          src="@/assets/auto.png"
-          alt="Car"
-          class="car-img"
-        >
       </div>
       <v-spacer />
-      <!-- Botones de Login y Registro -->
       <v-btn
         outlined
         @click="showLoginForm"
@@ -33,24 +31,28 @@
         Register
       </v-btn>
     </v-app-bar>
-  </v-layout>
-  <v-container class="mt-12">
-    <!-- condicion para mostrar el buscador solito -->
-    <Buscador v-if="!showLoginMenu && !showRegisterMenu" />
-    <!-- caso contrario mostramos o el registro o el login -->
-    <LoginMenu
-      v-if="showLoginMenu"
-      @close="closeLoginMenu"
-    />
-    <RegisterMenu
-      v-if="showRegisterMenu"
-      @close="closeRegisterMenu"
-    />
-  </v-container>
-</template>
+    <v-dialog
+      v-model="showLoginMenu"
+      max-width="500px"
+    >
+      <LoginMenu @close="closeLoginMenu" />
+    </v-dialog>
 
+    <v-dialog
+      v-model="showRegisterMenu"
+      max-width="500px"
+    >
+      <RegisterMenu @close="closeRegisterMenu" />
+    </v-dialog>
+    <v-main>
+      <v-container class="mt-12">
+        <Buscador />
+      </v-container>
+    </v-main>
+  </v-layout>
+</template>
 <script setup>
-import { ref } from 'vue';
+import {ref} from 'vue';
 import Buscador from "@/components/Buscador.vue";
 import LoginMenu from "@/components/Login.vue";
 import RegisterMenu from "@/components/Register.vue";
@@ -58,13 +60,11 @@ import RegisterMenu from "@/components/Register.vue";
 const showLoginMenu = ref(false);
 const showRegisterMenu = ref(false);
 
-// literal mostrar el formulario de correo y contraseña para login
 const showLoginForm = () => {
   showLoginMenu.value = true;
   showRegisterMenu.value = false;
 };
 
-// lo mismo pero con registro que tiene mas cosas
 const showRegisterForm = () => {
   showRegisterMenu.value = true;
   showLoginMenu.value = false;
@@ -84,12 +84,11 @@ const goToHome = () => {
 };
 </script>
 
-<!-- config textos e imagenes en gnral -->
 <style scoped>
 .title-container {
   display: flex;
   align-items: center;
-  margin-left: 20px; /* se m habia descuadrao el rent a car xddd */
+  margin-left: 20px;
 }
 
 .title-link {
@@ -97,21 +96,13 @@ const goToHome = () => {
   color: inherit;
   text-decoration: none;
   margin-right: 10px;
+  display: flex;
+  align-items: center;
 }
 
 .car-img {
   height: 40px;
   object-fit: contain;
+  margin-left: 10px;
 }
-
-/* ES LA D A IMAGEN Q M PITIE CREO
-.img {
-  display: flex;
-  object-fit: contain;
-  height: 40px;
-  padding-right: 15px;
-  filter: grayscale(1);
-}
- */
-
 </style>
