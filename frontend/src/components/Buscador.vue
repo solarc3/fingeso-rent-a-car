@@ -32,30 +32,13 @@
                 >
                   <label class="text-subtitle-2 font-weight-bold mb-2">Fecha de retiro</label>
                   <div class="d-flex">
-                    <v-menu
-                      ref="menu1"
-                      v-model="menu1"
-                      :close-on-content-click="false"
-                      transition="scale-transition"
-                      offset-y
-                      min-width="290px"
-                    >
-                      <template #activator="{ on, attrs }">
-                        <v-text-field
-                          v-model="fechaRetiro"
-                          outlined
-                          dense
-                          readonly
-                          v-bind="attrs"
-                          class="mr-2"
-                          v-on="on"
-                        />
-                      </template>
-                      <v-date-picker
-                        v-model="fechaRetiro"
-                        @input="menu1 = false"
-                      />
-                    </v-menu>
+                    <v-text-field
+                      v-model="fechaRetiro"
+                      type="date"
+                      outlined
+                      dense
+                      class="mr-2 flex-grow-1"
+                    />
                     <v-select
                       v-model="horaRetiro"
                       :items="horasDisponibles"
@@ -72,30 +55,13 @@
                 >
                   <label class="text-subtitle-2 font-weight-bold mb-2">Fecha de devolucion</label>
                   <div class="d-flex">
-                    <v-menu
-                      ref="menu2"
-                      v-model="menu2"
-                      :close-on-content-click="false"
-                      transition="scale-transition"
-                      offset-y
-                      min-width="290px"
-                    >
-                      <template #activator="{ on, attrs }">
-                        <v-text-field
-                          v-model="fechaDevolucion"
-                          outlined
-                          dense
-                          readonly
-                          v-bind="attrs"
-                          class="mr-2"
-                          v-on="on"
-                        />
-                      </template>
-                      <v-date-picker
-                        v-model="fechaDevolucion"
-                        @input="menu2 = false"
-                      />
-                    </v-menu>
+                    <v-text-field
+                      v-model="fechaDevolucion"
+                      type="date"
+                      outlined
+                      dense
+                      class="mr-2 flex-grow-1"
+                    />
                     <v-select
                       v-model="horaDevolucion"
                       :items="horasDisponibles"
@@ -150,8 +116,6 @@ export default {
       fechaDevolucion: '',
       horaRetiro: '',
       horaDevolucion: '',
-      menu1: false,
-      menu2: false,
       otraSucursal: false,
       sucursales: [
         'Sucursal Iquique',
@@ -170,7 +134,7 @@ export default {
     modificarReserva() {
       alert(`Reserva modificada para la sucursal: ${this.sucursal},
              Fecha de retiro: ${this.fechaRetiro} ${this.horaRetiro},
-             Fecha de devolución: ${this.fechaDevolucion} ${this.horaDevolucion}`);
+             Fecha de devoluciÃ³n: ${this.fechaDevolucion} ${this.horaDevolucion}`);
     }
   }
 };
@@ -181,3 +145,4 @@ export default {
   min-height: 40px !important;
 }
 </style>
+
