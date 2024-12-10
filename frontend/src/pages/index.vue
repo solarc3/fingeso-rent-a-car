@@ -21,7 +21,7 @@
 
     <v-main>
       <Buscador />
-      <!-- aqui va todo lo de los autos abajo!!! -->
+      <!-- aqui va todo lo de los autos abajo!!! -->}
     </v-main>
   </v-app>
 </template>
