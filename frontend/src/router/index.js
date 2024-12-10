@@ -1,22 +1,21 @@
 import {createRouter, createWebHistory} from 'vue-router'
-import Home from '@/pages/Home.vue'
-import Payment from '@/pages/Payment.vue'
+
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: Home,
+    component: () => import('@/pages/Home.vue'),
     meta: {
-      title: 'Home'
+      layout: 'default'
     }
   },
   {
     path: '/payment',
     name: 'Payment',
-    component: Payment,
+    component: () => import('@/pages/Payment.vue'),
     meta: {
-      title: 'Payment'
+      layout: 'default'
     }
   }
 ]
