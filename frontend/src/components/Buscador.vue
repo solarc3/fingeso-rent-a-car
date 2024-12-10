@@ -134,7 +134,7 @@ export default {
     modificarReserva() {
       alert(`Reserva modificada para la sucursal: ${this.sucursal},
              Fecha de retiro: ${this.fechaRetiro} ${this.horaRetiro},
-             Fecha de devoluciÃ³n: ${this.fechaDevolucion} ${this.horaDevolucion}`);
+             Fecha de devolucion: ${this.fechaDevolucion} ${this.horaDevolucion}`);
     }
   }
 };
