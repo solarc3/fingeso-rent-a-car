@@ -15,7 +15,6 @@ public class ValoracionEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Range()
     @Column(nullable = false)
     private Integer puntuacion;
 
