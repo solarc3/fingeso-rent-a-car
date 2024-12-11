@@ -14,34 +14,40 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VehiculoEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(unique = true, nullable = false)
-    private Long id;
-    @Column(nullable = false)
-    private String marca;
-    @Column(nullable = false)
-    private String modelo;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@Column(unique = true, nullable = false)
+	private Long id;
 
-    @Column(unique = true, nullable = false, length = 6)
-    private String patente;
+	@Column(nullable = false)
+	private String marca;
 
-    // fab year
-    private int anio;
+	@Column(nullable = false)
+	private String modelo;
 
-    @Column(name = "precio_arriendo", nullable = false)
-    private BigDecimal precioArriendo;
+	// Código ACRISS asociado al vehículo
+	@Column(nullable = false, length = 4)
+	private String acriss;
 
-    @ManyToOne
-    @JoinColumn(name = "sucursal_id")
-    private SucursalEntity sucursal;
+	@Column(unique = true, nullable = false, length = 6)
+	private String patente;
 
-    // Disponibilidad
-    private boolean disponible;
+	// fab year
+	private int anio;
 
-    // Estado del vehiculo
-    private String estado;//DISPONIBLE, NO_DISPONIBLE, EN_MANTENCION, EN_REPARACION
+	@Column(name = "precio_arriendo", nullable = false)
+	private BigDecimal precioArriendo;
 
-    @OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL)
-    private List<ValoracionEntity> valoraciones;
+	@ManyToOne
+	@JoinColumn(name = "sucursal_id")
+	private SucursalEntity sucursal;
+
+	// Disponibilidad
+	private boolean disponible;
+
+	// Estado del vehiculo
+	private String estado;//DISPONIBLE, NO_DISPONIBLE, EN_MANTENCION, EN_REPARACION
+
+	@OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL)
+	private List<ValoracionEntity> valoraciones;
 }
