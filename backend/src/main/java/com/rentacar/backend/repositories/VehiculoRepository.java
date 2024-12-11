@@ -16,7 +16,7 @@ public interface VehiculoRepository extends JpaRepository<VehiculoEntity, Long> 
 
     List<VehiculoEntity> findByMarca(String marca);
 
-    List<VehiculoEntity> findByAcriss(String acriss);
+    List<VehiculoEntity> findByAcrissLike(String acriss);
 
     List<VehiculoEntity> findBySucursal(SucursalEntity sucursal);
 

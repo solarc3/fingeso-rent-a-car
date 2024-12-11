@@ -38,7 +38,15 @@ public class UsuarioService {
     }
 
     //Crear nuevo usuario
-    public UsuarioEntity crearUsuario(UsuarioEntity usuario){
+    public UsuarioEntity crearUsuario(String rut, String nombre, String apellido){
+        if (usuarioRepository.findByRut(rut).isPresent())
+            throw new RuntimeException("Ya existe un usuario con RUT " + rut);
+
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setRut(rut);
+        usuario.setNombre(nombre);
+        usuario.setApellido(apellido);
+        usuario.setEstaEnListaNegra(false);
         return usuarioRepository.save(usuario);
     }
 
