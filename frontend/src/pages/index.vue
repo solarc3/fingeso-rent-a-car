@@ -1,29 +1,51 @@
-
 <template>
-  <v-layout>
-    <v-app-bar
-      title="Rent a Car"
-      color="var(--primary-a0)"
+  <v-app>
+    <AppBar
+      @show-login="showLoginForm"
+      @show-register="showRegisterForm"
+      @go-home="goToHome"
+    />
+    <v-dialog
+      v-model="showLoginMenu"
+      max-width="500px"
     >
-      <img
-        src="@/assets/login-icon.svg"
-        alt=""
-        class="img"
-      >
-    </v-app-bar>
-  </v-layout>
+      <LoginMenu />
+    </v-dialog>
+
+    <v-dialog
+      v-model="showRegisterMenu"
+      max-width="500px"
+    >
+      <RegisterMenu />
+    </v-dialog>
+
+    <v-main>
+      <router-view />
+    </v-main>
+  </v-app>
 </template>
 
 <script setup>
+import {ref} from 'vue';
+import AppBar from "@/components/AppBar.vue";
+import LoginMenu from "@/components/Login.vue";
+import RegisterMenu from "@/components/Register.vue";
+
+const showLoginMenu = ref(false);
+const showRegisterMenu = ref(false);
+
+const showLoginForm = () => {
+  showLoginMenu.value = true;
+  showRegisterMenu.value = false;
+};
+
+const showRegisterForm = () => {
+  showRegisterMenu.value = true;
+  showLoginMenu.value = false;
+};
+
+const goToHome = () => {
+  showLoginMenu.value = false;
+  showRegisterMenu.value = false;
+};
 </script>
-
-<style scoped>
-.img{
-  display: flex;
-  object-fit: contain;
-  height: 40px;
-  padding-right: 15px;
-  filter: grayscale(1);
-}
-
-</style>
