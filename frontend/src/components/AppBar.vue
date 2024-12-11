@@ -17,12 +17,19 @@
       </a>
     </div>
     <v-spacer />
+
+    <!-- Pseudo routing?? No se la verdad, pero funciona -->
+    <v-btn to="/about">
+      About
+    </v-btn>
+
     <v-btn
       outlined
       @click="showLoginForm"
     >
       Login
     </v-btn>
+
     <v-btn
       outlined
       @click="showRegisterForm"
@@ -33,6 +40,9 @@
 </template>
 
 <script setup>
+
+import router from "@/router/index.js";
+
 const emit = defineEmits(['showLogin', 'showRegister', 'goHome']);
 
 const showLoginForm = () => {

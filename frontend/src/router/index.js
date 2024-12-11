@@ -17,6 +17,14 @@ const routes = [
     meta: {
       layout: 'default'
     }
+  },
+  {
+    path: '/about',
+    name: 'About',
+    component: () => import('@/pages/About.vue'),
+    meta: {
+      layout: 'default'
+      }
   }
 ]
 
