@@ -18,14 +18,10 @@ import java.util.List;
 
 @Service
 public class ReservaService {
-
     private final ReservaRepository reservaRepository;
     private final UsuarioRepository usuarioRepository;
     private final SucursalRepository sucursalRepository;
     private final VehiculoRepository vehiculoRepository;
-
-
-
 
     public ReservaService(ReservaRepository reservaRepository, UsuarioRepository usuarioRepository,
                           SucursalRepository sucursalRepository, VehiculoRepository vehiculoRepository) {
@@ -35,15 +31,20 @@ public class ReservaService {
         this.vehiculoRepository = vehiculoRepository;
     }
 
-    List<ReservaEntity> obtenerUsuario(UsuarioEntity usuario) {return reservaRepository.findByUsuario(usuario);}
+    List<ReservaEntity> obtenerUsuario(UsuarioEntity usuario) {
+        return reservaRepository.findByUsuario(usuario);
+    }
 
-    List<ReservaEntity> obtenerVehiculo(VehiculoEntity vehiculo) {return reservaRepository.findByVehiculo(vehiculo);}
+    List<ReservaEntity> obtenerVehiculo(VehiculoEntity vehiculo) {
+        return reservaRepository.findByVehiculo(vehiculo);
+    }
 
-    List<ReservaEntity> obtenerSucursal(SucursalEntity sucursal) {return reservaRepository.findBySucursal(sucursal);}
-
+    List<ReservaEntity> obtenerSucursal(SucursalEntity sucursal) {
+        return reservaRepository.findBySucursal(sucursal);
+    }
 
     ReservaEntity crearReserva(LocalDateTime fechaInicio, LocalDateTime fechaFin, BigDecimal costo,
-                               Integer estado,Long usuarioID, Long vehiculoID, Long sucursalID) {
+                               Integer estado, Long usuarioID, Long vehiculoID, Long sucursalID) {
         ReservaEntity reserva = new ReservaEntity();
         reserva.setFechaInicio(fechaInicio);
         reserva.setFechaFin(fechaFin);
@@ -53,7 +54,5 @@ public class ReservaService {
         reserva.setVehiculo(vehiculoRepository.findById(vehiculoID).orElseThrow());
         reserva.setSucursal(sucursalRepository.findById(sucursalID).orElseThrow());
         return reservaRepository.save(reserva);
-        }
-
-
+    }
 }

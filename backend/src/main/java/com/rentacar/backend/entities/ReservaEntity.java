@@ -1,5 +1,6 @@
 package com.rentacar.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -34,14 +35,17 @@ public class ReservaEntity {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
+    @JsonBackReference
     private UsuarioEntity usuario;
 
     @ManyToOne
     @JoinColumn(name = "vehiculo_id")
+    @JsonBackReference
     private VehiculoEntity vehiculo;
 
     @ManyToOne
     @JoinColumn(name = "sucursal_id")
+    @JsonBackReference
     private SucursalEntity sucursal;
 
 }

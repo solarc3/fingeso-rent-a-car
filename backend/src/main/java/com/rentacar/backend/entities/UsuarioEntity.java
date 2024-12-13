@@ -1,5 +1,7 @@
 package com.rentacar.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -29,13 +31,16 @@ public class UsuarioEntity {
 
     private boolean estaEnListaNegra;
 
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
+    @JsonManagedReference
     private List<ValoracionEntity> valoraciones;
 
-    @OneToMany(mappedBy = "usuario")
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
+    @JsonManagedReference
     private List<ReservaEntity> reservas;
 
     @ManyToOne
     @JoinColumn(name = "sucursal_id")
+    @JsonBackReference
     private SucursalEntity sucursal;  // cuando es un empleado, se quiere saber su sucursal
 }

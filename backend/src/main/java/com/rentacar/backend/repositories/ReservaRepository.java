@@ -19,10 +19,10 @@ public interface ReservaRepository extends JpaRepository<ReservaEntity, Long>{
     List<ReservaEntity> findByFechaInicio(LocalDateTime fechaInicio);
 
     //Buscar por fecha final
-    List<ReservaEntity> findByFechaFinal(LocalDateTime fechaFinal);
+    List<ReservaEntity> findByFechaFin(LocalDateTime fechaFinal);
 
     //Buscar entre dos fechas
-    List<ReservaEntity> findByFechaBetween(LocalDateTime fechaInicio, LocalDateTime fechaFinal);
+    //List<ReservaEntity> findByFechaBetween(LocalDateTime fechaInicio, LocalDateTime fechaFinal);
 
     //Buscar por costo
     List<ReservaEntity> findByCosto(BigDecimal costo);

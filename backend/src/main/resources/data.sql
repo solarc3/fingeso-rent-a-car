@@ -5,10 +5,10 @@ INSERT INTO sucursales (nombre, direccion, telefono, email)
 VALUES ('Sucursal Copiapo', 'Copiapo 123', '56948893000', 'solar@rentacar.cl');
 
 -- Vehiculos
-INSERT INTO vehiculos (marca, modelo, patente, anio, precio_arriendo, sucursal_id, disponible, estado)
-VALUES ('CHEVROLET', 'GROOVE', 'ASKsdd', 2024, 100000.00, 1, true, 'DISPONIBLE');
-INSERT INTO vehiculos (marca, modelo, patente, anio, precio_arriendo, sucursal_id, disponible, estado)
-VALUES ('TOYOTA', 'COROLLA', 'ABCddd', 2020, 90000.00, 1, true, 'EN_REPARACION');
+INSERT INTO vehiculos (marca, modelo, acriss, patente, anio, precio_arriendo, sucursal_id, disponible, estado)
+VALUES ('CHEVROLET', 'GROOVE', 'SCMD', 'ASKS01', 2024, 100000.00, 1, true, 'DISPONIBLE');
+INSERT INTO vehiculos (marca, modelo, acriss, patente, anio, precio_arriendo, sucursal_id, disponible, estado)
+VALUES ('TOYOTA', 'COROLLA', 'RCAD', 'ABCD01', 2020, 90000.00, 1, true, 'EN_REPARACION');
 
 -- Usuarios
 INSERT INTO usuarios (rut, nombre, apellido, esta_en_lista_negra, sucursal_id)

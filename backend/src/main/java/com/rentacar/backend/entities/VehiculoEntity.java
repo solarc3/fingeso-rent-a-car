@@ -1,5 +1,7 @@
 package com.rentacar.backend.entities;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -40,6 +42,7 @@ public class VehiculoEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "sucursal_id")
+	@JsonBackReference
 	private SucursalEntity sucursal;
 
 	// Disponibilidad
@@ -48,6 +51,7 @@ public class VehiculoEntity {
 	// Estado del vehiculo
 	private String estado;//DISPONIBLE, NO_DISPONIBLE, EN_MANTENCION, EN_REPARACION
 
-	@OneToMany(mappedBy = "vehiculo", cascade = CascadeType.ALL)
+	@OneToMany(mappedBy = "vehiculo", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+	@JsonManagedReference
 	private List<ValoracionEntity> valoraciones;
 }
