@@ -24,11 +24,11 @@ public class ValoracionEntity {
     // una valoracion debe tener asignado un usuario y un vehiculo
     @ManyToOne(optional = false)
     @JoinColumn(name = "usuario_id")
-    @JsonBackReference
+    @JsonBackReference(value = "usuario-valoracion")
     private UsuarioEntity usuario;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "vehiculo_id")
-    @JsonBackReference
+    @JsonBackReference(value = "vehiculo-valoracion")
     private VehiculoEntity vehiculo;
 }

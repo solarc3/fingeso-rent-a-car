@@ -42,7 +42,7 @@ public class VehiculoEntity {
 
 	@ManyToOne
 	@JoinColumn(name = "sucursal_id")
-	@JsonBackReference
+	@JsonBackReference(value = "sucursal-vehiculo")
 	private SucursalEntity sucursal;
 
 	// Disponibilidad
@@ -52,6 +52,6 @@ public class VehiculoEntity {
 	private String estado;//DISPONIBLE, NO_DISPONIBLE, EN_MANTENCION, EN_REPARACION
 
 	@OneToMany(mappedBy = "vehiculo", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@JsonManagedReference
+	@JsonManagedReference(value = "vehiculo-valoracion")
 	private List<ValoracionEntity> valoraciones;
 }

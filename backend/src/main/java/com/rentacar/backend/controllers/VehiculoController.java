@@ -8,10 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/vehiculo")
@@ -59,6 +57,30 @@ public class VehiculoController {
             return ResponseEntity.ok().body(vSucursalDisp);
         } catch (Exception e) {
             return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/eliminar")
+    public ResponseEntity<?> eliminarVehiculo(@RequestParam Long id) {
+        try {
+            vehiculoService.eliminarVehiculoPorId(id);
+            return ResponseEntity.ok().body("Vehiculo eliminado correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // actualizar precio y estado, los dos unicos atributos variables en el tiempo (?
+    @PutMapping("/actualizar")
+    public ResponseEntity<?> actualizarVehiculo(@RequestBody VehiculoEntity vehiculo) {
+        try {
+            vehiculoService.actualizarPrecioArriendoVehiculoPorId(vehiculo.getId(),
+                    vehiculo.getPrecioArriendo());
+            VehiculoEntity v = vehiculoService.actualizarEstadoVehiculoPorId(vehiculo.getId(),
+                    vehiculo.getEstado());
+            return ResponseEntity.ok().body(v);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(vehiculo);
         }
     }
 }

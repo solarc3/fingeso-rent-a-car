@@ -35,17 +35,17 @@ public class ReservaEntity {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
-    @JsonBackReference
+    @JsonBackReference(value = "usuario-reserva")
     private UsuarioEntity usuario;
 
     @ManyToOne
     @JoinColumn(name = "vehiculo_id")
-    @JsonBackReference
+    @JsonBackReference(value = "vehiculo-reserva")
     private VehiculoEntity vehiculo;
 
     @ManyToOne
     @JoinColumn(name = "sucursal_id")
-    @JsonBackReference
+    @JsonBackReference(value = "sucursal-reserva")
     private SucursalEntity sucursal;
 
 }

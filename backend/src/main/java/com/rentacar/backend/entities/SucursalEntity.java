@@ -30,14 +30,14 @@ public class SucursalEntity {
     private String email;
 
     @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER)
-    @JsonManagedReference
+    @JsonManagedReference(value = "sucursal-usuario")
     private List<UsuarioEntity> empleados;
 
     @OneToMany(mappedBy = "sucursal")
-    @JsonManagedReference
+    @JsonManagedReference(value = "sucursal-vehiculo")
     private List<VehiculoEntity> vehiculos;
 
     @OneToMany(mappedBy = "sucursal")
-    @JsonManagedReference
+    @JsonManagedReference(value = "sucursal-reserva")
     private List<ReservaEntity> reservas;
 }

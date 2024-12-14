@@ -32,15 +32,15 @@ public class UsuarioEntity {
     private boolean estaEnListaNegra;
 
     @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
-    @JsonManagedReference
+    @JsonManagedReference(value = "usuario-valoracion")
     private List<ValoracionEntity> valoraciones;
 
     @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
-    @JsonManagedReference
+    @JsonManagedReference(value = "usuario-reserva")
     private List<ReservaEntity> reservas;
 
     @ManyToOne
     @JoinColumn(name = "sucursal_id")
-    @JsonBackReference
+    @JsonBackReference(value = "sucursal-usuario")
     private SucursalEntity sucursal;  // cuando es un empleado, se quiere saber su sucursal
 }

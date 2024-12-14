@@ -155,10 +155,22 @@ public class VehiculoService {
     }
 
     /**
+     * Permite actualizar el precio de arriendo de un vehiculo dado su ID
+     * @param vehiculoId ID del vehiculo a actualizar
+     * @param precio Precio nuevo del vehiculo
+     * @return Vehiculo actualizado con ese nuevo precio
+     */
+    public VehiculoEntity actualizarPrecioArriendoVehiculoPorId(Long vehiculoId, BigDecimal precio) {
+        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId).orElseThrow();
+        vehiculo.setPrecioArriendo(precio);
+        return vehiculoRepository.save(vehiculo);
+    }
+
+    /**
      * Permite eliminar un vehículo de la base de datos dado su ID
      * @param vehiculoId ID del vehículo a eliminar
      */
-    void eliminarVehiculoPorId(Long vehiculoId) {
+    public void eliminarVehiculoPorId(Long vehiculoId) {
         vehiculoRepository.findById(vehiculoId).orElseThrow();
         vehiculoRepository.deleteById(vehiculoId);
     }
