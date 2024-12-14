@@ -2,22 +2,26 @@ package com.rentacar.backend.services;
 
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
+import com.rentacar.backend.repositories.ReservaRepository;
 import com.rentacar.backend.repositories.VehiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
 @Service
 public class VehiculoService {
     private final VehiculoRepository vehiculoRepository;
+    private final ReservaRepository reservaRepository;
 
     @Autowired
-    public VehiculoService(VehiculoRepository vehiculoRepository) {
+    public VehiculoService(VehiculoRepository vehiculoRepository, ReservaRepository reservaRepository) {
         this.vehiculoRepository = vehiculoRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     /**
@@ -74,6 +78,12 @@ public class VehiculoService {
      */
     public List<VehiculoEntity> obtenerVehiculos() {
         return vehiculoRepository.findAll();
+    }
+
+    public VehiculoEntity obtenerVehiculoPorId(Long id) {
+        Optional<VehiculoEntity> vehiculo = vehiculoRepository.findById(id);
+        if (vehiculo.isEmpty()) throw new NoSuchElementException("Vehiculo no encontrado");
+        return vehiculo.get();
     }
 
     /**
@@ -171,7 +181,10 @@ public class VehiculoService {
      * @param vehiculoId ID del vehículo a eliminar
      */
     public void eliminarVehiculoPorId(Long vehiculoId) {
-        vehiculoRepository.findById(vehiculoId).orElseThrow();
-        vehiculoRepository.deleteById(vehiculoId);
+        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId).orElseThrow();
+        if (!reservaRepository.findByVehiculo(vehiculo).isEmpty())
+            throw new RuntimeException("El vehiculo" + vehiculoId + "tiene reservas pendientes");
+        else
+            vehiculoRepository.deleteById(vehiculoId);
     }
 }

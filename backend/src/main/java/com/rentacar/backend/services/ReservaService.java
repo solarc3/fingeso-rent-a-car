@@ -10,6 +10,10 @@ import com.rentacar.backend.repositories.UsuarioRepository;
 import com.rentacar.backend.repositories.VehiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.time.Duration;
+import java.time.Period;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import java.math.BigDecimal;
@@ -31,20 +35,48 @@ public class ReservaService {
         this.vehiculoRepository = vehiculoRepository;
     }
 
-    List<ReservaEntity> obtenerUsuario(UsuarioEntity usuario) {
+    public List<ReservaEntity> obtenerReservas() {
+        return reservaRepository.findAll();
+    }
+
+    public List<ReservaEntity> obtenerReservasDeUsuario(UsuarioEntity usuario) {
         return reservaRepository.findByUsuario(usuario);
     }
 
-    List<ReservaEntity> obtenerVehiculo(VehiculoEntity vehiculo) {
+    public List<ReservaEntity> obtenerReservasDeVehiculo(VehiculoEntity vehiculo) {
         return reservaRepository.findByVehiculo(vehiculo);
     }
 
-    List<ReservaEntity> obtenerSucursal(SucursalEntity sucursal) {
+    public List<ReservaEntity> obtenerReservasDeSucursal(SucursalEntity sucursal) {
         return reservaRepository.findBySucursal(sucursal);
     }
 
-    ReservaEntity crearReserva(LocalDateTime fechaInicio, LocalDateTime fechaFin, BigDecimal costo,
+    public ReservaEntity extenderReserva(Long reservaId, LocalDateTime nuevaFechaFin) {
+        Optional<ReservaEntity> reserva = reservaRepository.findById(reservaId);
+        if (reserva.isEmpty())
+            throw new NoSuchElementException("Reserva no encontrada");
+
+        // Comprobar periodo 30 dias
+        ReservaEntity r = reserva.get();
+        Duration treintaDias = Duration.ofDays(30);
+        Duration periodoArriendo = Duration.between(r.getFechaFin(), nuevaFechaFin);
+
+        if (periodoArriendo.compareTo(treintaDias) > 0)
+            throw new RuntimeException("Periodo superior a 30 dias");
+
+        r.setFechaFin(nuevaFechaFin);
+        return reservaRepository.save(r);
+    }
+
+    public ReservaEntity crearReserva(LocalDateTime fechaInicio, LocalDateTime fechaFin, BigDecimal costo,
                                Integer estado, Long usuarioID, Long vehiculoID, Long sucursalID) {
+        // Comprobar periodo 30 dias
+        Duration treintaDias = Duration.ofDays(30);
+        Duration periodoArriendo = Duration.between(fechaInicio, fechaFin);
+
+        if (periodoArriendo.compareTo(treintaDias) > 0)
+            throw new RuntimeException("Periodo superior a 30 dias");
+
         ReservaEntity reserva = new ReservaEntity();
         reserva.setFechaInicio(fechaInicio);
         reserva.setFechaFin(fechaFin);
