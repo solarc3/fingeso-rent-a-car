@@ -10,7 +10,7 @@
     <v-img
       min-width="450px"
       min-height="200px"
-      src="../assets/Autocard.png"
+      src="../../assets/Autocard.png"
       cover
     />
 

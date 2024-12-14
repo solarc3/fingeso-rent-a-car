@@ -10,7 +10,7 @@
       >
         Rent a Car
         <img
-          src="../assets/auto.png"
+          src="../../assets/auto.png"
           alt="Car"
           class="car-img"
         >
@@ -18,7 +18,6 @@
     </div>
     <v-spacer />
 
-    <!-- Pseudo routing?? No se la verdad, pero funciona -->
     <v-btn to="/about">
       About
     </v-btn>
@@ -55,6 +54,7 @@ const showRegisterForm = () => {
 
 const goToHome = () => {
   emit('goHome');
+  router.push('/')
 };
 </script>
 
