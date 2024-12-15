@@ -17,31 +17,90 @@
       </a>
     </div>
     <v-spacer />
+    <!-- Usuario NO autenticado -->
+    <template v-if="!authStore.isAuthenticated">
+      <v-btn to="/about">
+        About
+      </v-btn>
+      <v-btn
+        outlined
+        @click="showLoginForm"
+      >
+        Login
+      </v-btn>
+      <v-btn
+        outlined
+        @click="showRegisterForm"
+      >
+        Register
+      </v-btn>
+    </template>
+    <!-- Usuario logged -->
+    <template v-else>
+      <!-- Menú para Administrador -->
+      <template v-if="authStore.isAdmin">
+        <v-btn to="/admin/usuarios">
+          Gestionar Usuarios
+        </v-btn>
+        <v-btn to="/admin/vehiculos">
+          Gestionar Vehículos
+        </v-btn>
+      </template>
 
-    <v-btn to="/about">
-      About
-    </v-btn>
+      <!-- Menú para Trabajador -->
+      <template v-if="authStore.isWorker">
+        <v-btn to="/trabajador/reservas">
+          Gestionar Reservas
+        </v-btn>
+      </template>
 
-    <v-btn
-      outlined
-      @click="showLoginForm"
-    >
-      Login
-    </v-btn>
+      <!-- Menú de usuario -->
+      <v-menu>
+        <template #activator="{ props }">
+          <v-btn v-bind="props">
+            <v-icon>mdi-account</v-icon>
+            {{ authStore.user.nombre }}
+          </v-btn>
+        </template>
 
-    <v-btn
-      outlined
-      @click="showRegisterForm"
-    >
-      Register
-    </v-btn>
+        <v-list>
+          <v-list-item>
+            <v-list-item-title>
+              {{ authStore.user.nombre }} {{ authStore.user.apellido }}
+            </v-list-item-title>
+            <v-list-item-subtitle>
+              {{ authStore.user.rol }}
+            </v-list-item-subtitle>
+          </v-list-item>
+
+          <v-divider />
+
+          <v-list-item to="/perfil">
+            <v-list-item-title>Mi Perfil</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item to="/mis-reservas">
+            <v-list-item-title>Mis Reservas</v-list-item-title>
+          </v-list-item>
+
+          <v-list-item @click="handleLogout">
+            <v-list-item-title class="text-error">
+              Cerrar Sesión
+            </v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-menu>
+    </template>
   </v-app-bar>
 </template>
 
 <script setup>
 
-import router from "@/router/index.js";
+import {useAuthStore} from '@/stores/auth'
+import {useRouter} from 'vue-router'
 
+const router = useRouter()
+const authStore = useAuthStore()
 const emit = defineEmits(['showLogin', 'showRegister', 'goHome']);
 
 const showLoginForm = () => {
