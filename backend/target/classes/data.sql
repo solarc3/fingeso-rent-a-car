@@ -88,7 +88,7 @@ VALUES
 ('PEUGEOT', 'EXPERT', 'MVAR', 'UUVW37', 2023, 145000.00, 3, true, 'DISPONIBLE');
 -- Usuarios
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('24150030-3', 'Ignacio', 'Solar', 'admin123', false, 1, 'ADMINISTRADOR');
+VALUES ('21284189-7', 'Ignacio', 'Solar', 'admin123', false, 1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('14353454-1', 'Diego', 'Gomez', 'worker123', false, 1, 'TRABAJADOR');

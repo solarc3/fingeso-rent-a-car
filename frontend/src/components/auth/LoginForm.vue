@@ -1,4 +1,3 @@
-
 <template>
   <v-container>
     <v-card>
@@ -6,11 +5,10 @@
         Login
       </v-card-title>
       <v-card-text>
-        <!-- mismo q en register, datos d ingreso a la web -->
         <v-form>
           <v-text-field
-            v-model="email"
-            label="Correo"
+            v-model="rut"
+            label="RUT"
             required
           />
           <v-text-field
@@ -19,11 +17,16 @@
             type="password"
             required
           />
+          <v-select
+            v-model="rol"
+            :items="roles"
+            label="Tipo de Usuario"
+            required
+          />
         </v-form>
       </v-card-text>
       <v-card-actions>
         <v-spacer />
-        <!-- botones dnvo -->
         <v-btn
           color="blue darken-1"
           text
@@ -36,23 +39,29 @@
   </v-container>
 </template>
 
-<script>
-import { ref } from 'vue';
+<script setup>
+import {ref} from 'vue';
+import {useAuthStore} from '@/stores/auth';
+import {useRouter} from 'vue-router';
 
-export default {
-  setup() {
-    const email = ref('');
-    const password = ref('');
+const router = useRouter();
+const authStore = useAuthStore();
 
-    const login = () => {
-      alert(`Email: ${email.value}, Password: ${password.value}`);
-    };
+const rut = ref('');
+const password = ref('');
+const rol = ref('');
+const roles = ['ARRENDATARIO', 'TRABAJADOR', 'ADMINISTRADOR'];
 
-    return {
-      email,
-      password,
-      login
-    };
+const login = async () => {
+  try {
+    if (!rut.value || !password.value || !rol.value) {
+      alert('Por favor complete todos los campos');
+      return;
+    }
+    await authStore.login(rut.value, password.value, rol.value);
+    await router.push('/');
+  } catch (error) {
+    alert('Error al iniciar sesión: ' + error.message);
   }
 };
 </script>

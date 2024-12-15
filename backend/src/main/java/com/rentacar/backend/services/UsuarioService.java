@@ -127,14 +127,16 @@ public class UsuarioService {
     public List<UsuarioEntity> obtenerArrendatarios() {
         return usuarioRepository.findByRol(UsuarioEntity.RolUsuario.ARRENDATARIO);
     }
-    
 
-    public Optional<UsuarioEntity> validarCredenciales(String rut, String password) {
+
+    public Optional<UsuarioEntity> validarCredenciales(String rut, String password, String rol) {
         Optional<UsuarioEntity> usuario = usuarioRepository.findByRut(rut);
-
+        //pasar el rol de string a enum
+        UsuarioEntity.RolUsuario rolUsuario = UsuarioEntity.RolUsuario.valueOf(rol);
         if (usuario.isPresent() && usuario.get()
             .getPassword()
-            .equals(password)) {
+            .equals(password) && usuario.get()
+                                     .getRol() == rolUsuario) {
             return usuario;
         }
 

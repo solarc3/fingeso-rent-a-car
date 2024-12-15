@@ -124,21 +124,26 @@ public class UsuarioController {
         try {
             String rut = credentials.get("rut");
             String password = credentials.get("password");
+            String rol = credentials.get("rol");
 
-            if (rut == null || password == null) {
+            if (rut == null || password == null || rol == null) {
                 return ResponseEntity.badRequest()
-                    .body("RUT y contraseña son requeridos");
+                    .body("RUT, contraseña y rol son requeridos");
             }
 
-            Optional<UsuarioEntity> usuario = usuarioService.validarCredenciales(rut, password);
+            Optional<UsuarioEntity> usuario = usuarioService.validarCredenciales(rut, password, rol);
 
             if (usuario.isPresent()) {
-                if (usuario.get()
-                    .isEstaEnListaNegra()) {
+                UsuarioEntity user = usuario.get();
+
+                // check lista negra
+                if (user.isEstaEnListaNegra()) {
                     return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body("Usuario en lista negra");
                 }
-                return ResponseEntity.ok(usuario.get());
+                // si llegamos aqui todo ok
+                return ResponseEntity.ok(user);
+
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Credenciales invalidas");

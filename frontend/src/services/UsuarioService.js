@@ -72,25 +72,26 @@ export const useUsuarioService = () => {
       throw error.response.data;
     }
   };
-  const login = async (rut, password) => {
-    // POST /api/usuario/login
-    // @RequestBody Map<String, String> credentials
+  const login = async (rut, password, rol) => {
     try {
       const {data} = await axiosInstance.post('/api/usuario/login', {
         rut,
-        password
+        password,
+        rol
       });
       return data;
     } catch (error) {
       if (error.response) {
-        // Si el servidor respondió con un estado de error
-        if (error.response.status === 403) {
-          throw new Error('Usuario en lista negra');
-        } else if (error.response.status === 401) {
-          throw new Error('Credenciales inválidas');
+        switch (error.response.status) {
+          case 403:
+            throw new Error('Usuario en lista negra');
+          case 401:
+            throw new Error('Credenciales inválidas o rol no autorizado');
+          default:
+            throw new Error('Error en el servidor');
         }
       }
-      throw error.response?.data || error;
+      throw error;
     }
   };
 
