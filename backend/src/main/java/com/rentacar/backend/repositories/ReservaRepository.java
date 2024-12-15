@@ -13,7 +13,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Repository
-public interface ReservaRepository extends JpaRepository<ReservaEntity, Long>{
+public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
 
     //Buscar por fecha inicio
     List<ReservaEntity> findByFechaInicio(LocalDateTime fechaInicio);
@@ -31,7 +31,7 @@ public interface ReservaRepository extends JpaRepository<ReservaEntity, Long>{
     List<ReservaEntity> findByCostoBetween(BigDecimal costoMin, BigDecimal costoMax);
 
     //Buscar por estado
-    List<ReservaEntity> findByEstado(Integer Estado);
+    List<ReservaEntity> findByEstado(ReservaEntity.EstadoReserva Estado);
 
     // Buscar todas las reservas de un usuario
     List<ReservaEntity> findByUsuario(UsuarioEntity usuario);

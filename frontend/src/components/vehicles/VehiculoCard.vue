@@ -26,7 +26,7 @@
 
     <v-card-actions>
       <v-btn
-        color="var(--primary-a20)"
+        color="#be1784"
         text="ARRENDAR"
         class="text-white"
         variant="elevated"

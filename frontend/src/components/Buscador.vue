@@ -88,7 +88,7 @@
           </v-card>
           <div class="d-flex align-center">
             <v-btn
-              color="grey"
+              color="#be1784"
               x-large
               height="64"
               min-width="150"

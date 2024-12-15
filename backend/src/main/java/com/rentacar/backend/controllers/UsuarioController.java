@@ -19,32 +19,72 @@ public class UsuarioController {
 
     @PostMapping("/crear")
     public ResponseEntity<?> crearUsuario(@RequestBody UsuarioEntity usuario) {
-        try{
+        try {
             usuarioService.crearUsuario(
-                    usuario.getRut(),
-                    usuario.getNombre(),
-                    usuario.getApellido());
-                    return ResponseEntity.ok().body("Usuario creado correctamente");
+                usuario.getRut(),
+                usuario.getNombre(),
+                usuario.getApellido(),
+                usuario.getRol(),
+                usuario.getSucursal());
+            return ResponseEntity.ok()
+                .body("Usuario creado correctamente");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
         }
     }
+
+    @GetMapping("/trabajadores")
+    public ResponseEntity<?> obtenerTrabajadores() {
+        try {
+            return ResponseEntity.ok(usuarioService.obtenerTrabajadores());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/administradores")
+    public ResponseEntity<?> obtenerAdministradores() {
+        try {
+            return ResponseEntity.ok(usuarioService.obtenerAdministradores());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/arrendatarios")
+    public ResponseEntity<?> obtenerArrendatarios() {
+        try {
+            return ResponseEntity.ok(usuarioService.obtenerArrendatarios());
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
+        }
+    }
+
     @DeleteMapping("/eliminar")
     public ResponseEntity<?> eliminarUsuario(@RequestParam Long id) {
-        try{
+        try {
             usuarioService.eliminarUsuario(id);
-            return ResponseEntity.ok().body("Usuario eliminado correctamente");
-        }catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.ok()
+                .body("Usuario eliminado correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
         }
     }
+
     @PutMapping("/actualizar")
     public ResponseEntity<?> actualizarUsuario(@RequestBody UsuarioEntity usuario, Long id) {
-        try{
-            usuarioService.actualizarUsuario(id,usuario);
-            return ResponseEntity.ok().body("Usuario actualizado correctamente");
-        }catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        try {
+            usuarioService.actualizarUsuario(id, usuario);
+            return ResponseEntity.ok()
+                .body("Usuario actualizado correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
         }
     }
 }

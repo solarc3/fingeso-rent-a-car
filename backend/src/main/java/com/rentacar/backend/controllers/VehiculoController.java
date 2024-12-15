@@ -27,14 +27,16 @@ public class VehiculoController {
     public ResponseEntity<?> crearVehiculo(@RequestBody VehiculoEntity vehiculo) {
         try {
             vehiculoService.crearVehiculo(
-                    vehiculo.getMarca(),
-                    vehiculo.getModelo(),
-                    vehiculo.getAcriss(),
-                    vehiculo.getPatente(),
-                    vehiculo.getPrecioArriendo());
-            return ResponseEntity.ok().body("Vehiculo creado correctamente");
+                vehiculo.getMarca(),
+                vehiculo.getModelo(),
+                vehiculo.getAcriss(),
+                vehiculo.getPatente(),
+                vehiculo.getPrecioArriendo());
+            return ResponseEntity.ok()
+                .body("Vehiculo creado correctamente");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
         }
     }
 
@@ -51,12 +53,14 @@ public class VehiculoController {
 
             // Filtrar vehiculos disponibles
             List<VehiculoEntity> vSucursalDisp = vSucursal.stream()
-                    .filter(v -> Objects.equals(v.getEstado(), "DISPONIBLE"))
-                    .toList();
+                .filter(v -> Objects.equals(v.getEstado(), "DISPONIBLE"))
+                .toList();
 
-            return ResponseEntity.ok().body(vSucursalDisp);
+            return ResponseEntity.ok()
+                .body(vSucursalDisp);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest()
+                .build();
         }
     }
 
@@ -64,9 +68,11 @@ public class VehiculoController {
     public ResponseEntity<?> eliminarVehiculo(@RequestParam Long id) {
         try {
             vehiculoService.eliminarVehiculoPorId(id);
-            return ResponseEntity.ok().body("Vehiculo eliminado correctamente");
+            return ResponseEntity.ok()
+                .body("Vehiculo eliminado correctamente");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
         }
     }
 
@@ -75,12 +81,14 @@ public class VehiculoController {
     public ResponseEntity<?> actualizarVehiculo(@RequestBody VehiculoEntity vehiculo) {
         try {
             vehiculoService.actualizarPrecioArriendoVehiculoPorId(vehiculo.getId(),
-                    vehiculo.getPrecioArriendo());
+                                                                  vehiculo.getPrecioArriendo());
             VehiculoEntity v = vehiculoService.actualizarEstadoVehiculoPorId(vehiculo.getId(),
-                    vehiculo.getEstado());
-            return ResponseEntity.ok().body(v);
+                                                                             String.valueOf(vehiculo.getEstado()));
+            return ResponseEntity.ok()
+                .body(v);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(vehiculo);
+            return ResponseEntity.badRequest()
+                .body(vehiculo);
         }
     }
 }

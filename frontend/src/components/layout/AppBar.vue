@@ -1,7 +1,7 @@
 <template>
   <v-app-bar
     title=""
-    color="var(--primary-a0)"
+    color="#002349"
   >
     <div class="title-container">
       <a

@@ -53,38 +53,49 @@ public class ReservaService {
 
     public ReservaEntity extenderReserva(Long reservaId, LocalDateTime nuevaFechaFin) {
         Optional<ReservaEntity> reserva = reservaRepository.findById(reservaId);
-        if (reserva.isEmpty())
+        if (reserva.isEmpty()) {
             throw new NoSuchElementException("Reserva no encontrada");
+        }
 
         // Comprobar periodo 30 dias
         ReservaEntity r = reserva.get();
         Duration treintaDias = Duration.ofDays(30);
         Duration periodoArriendo = Duration.between(r.getFechaFin(), nuevaFechaFin);
 
-        if (periodoArriendo.compareTo(treintaDias) > 0)
+        if (periodoArriendo.compareTo(treintaDias) > 0) {
             throw new RuntimeException("Periodo superior a 30 dias");
+        }
 
         r.setFechaFin(nuevaFechaFin);
         return reservaRepository.save(r);
     }
 
-    public ReservaEntity crearReserva(LocalDateTime fechaInicio, LocalDateTime fechaFin, BigDecimal costo,
-                               Integer estado, Long usuarioID, Long vehiculoID, Long sucursalID) {
-        // Comprobar periodo 30 dias
-        Duration treintaDias = Duration.ofDays(30);
-        Duration periodoArriendo = Duration.between(fechaInicio, fechaFin);
-
-        if (periodoArriendo.compareTo(treintaDias) > 0)
-            throw new RuntimeException("Periodo superior a 30 dias");
-
+    public ReservaEntity crearReserva(LocalDateTime fechaInicio, LocalDateTime fechaFin,
+                                      BigDecimal costo, Long usuarioID, Long vehiculoID,
+                                      Long sucursalID) {
         ReservaEntity reserva = new ReservaEntity();
         reserva.setFechaInicio(fechaInicio);
         reserva.setFechaFin(fechaFin);
         reserva.setCosto(costo);
-        reserva.setEstado(estado);
-        reserva.setUsuario(usuarioRepository.findById(usuarioID).orElseThrow());
-        reserva.setVehiculo(vehiculoRepository.findById(vehiculoID).orElseThrow());
-        reserva.setSucursal(sucursalRepository.findById(sucursalID).orElseThrow());
+        reserva.setEstado(ReservaEntity.EstadoReserva.PENDIENTE); // Usar el enum
+        reserva.setUsuario(usuarioRepository.findById(usuarioID)
+                               .orElseThrow());
+        reserva.setVehiculo(vehiculoRepository.findById(vehiculoID)
+                                .orElseThrow());
+        reserva.setSucursal(sucursalRepository.findById(sucursalID)
+                                .orElseThrow());
         return reservaRepository.save(reserva);
     }
+
+    public ReservaEntity actualizarEstado(Long reservaId, ReservaEntity.EstadoReserva nuevoEstado) {
+        ReservaEntity reserva = reservaRepository.findById(reservaId)
+            .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+        reserva.setEstado(nuevoEstado);
+        return reservaRepository.save(reserva);
+    }
+
+    public List<ReservaEntity> obtenerPorEstado(ReservaEntity.EstadoReserva estado) {
+        return reservaRepository.findByEstado(estado);
+    }
+
 }

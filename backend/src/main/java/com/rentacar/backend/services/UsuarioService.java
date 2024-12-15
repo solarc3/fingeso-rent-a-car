@@ -15,7 +15,7 @@ public class UsuarioService {
     private final UsuarioRepository usuarioRepository;
 
     @Autowired
-    public UsuarioService(UsuarioRepository usuarioRepository){
+    public UsuarioService(UsuarioRepository usuarioRepository) {
         this.usuarioRepository = usuarioRepository;
     }
 
@@ -25,40 +25,64 @@ public class UsuarioService {
         return usuario.get();
     }
 
+    public List<UsuarioEntity> getUsuariosPorValoracion(ValoracionEntity valoracion) {
+        return usuarioRepository.findByValoracionesContaining(valoracion);
+    }
+
+    public List<UsuarioEntity> getUsuariosPorValoraciones(List<ValoracionEntity> valoraciones) {
+        return usuarioRepository.findByValoracionesIn(valoraciones);
+    }
+
+    public List<UsuarioEntity> getUsuariosPorReserva(ReservaEntity reserva) {
+        return usuarioRepository.findByReservasContaining(reserva);
+    }
+
+    public List<UsuarioEntity> getUsuariosPorReservas(List<ReservaEntity> reservas) {
+        return usuarioRepository.findByReservasIn(reservas);
+    }
+
     //Buscar usuario por rut
-    public Optional<UsuarioEntity> getUsuarioByRut(String rut){
+    public Optional<UsuarioEntity> getUsuarioByRut(String rut) {
         return usuarioRepository.findByRut(rut);
     }
 
     //Buscar usuarios por estado de lista negra
-    public List<UsuarioEntity> getUsuariosEnListaNegra(boolean estaEnListaNegra){
+    public List<UsuarioEntity> getUsuariosEnListaNegra(boolean estaEnListaNegra) {
         return usuarioRepository.findByEstaEnListaNegra(estaEnListaNegra);
-    }
-    //Buscar usuarios por valoraciones
-    public List<UsuarioEntity> getUsuariosPorReservas(ReservaEntity reservas){
-        return usuarioRepository.findByReservas(reservas);
     }
 
     //Buscar usuarios por sucursal
-    public List<UsuarioEntity> getUsuariosPorSucursal(SucursalEntity sucursal){
+    public List<UsuarioEntity> getUsuariosPorSucursal(SucursalEntity sucursal) {
         return usuarioRepository.findBySucursal(sucursal);
     }
 
     //Crear nuevo usuario
-    public UsuarioEntity crearUsuario(String rut, String nombre, String apellido){
-        if (usuarioRepository.findByRut(rut).isPresent())
+    public UsuarioEntity crearUsuario(String rut, String nombre, String apellido, UsuarioEntity.RolUsuario rol, SucursalEntity sucursal) {
+        if (usuarioRepository.findByRut(rut)
+            .isPresent()) {
             throw new RuntimeException("Ya existe un usuario con RUT " + rut);
+        }
 
         UsuarioEntity usuario = new UsuarioEntity();
         usuario.setRut(rut);
         usuario.setNombre(nombre);
         usuario.setApellido(apellido);
         usuario.setEstaEnListaNegra(false);
+        usuario.setRol(rol);
+
+        // Solo asignar sucursal si es TRABAJADOR o ADMINISTRADOR
+        if (rol == UsuarioEntity.RolUsuario.TRABAJADOR || rol == UsuarioEntity.RolUsuario.ADMINISTRADOR) {
+            if (sucursal == null) {
+                throw new RuntimeException("Los trabajadores y administradores deben tener una sucursal asignada");
+            }
+            usuario.setSucursal(sucursal);
+        }
+
         return usuarioRepository.save(usuario);
     }
 
     //Actualizar usuario que ya existe, por id
-    public UsuarioEntity actualizarUsuario(Long id, UsuarioEntity usuarioActualizado){
+    public UsuarioEntity actualizarUsuario(Long id, UsuarioEntity usuarioActualizado) {
         Optional<UsuarioEntity> usuarioExistente = usuarioRepository.findById(id);
         if (usuarioExistente.isPresent()) {
             usuarioActualizado.setId(id);
@@ -69,12 +93,28 @@ public class UsuarioService {
     }
 
     //Eliminar usuario por id
-    public void eliminarUsuario(Long id){
+    public void eliminarUsuario(Long id) {
         Optional<UsuarioEntity> usuarioExistente = usuarioRepository.findById(id);
-        if(usuarioExistente.isPresent()){
+        if (usuarioExistente.isPresent()) {
             usuarioRepository.deleteById(id);
         } else {
             throw new RuntimeException("Usuario no encontrado con ID: " + id);
         }
+    }
+
+    public List<UsuarioEntity> obtenerUsuariosPorRol(UsuarioEntity.RolUsuario rol) {
+        return usuarioRepository.findByRol(rol);
+    }
+
+    public List<UsuarioEntity> obtenerTrabajadores() {
+        return usuarioRepository.findByRol(UsuarioEntity.RolUsuario.TRABAJADOR);
+    }
+
+    public List<UsuarioEntity> obtenerAdministradores() {
+        return usuarioRepository.findByRol(UsuarioEntity.RolUsuario.ADMINISTRADOR);
+    }
+
+    public List<UsuarioEntity> obtenerArrendatarios() {
+        return usuarioRepository.findByRol(UsuarioEntity.RolUsuario.ARRENDATARIO);
     }
 }

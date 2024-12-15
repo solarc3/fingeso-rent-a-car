@@ -16,42 +16,50 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class VehiculoEntity {
-	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
-	@Column(unique = true, nullable = false)
-	private Long id;
+    public enum EstadoVehiculo {
+        DISPONIBLE,
+        NO_DISPONIBLE,
+        EN_MANTENCION,
+        EN_REPARACION
+    }
 
-	@Column(nullable = false)
-	private String marca;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(unique = true, nullable = false)
+    private Long id;
 
-	@Column(nullable = false)
-	private String modelo;
+    @Column(nullable = false)
+    private String marca;
 
-	// Código ACRISS asociado al vehículo
-	@Column(nullable = false, length = 4)
-	private String acriss;
+    @Column(nullable = false)
+    private String modelo;
 
-	@Column(unique = true, nullable = false, length = 6)
-	private String patente;
+    // Código ACRISS asociado al vehículo
+    @Column(nullable = false, length = 4)
+    private String acriss;
 
-	// fab year
-	private int anio;
+    @Column(unique = true, nullable = false, length = 6)
+    private String patente;
 
-	@Column(name = "precio_arriendo", nullable = false)
-	private BigDecimal precioArriendo;
+    // fab year
+    private int anio;
 
-	@ManyToOne
-	@JoinColumn(name = "sucursal_id")
-	@JsonBackReference(value = "sucursal-vehiculo")
-	private SucursalEntity sucursal;
+    @Column(name = "precio_arriendo", nullable = false)
+    private BigDecimal precioArriendo;
 
-	// Disponibilidad
-	private boolean disponible;
+    @ManyToOne
+    @JoinColumn(name = "sucursal_id")
+    @JsonBackReference(value = "sucursal-vehiculo")
+    private SucursalEntity sucursal;
 
-	// Estado del vehiculo
-	private String estado;//DISPONIBLE, NO_DISPONIBLE, EN_MANTENCION, EN_REPARACION
+    // Disponibilidad
+    private boolean disponible;
 
-	@OneToMany(mappedBy = "vehiculo", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-	@JsonManagedReference(value = "vehiculo-valoracion")
-	private List<ValoracionEntity> valoraciones;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private EstadoVehiculo estado;
+
+    @OneToMany(mappedBy = "vehiculo", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JsonManagedReference(value = "vehiculo-valoracion")
+    private List<ValoracionEntity> valoraciones;
 }

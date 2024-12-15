@@ -26,15 +26,16 @@ public class VehiculoService {
 
     /**
      * Permite crear un nuevo vehículo y almacenarlo en la base de datos.
-     * @param marca marca del fabricante
-     * @param modelo modelo específico del vehículo
-     * @param acriss código ACRISS asociado (Categoría, Carrocería, Transmisión, Combustible/Aire)
+     *
+     * @param marca   marca del fabricante
+     * @param modelo  modelo específico del vehículo
+     * @param acriss  código ACRISS asociado (Categoría, Carrocería, Transmisión, Combustible/Aire)
      * @param patente patente del vehículo
-     * @param precio precio de arriendo
+     * @param precio  precio de arriendo
      * @return Entidad Vehículo creada
      */
     public VehiculoEntity crearVehiculo(String marca, String modelo, String acriss,
-                                 String patente, BigDecimal precio) {
+                                        String patente, BigDecimal precio) {
         // Sanitización de datos
 
         // Patentes en Chile -> 2 letras, 2 letras o 2 números, 2 números
@@ -42,9 +43,11 @@ public class VehiculoService {
         Pattern patternClPlate = Pattern.compile(CL_PLATE_REGEX);
 
         // Verificar formato ACRISS, formato patente, y valor positivo del precio
-        if (!validarAcriss(acriss) || !patternClPlate.matcher(patente.toUpperCase()).matches()
-                || precio.compareTo(BigDecimal.ZERO) < 0)
+        if (!validarAcriss(acriss) || !patternClPlate.matcher(patente.toUpperCase())
+            .matches()
+            || precio.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Parámetros de vehículo inválidos");
+        }
 
         // Almacenar si no hay problemas con lo de arriba
         VehiculoEntity vehiculo = new VehiculoEntity();
@@ -58,22 +61,25 @@ public class VehiculoService {
 
     /**
      * Permite verificar si un string es un código ACRISS válido.
+     *
      * @param acriss String candidato a verificar
      * @return true si se cumple con el formato ACRISS, false en otro caso
      */
     boolean validarAcriss(String acriss) {
         // Corroborar con tabla ACRISS
         final String ACRISS_REGEX =
-                "^[MNEHCDIJRSFGPULWOX]" +       // Categoría / tamaño
-                "[BCDWVLSTFJXPQZEMRHYNKG]" +    // Tipo / carrocería
-                "[MNCABD]" +                    // Transmisión / manual, automática
-                "[RNDQHIECMLSABFVZUX]$";        // Combustible / Aire Acondicionado
+            "^[MNEHCDIJRSFGPULWOX]" +       // Categoría / tamaño
+            "[BCDWVLSTFJXPQZEMRHYNKG]" +    // Tipo / carrocería
+            "[MNCABD]" +                    // Transmisión / manual, automática
+            "[RNDQHIECMLSABFVZUX]$";        // Combustible / Aire Acondicionado
         Pattern patternAcriss = Pattern.compile(ACRISS_REGEX);
-        return patternAcriss.matcher(acriss.toUpperCase()).matches();
+        return patternAcriss.matcher(acriss.toUpperCase())
+            .matches();
     }
 
     /**
      * Permite obtener todos los vehículos en la base de datos.
+     *
      * @return Lista de todos los vehículos
      */
     public List<VehiculoEntity> obtenerVehiculos() {
@@ -88,6 +94,7 @@ public class VehiculoService {
 
     /**
      * Permite obtener un vehículo con una patente determinada.
+     *
      * @param patente Patente del vehículo a buscar
      * @return Vehículo con la patente buscada, si existe.
      */
@@ -97,6 +104,7 @@ public class VehiculoService {
 
     /**
      * Permite obtener todos los vehículos de una marca determinada.
+     *
      * @param marca Marca de los vehículos
      * @return Lista de vehículos de esa marca
      */
@@ -108,17 +116,20 @@ public class VehiculoService {
      * Permite obtener todos los vehículos en base a uno o más caracteres del código ACRISS
      * Deben haber '_' para representar que no importa ese caracter en particular
      * (Por ejemplo, acriss = "__ME" buscaría todos los vehículos eléctricos con transmisión manual)
+     *
      * @param acriss Código ACRISS
      * @return Lista de vehículos con código ACRISS acorde a lo pedido
      */
     public List<VehiculoEntity> obtenerVehiculosPorAcriss(String acriss) {
-        if (!validarAcriss(acriss))
+        if (!validarAcriss(acriss)) {
             throw new IllegalArgumentException("Código ACRISS no válido");
+        }
         return vehiculoRepository.findByAcrissLike(acriss.toUpperCase());
     }
 
     /**
      * Permite obtener todos los vehículos asociados a cierta sucursal.
+     *
      * @param sucursal Sucursal a buscar
      * @return Lista de vehículos en esa sucursal
      */
@@ -130,19 +141,22 @@ public class VehiculoService {
 
     /**
      * Permite obtener todos los vehículso cuyo precio esté dentro de un rango dado
+     *
      * @param min Precio mínimo de arriendo
      * @param max Precio máximo de arriendo
      * @return Lista de vehículos con precio de arriendo entre min y max
      */
     public List<VehiculoEntity> obtenerVehiculosConPrecioEntre(BigDecimal min, BigDecimal max) {
-        if (min.compareTo(BigDecimal.ZERO) < 0 || max.compareTo(BigDecimal.ZERO) < 0)
+        if (min.compareTo(BigDecimal.ZERO) < 0 || max.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Precio inválido");
+        }
 
         return vehiculoRepository.findByPrecioArriendoBetween(min, max);
     }
 
     /**
      * Permite obtener todos los vehículos que se encuentren en cierto estado
+     *
      * @param estado Estado de los vehículos
      * @return Lista de vehículos en ese estado
      */
@@ -154,37 +168,45 @@ public class VehiculoService {
 
     /**
      * Permite actualizar el estado de un vehículo dado su ID
+     *
      * @param vehiculoId ID del vehículo a actualizar
-     * @param estado Estado nuevo del vehículo
+     * @param estado     Estado nuevo del vehículo
      * @return Vehículo actualizado con ese nuevo estado
      */
     public VehiculoEntity actualizarEstadoVehiculoPorId(Long vehiculoId, String estado) {
-        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId).orElseThrow();
-        vehiculo.setEstado(estado);
+        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
+            .orElseThrow();
+        vehiculo.setEstado(VehiculoEntity.EstadoVehiculo.valueOf(estado));
         return vehiculoRepository.save(vehiculo);
     }
 
     /**
      * Permite actualizar el precio de arriendo de un vehiculo dado su ID
+     *
      * @param vehiculoId ID del vehiculo a actualizar
-     * @param precio Precio nuevo del vehiculo
+     * @param precio     Precio nuevo del vehiculo
      * @return Vehiculo actualizado con ese nuevo precio
      */
     public VehiculoEntity actualizarPrecioArriendoVehiculoPorId(Long vehiculoId, BigDecimal precio) {
-        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId).orElseThrow();
+        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
+            .orElseThrow();
         vehiculo.setPrecioArriendo(precio);
         return vehiculoRepository.save(vehiculo);
     }
 
     /**
      * Permite eliminar un vehículo de la base de datos dado su ID
+     *
      * @param vehiculoId ID del vehículo a eliminar
      */
     public void eliminarVehiculoPorId(Long vehiculoId) {
-        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId).orElseThrow();
-        if (!reservaRepository.findByVehiculo(vehiculo).isEmpty())
+        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
+            .orElseThrow();
+        if (!reservaRepository.findByVehiculo(vehiculo)
+            .isEmpty()) {
             throw new RuntimeException("El vehiculo" + vehiculoId + "tiene reservas pendientes");
-        else
+        } else {
             vehiculoRepository.deleteById(vehiculoId);
+        }
     }
 }

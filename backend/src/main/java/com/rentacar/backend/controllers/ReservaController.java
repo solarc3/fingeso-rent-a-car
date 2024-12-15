@@ -31,21 +31,22 @@ public class ReservaController {
     }
 
     @PostMapping("/crear")
-    public ResponseEntity<?> crearReserva(@RequestBody Map<String, Object> reservaJsonMap) {
+    public ResponseEntity<?> crearReserva(@RequestBody ReservaEntity reserva) {
         try {
-            DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
-            reservaService.crearReserva(
-                    LocalDateTime.parse((String) reservaJsonMap.get("fechaInicio"), formatoFecha),
-                    LocalDateTime.parse((String) reservaJsonMap.get("fechaFin"), formatoFecha),
-                    BigDecimal.valueOf((Double) reservaJsonMap.get("costo")),
-                    (Integer) reservaJsonMap.get("estado"),
-
-                    Long.valueOf((Integer) reservaJsonMap.get("usuarioId")),
-                    Long.valueOf((Integer) reservaJsonMap.get("vehiculoId")),
-                    Long.valueOf((Integer) reservaJsonMap.get("sucursalId")));
-            return ResponseEntity.ok().body("Reserva creada correctamente");
+            ReservaEntity nuevaReserva = reservaService.crearReserva(
+                reserva.getFechaInicio(),
+                reserva.getFechaFin(),
+                reserva.getCosto(),
+                reserva.getUsuario()
+                    .getId(),
+                reserva.getVehiculo()
+                    .getId(),
+                reserva.getSucursal()
+                    .getId());
+            return ResponseEntity.ok(nuevaReserva);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
         }
     }
 
@@ -59,10 +60,24 @@ public class ReservaController {
         try {
             UsuarioEntity u = usuarioService.obtenerUsuarioPorId(id);
             List<ReservaEntity> reservas = reservaService.obtenerReservasDeUsuario(u);
-            return ResponseEntity.ok().body(reservas);
+            return ResponseEntity.ok()
+                .body(reservas);
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/estado")
+    public ResponseEntity<?> actualizarEstado(@PathVariable Long id,
+                                              @RequestBody ReservaEntity.EstadoReserva estado) {
+        try {
+            ReservaEntity reserva = reservaService.actualizarEstado(id, estado);
+            return ResponseEntity.ok(reserva);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
         }
     }
 
@@ -71,10 +86,12 @@ public class ReservaController {
         try {
             VehiculoEntity v = vehiculoService.obtenerVehiculoPorId(id);
             List<ReservaEntity> reservas = reservaService.obtenerReservasDeVehiculo(v);
-            return ResponseEntity.ok().body(reservas);
+            return ResponseEntity.ok()
+                .body(reservas);
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
         }
     }
 
@@ -86,11 +103,24 @@ public class ReservaController {
 
             DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
             reservaService.extenderReserva(
-                    Long.valueOf((Integer) nuevaFechaJsonMap.get("reservaId")),
-                    LocalDateTime.parse((String) nuevaFechaJsonMap.get("fechaFin"), formatoFecha));
-            return ResponseEntity.ok().body("Reserva extendida");
+                Long.valueOf((Integer) nuevaFechaJsonMap.get("reservaId")),
+                LocalDateTime.parse((String) nuevaFechaJsonMap.get("fechaFin"), formatoFecha));
+            return ResponseEntity.ok()
+                .body("Reserva extendida");
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/estado/{estado}")
+    public ResponseEntity<?> obtenerPorEstado(@PathVariable ReservaEntity.EstadoReserva estado) {
+        try {
+            List<ReservaEntity> reservas = reservaService.obtenerPorEstado(estado);
+            return ResponseEntity.ok(reservas);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
         }
     }
 }

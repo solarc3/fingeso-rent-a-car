@@ -7,15 +7,23 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
 import java.util.List;
 
 @Entity
-@Table(name = "usuarios")
+@Table(name = "usuarios", indexes = {
+    @Index(name = "idx_usuario_rut", columnList = "rut"),
+    @Index(name = "idx_usuario_rol", columnList = "rol")
+})
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 public class UsuarioEntity {
+    public enum RolUsuario {
+        ARRENDATARIO,
+        TRABAJADOR,
+        ADMINISTRADOR
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -31,16 +39,32 @@ public class UsuarioEntity {
 
     private boolean estaEnListaNegra;
 
-    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RolUsuario rol;
+
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
     @JsonManagedReference(value = "usuario-valoracion")
     private List<ValoracionEntity> valoraciones;
 
-    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
     @JsonManagedReference(value = "usuario-reserva")
     private List<ReservaEntity> reservas;
 
     @ManyToOne
     @JoinColumn(name = "sucursal_id")
     @JsonBackReference(value = "sucursal-usuario")
-    private SucursalEntity sucursal;  // cuando es un empleado, se quiere saber su sucursal
+    private SucursalEntity sucursal;
+
+    public boolean isAdministrador() {
+        return rol == RolUsuario.ADMINISTRADOR;
+    }
+
+    public boolean isTrabajador() {
+        return rol == RolUsuario.TRABAJADOR;
+    }
+
+    public boolean isArrendatario() {
+        return rol == RolUsuario.ARRENDATARIO;
+    }
 }

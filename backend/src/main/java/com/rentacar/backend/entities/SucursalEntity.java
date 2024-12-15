@@ -29,15 +29,15 @@ public class SucursalEntity {
     @Column(nullable = false)
     private String email;
 
-    @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "sucursal", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JsonManagedReference(value = "sucursal-usuario")
     private List<UsuarioEntity> empleados;
 
-    @OneToMany(mappedBy = "sucursal",fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "sucursal", fetch = FetchType.LAZY)
     @JsonManagedReference(value = "sucursal-vehiculo")
     private List<VehiculoEntity> vehiculos;
 
-    @OneToMany(mappedBy = "sucursal",fetch = FetchType.EAGER)
+    @OneToMany(mappedBy = "sucursal", fetch = FetchType.LAZY)
     @JsonManagedReference(value = "sucursal-reserva")
     private List<ReservaEntity> reservas;
 }

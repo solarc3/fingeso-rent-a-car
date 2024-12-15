@@ -17,6 +17,14 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ReservaEntity {
+    public enum EstadoReserva {
+        PENDIENTE,
+        CONFIRMADA,
+        EN_PROGRESO,
+        COMPLETADA,
+        CANCELADA
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -30,8 +38,9 @@ public class ReservaEntity {
     @Column(nullable = false)
     private BigDecimal costo;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Integer estado; //PENDIENTE, CONFIRMADA, EN_PROGRESO, COMPLETADA, CANCELADA
+    private EstadoReserva estado;
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
