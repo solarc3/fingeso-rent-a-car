@@ -1,10 +1,10 @@
-import axios from 'axios';
+import axiosInstance from "@/services/axiosConfig.js";
 
 export const useVehiculoService = () => {
   const obtenerVehiculos = async () => {
     // GET /api/vehiculo/listing
     try {
-      const {data} = await axios.get('/api/vehiculo/listing');
+      const {data} = await axiosInstance.get('/api/vehiculo/listing');
       return data;
     } catch (error) {
       throw error.response.data;
@@ -15,7 +15,7 @@ export const useVehiculoService = () => {
     // POST /api/vehiculo/crear
     // @RequestBody VehiculoEntity vehiculo
     try {
-      const {data} = await axios.post('/api/vehiculo/crear', {
+      const {data} = await axiosInstance.post('/api/vehiculo/crear', {
         marca: vehiculo.marca,
         modelo: vehiculo.modelo,
         acriss: vehiculo.acriss,
@@ -32,7 +32,7 @@ export const useVehiculoService = () => {
     // GET /api/vehiculo/listing/enSucursal
     // @RequestParam Long id
     try {
-      const {data} = await axios.get('/api/vehiculo/listing/enSucursal', {
+      const {data} = await axiosInstance.get('/api/vehiculo/listing/enSucursal', {
         params: {id}
       });
       return data;
@@ -45,7 +45,7 @@ export const useVehiculoService = () => {
     // DELETE /api/vehiculo/eliminar
     // @RequestParam Long id
     try {
-      const {data} = await axios.delete('/api/vehiculo/eliminar', {
+      const {data} = await axiosInstance.delete('/api/vehiculo/eliminar', {
         params: {id}
       });
       return data;
@@ -58,7 +58,7 @@ export const useVehiculoService = () => {
     // PUT /api/vehiculo/actualizar
     // @RequestBody VehiculoEntity vehiculo
     try {
-      const {data} = await axios.put('/api/vehiculo/actualizar', vehiculo);
+      const {data} = await axiosInstance.put('/api/vehiculo/actualizar', vehiculo);
       return data;
     } catch (error) {
       throw error.response.data;

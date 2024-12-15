@@ -1,11 +1,11 @@
-import axios from 'axios';
+import axiosInstance from "@/services/axiosConfig.js";
 
 export const useSucursalService = () => {
   const crearSucursal = async (sucursal) => {
     // POST /api/sucursal/crear
     // @RequestBody SucursalEntity sucursal
     try {
-      const {data} = await axios.post('/api/sucursal/crear', {
+      const {data} = await axiosInstance.post('/api/sucursal/crear', {
         nombre: sucursal.nombre,
         direccion: sucursal.direccion,
         telefono: sucursal.telefono,
@@ -20,7 +20,7 @@ export const useSucursalService = () => {
   const listarSucursales = async () => {
     // GET /api/sucursal/listar
     try {
-      const {data} = await axios.get('/api/sucursal/listar');
+      const {data} = await axiosInstance.get('/api/sucursal/listar');
       return data;
     } catch (error) {
       throw error.response.data;
@@ -31,7 +31,7 @@ export const useSucursalService = () => {
     // GET /api/sucursal/obtenerPorId
     // @RequestParam Long id
     try {
-      const {data} = await axios.get('/api/sucursal/obtenerPorId', {
+      const {data} = await axiosInstance.get('/api/sucursal/obtenerPorId', {
         params: {id}
       });
       return data;
@@ -45,7 +45,7 @@ export const useSucursalService = () => {
     // @RequestParam Long id
     // @RequestBody SucursalEntity sucursal
     try {
-      const {data} = await axios.put('/api/sucursal/actualizar', sucursal, {
+      const {data} = await axiosInstance.put('/api/sucursal/actualizar', sucursal, {
         params: {id}
       });
       return data;
@@ -58,7 +58,7 @@ export const useSucursalService = () => {
     // DELETE /api/sucursal/eliminar
     // @RequestParam Long id
     try {
-      const {data} = await axios.delete('/api/sucursal/eliminar', {
+      const {data} = await axiosInstance.delete('/api/sucursal/eliminar', {
         params: {id}
       });
       return data;
@@ -72,7 +72,7 @@ export const useSucursalService = () => {
     // @RequestParam Long IdEmpleado
     // @RequestParam Long IdSucursal
     try {
-      const {data} = await axios.put('/api/sucursal/agregarEmpleado', null, {
+      const {data} = await axiosInstance.put('/api/sucursal/agregarEmpleado', null, {
         params: {
           IdEmpleado: idEmpleado,
           IdSucursal: idSucursal
@@ -89,7 +89,7 @@ export const useSucursalService = () => {
     // @RequestParam Long IdVehiculo
     // @RequestParam Long IdSucursal
     try {
-      const {data} = await axios.put('/api/sucursal/agregarVehiculo', null, {
+      const {data} = await axiosInstance.put('/api/sucursal/agregarVehiculo', null, {
         params: {
           IdVehiculo: idVehiculo,
           IdSucursal: idSucursal
