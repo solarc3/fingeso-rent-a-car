@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 @Service
@@ -16,6 +17,12 @@ public class UsuarioService {
     @Autowired
     public UsuarioService(UsuarioRepository usuarioRepository){
         this.usuarioRepository = usuarioRepository;
+    }
+
+    public UsuarioEntity obtenerUsuarioPorId(Long id) {
+        Optional<UsuarioEntity> usuario = usuarioRepository.findById(id);
+        if (usuario.isEmpty()) throw new NoSuchElementException("Usuario no encontrado");
+        return usuario.get();
     }
 
     //Buscar usuario por rut
