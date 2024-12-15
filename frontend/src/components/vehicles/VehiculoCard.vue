@@ -13,7 +13,7 @@
       src="../../assets/Autocard.png"
       cover
     />
-
+    
     <v-card-title>
       {{ vehiculo.marca }} {{ vehiculo.modelo }}
     </v-card-title>

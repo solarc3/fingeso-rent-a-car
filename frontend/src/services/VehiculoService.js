@@ -1,42 +1,53 @@
 import axios from 'axios';
 
-import axiosInstance from './axiosConfig';
-
 export const useVehiculoService = () => {
   const obtenerVehiculos = async () => {
+    // GET /api/vehiculo/listing
     try {
-      const {data} = await axiosInstance.get('/api/vehiculo/listing');
-      return data;
-    } catch (error) {
-      console.error('Error al obtener vehículos:', error.response || error);
-      throw error;
-    }
-  };
-  const crearVehiculo = async (vehiculo) => {
-    try {
-      const {data} = await axios.post('/api/vehiculo/crear', vehiculo);
+      const {data} = await axios.get('/api/vehiculo/listing');
       return data;
     } catch (error) {
       throw error.response.data;
     }
   };
-  const obtenerVehiculosDisponiblesEnSucursal = async (idSucursal) => {
+
+  const crearVehiculo = async (vehiculo) => {
+    // POST /api/vehiculo/crear
+    // @RequestBody VehiculoEntity vehiculo
     try {
-      const {data} = await axiosInstance.get('/api/vehiculo/listing/enSucursal', {
-        params: {
-          idSucursal // Nombre del parametro debe coincidir con @RequestParam
-        }
+      const {data} = await axios.post('/api/vehiculo/crear', {
+        marca: vehiculo.marca,
+        modelo: vehiculo.modelo,
+        acriss: vehiculo.acriss,
+        patente: vehiculo.patente,
+        precioArriendo: vehiculo.precioArriendo
       });
       return data;
     } catch (error) {
-      console.error('Error al obtener vehículos por sucursal:', error);
-      throw error;
+      throw error.response.data;
+    }
+  };
+
+  const obtenerVehiculosDisponiblesEnSucursal = async (id) => {
+    // GET /api/vehiculo/listing/enSucursal
+    // @RequestParam Long id
+    try {
+      const {data} = await axios.get('/api/vehiculo/listing/enSucursal', {
+        params: {id}
+      });
+      return data;
+    } catch (error) {
+      throw error.response.data;
     }
   };
 
   const eliminarVehiculo = async (id) => {
+    // DELETE /api/vehiculo/eliminar
+    // @RequestParam Long id
     try {
-      const {data} = await axios.delete(`/api/vehiculo/eliminar?id=${id}`);
+      const {data} = await axios.delete('/api/vehiculo/eliminar', {
+        params: {id}
+      });
       return data;
     } catch (error) {
       throw error.response.data;
@@ -44,6 +55,8 @@ export const useVehiculoService = () => {
   };
 
   const actualizarVehiculo = async (vehiculo) => {
+    // PUT /api/vehiculo/actualizar
+    // @RequestBody VehiculoEntity vehiculo
     try {
       const {data} = await axios.put('/api/vehiculo/actualizar', vehiculo);
       return data;
@@ -54,8 +67,8 @@ export const useVehiculoService = () => {
 
   return {
     obtenerVehiculos,
-    obtenerVehiculosDisponiblesEnSucursal,
     crearVehiculo,
+    obtenerVehiculosDisponiblesEnSucursal,
     eliminarVehiculo,
     actualizarVehiculo
   };
