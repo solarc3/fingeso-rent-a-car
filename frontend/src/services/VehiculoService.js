@@ -1,6 +1,17 @@
 import axios from 'axios';
 
+import axiosInstance from './axiosConfig';
+
 export const useVehiculoService = () => {
+  const obtenerVehiculos = async () => {
+    try {
+      const {data} = await axiosInstance.get('/api/vehiculo/listing');
+      return data;
+    } catch (error) {
+      console.error('Error al obtener vehículos:', error.response || error);
+      throw error;
+    }
+  };
   const crearVehiculo = async (vehiculo) => {
     try {
       const {data} = await axios.post('/api/vehiculo/crear', vehiculo);
@@ -9,22 +20,17 @@ export const useVehiculoService = () => {
       throw error.response.data;
     }
   };
-
-  const obtenerVehiculos = async () => {
+  const obtenerVehiculosDisponiblesEnSucursal = async (idSucursal) => {
     try {
-      const {data} = await axios.get('/api/vehiculo/listing');
+      const {data} = await axiosInstance.get('/api/vehiculo/listing/enSucursal', {
+        params: {
+          idSucursal // Nombre del parametro debe coincidir con @RequestParam
+        }
+      });
       return data;
     } catch (error) {
-      throw error.response.data;
-    }
-  };
-
-  const obtenerVehiculosDisponiblesEnSucursal = async (id) => {
-    try {
-      const {data} = await axios.get(`/api/vehiculo/listing/enSucursal?id=${id}`);
-      return data;
-    } catch (error) {
-      throw error.response.data;
+      console.error('Error al obtener vehículos por sucursal:', error);
+      throw error;
     }
   };
 
@@ -47,9 +53,9 @@ export const useVehiculoService = () => {
   };
 
   return {
-    crearVehiculo,
     obtenerVehiculos,
     obtenerVehiculosDisponiblesEnSucursal,
+    crearVehiculo,
     eliminarVehiculo,
     actualizarVehiculo
   };

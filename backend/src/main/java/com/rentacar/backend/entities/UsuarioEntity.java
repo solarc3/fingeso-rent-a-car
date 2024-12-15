@@ -43,11 +43,11 @@ public class UsuarioEntity {
     @Column(nullable = false)
     private RolUsuario rol;
 
-    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
     @JsonManagedReference(value = "usuario-valoracion")
     private List<ValoracionEntity> valoraciones;
 
-    @OneToMany(mappedBy = "usuario", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
     @JsonManagedReference(value = "usuario-reserva")
     private List<ReservaEntity> reservas;
 

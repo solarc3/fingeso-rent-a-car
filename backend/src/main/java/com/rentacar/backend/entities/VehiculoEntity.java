@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 import java.math.BigDecimal;
 import java.util.List;
 
+
 @Entity
 @Table(name = "vehiculos")
 @Data
@@ -34,14 +35,12 @@ public class VehiculoEntity {
     @Column(nullable = false)
     private String modelo;
 
-    // Código ACRISS asociado al vehículo
     @Column(nullable = false, length = 4)
     private String acriss;
 
     @Column(unique = true, nullable = false, length = 6)
     private String patente;
 
-    // fab year
     private int anio;
 
     @Column(name = "precio_arriendo", nullable = false)
@@ -52,14 +51,13 @@ public class VehiculoEntity {
     @JsonBackReference(value = "sucursal-vehiculo")
     private SucursalEntity sucursal;
 
-    // Disponibilidad
     private boolean disponible;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoVehiculo estado;
 
-    @OneToMany(mappedBy = "vehiculo", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "vehiculo", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
     @JsonManagedReference(value = "vehiculo-valoracion")
     private List<ValoracionEntity> valoraciones;
 }

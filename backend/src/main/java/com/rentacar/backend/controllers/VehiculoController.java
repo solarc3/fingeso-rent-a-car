@@ -53,7 +53,7 @@ public class VehiculoController {
 
             // Filtrar vehiculos disponibles
             List<VehiculoEntity> vSucursalDisp = vSucursal.stream()
-                .filter(v -> Objects.equals(v.getEstado(), "DISPONIBLE"))
+                .filter(v -> v.getEstado() == VehiculoEntity.EstadoVehiculo.DISPONIBLE)
                 .toList();
 
             return ResponseEntity.ok()

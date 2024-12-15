@@ -15,13 +15,13 @@
     />
 
     <v-card-title>
-      Nombre Vehiculo
+      {{ vehiculo.marca }} {{ vehiculo.modelo }}
     </v-card-title>
     <v-card-subtitle>
-      Detalles
+      Patente: {{ vehiculo.patente }}
     </v-card-subtitle>
     <v-card-subtitle>
-      Mas detalles aca
+      Precio: ${{ vehiculo.precioArriendo }} / día
     </v-card-subtitle>
 
     <v-card-actions>
@@ -31,9 +31,16 @@
         class="text-white"
         variant="elevated"
         to="/payment"
+        :disabled="vehiculo.estado !== 'DISPONIBLE'"
+        @click="seleccionarVehiculo"
       />
     </v-card-actions>
   </v-card>
 </template>
 <script setup>
+const props = defineProps({vehiculo: {type: Object, required: true}})
+const emit = defineEmits(['seleccionar'])
+const seleccionarVehiculo = () => {
+  emit('seleccionar', props.vehiculo)
+}
 </script>
