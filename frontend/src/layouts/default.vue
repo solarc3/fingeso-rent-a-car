@@ -9,8 +9,13 @@
     <v-dialog
       v-model="showLoginMenu"
       max-width="500px"
+      persistent
     >
-      <login-form />
+      <login-form
+        @login-success="handleLoginSuccess"
+        @login-error="handleLoginError"
+        @close="closeLoginDialog"
+      />
     </v-dialog>
 
     <v-dialog
@@ -22,17 +27,25 @@
 
     <v-main>
       <router-view />
-      <app-footer />
+      <!-- app-footer --->
     </v-main>
+    <v-snackbar
+      v-model="showSnackbar"
+      :color="snackbarColor"
+      timeout="3000"
+    >
+      {{ snackbarText }}
+    </v-snackbar>
   </div>
 </template>
 
 <script setup>
-import {useAuth} from '@/composables/useAuth'
-import AppBar from '@/components/layout/AppBar.vue'
-import AppFooter from '@/components/layout/AppFooter.vue'
-import LoginForm from '@/components/auth/LoginForm.vue'
-import RegisterForm from '@/components/auth/RegisterForm.vue'
+import {ref} from 'vue';
+import {useAuth} from '@/composables/useAuth';
+import AppBar from '@/components/layout/AppBar.vue';
+import AppFooter from '@/components/layout/AppFooter.vue';
+import LoginForm from '@/components/auth/LoginForm.vue';
+import RegisterForm from '@/components/auth/RegisterForm.vue';
 
 const {
   showLoginMenu,
@@ -40,5 +53,28 @@ const {
   showLoginForm,
   showRegisterForm,
   goToHome
-} = useAuth()
+} = useAuth();
+
+// snackbar state
+const showSnackbar = ref(false);
+const snackbarText = ref('');
+const snackbarColor = ref('success');
+
+// login event
+const handleLoginSuccess = (userData) => {
+  showLoginMenu.value = false; // Cerrar el diálogo
+  snackbarColor.value = 'success';
+  snackbarText.value = `Bienvenido ${userData.nombre}!`;
+  showSnackbar.value = true;
+};
+// login error event
+const handleLoginError = (errorMessage) => {
+  snackbarColor.value = 'error';
+  snackbarText.value = errorMessage;
+  showSnackbar.value = true;
+};
+// close login dialog
+const closeLoginDialog = () => {
+  showLoginMenu.value = false;
+};
 </script>
