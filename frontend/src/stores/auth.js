@@ -33,14 +33,18 @@ export const useAuthStore = defineStore('auth', {
         isAuthenticated: true
       }));
     },
-
-    logout() {
-      // 1. Limpiar el estado de Pinia
+    clearAuth() {
       this.user = null;
       this.isAuthenticated = false;
+      sessionStorage.removeItem('auth');
+    },
+    logout() {
+      // 1. Limpiar el estado de Pinia
+      this.clearAuth();
+      router.push('/');
 
       // 2. Limpiar sessionStorage
-      sessionStorage.clear(); // Limpia todo el sessionStorage
+      //sessionStorage.clear(); // Limpia todo el sessionStorage
       // O si prefieres ser más específico:
       // sessionStorage.removeItem('auth');
 
@@ -56,10 +60,10 @@ export const useAuthStore = defineStore('auth', {
       // cartStore.$reset();
 
       // 6. Redireccionar a la página de inicio
-      router.push('/');
+      //router.push('/');
 
       // 7. Opcional: Recargar la pagina para limpiar la memoria
-      window.location.reload();
+      //window.location.reload();
     },
 
     initializeAuth() {

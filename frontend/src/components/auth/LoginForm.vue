@@ -103,6 +103,7 @@ const handleLogin = async () => {
   try {
     const result = await authStore.login(rut.value, password.value, rol.value);
     emit('login-success', result);
+    emit('close');
     await router.push('/');
   } catch (err) {
     error.value = err.message || 'Error al iniciar sesion';
@@ -111,7 +112,6 @@ const handleLogin = async () => {
     loading.value = false;
   }
 };
-
 const handleCancel = () => {
   emit('close');
 };

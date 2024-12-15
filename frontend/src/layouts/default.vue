@@ -32,9 +32,19 @@
     <v-snackbar
       v-model="showSnackbar"
       :color="snackbarColor"
-      timeout="3000"
+      :timeout="3000"
+      @update:model-value="handleSnackbarUpdate"
     >
       {{ snackbarText }}
+      <template #actions>
+        <v-btn
+          color="white"
+          text
+          @click="closeSnackbar"
+        >
+          Cerrar
+        </v-btn>
+      </template>
     </v-snackbar>
   </div>
 </template>
@@ -42,10 +52,13 @@
 <script setup>
 import {ref} from 'vue';
 import {useAuth} from '@/composables/useAuth';
-import AppBar from '@/components/layout/AppBar.vue';
-import AppFooter from '@/components/layout/AppFooter.vue';
-import LoginForm from '@/components/auth/LoginForm.vue';
-import RegisterForm from '@/components/auth/RegisterForm.vue';
+import RegisterForm from "@/components/auth/RegisterForm.vue";
+import LoginForm from "@/components/auth/LoginForm.vue";
+import AppBar from "@/components/layout/AppBar.vue";
+
+const showSnackbar = ref(false);
+const snackbarText = ref('');
+const snackbarColor = ref('success');
 
 const {
   showLoginMenu,
@@ -55,26 +68,30 @@ const {
   goToHome
 } = useAuth();
 
-// snackbar state
-const showSnackbar = ref(false);
-const snackbarText = ref('');
-const snackbarColor = ref('success');
+const closeLoginDialog = () => {
+  showLoginMenu.value = false;
+};
 
-// login event
 const handleLoginSuccess = (userData) => {
-  showLoginMenu.value = false; // Cerrar el diálogo
+  closeLoginDialog();
   snackbarColor.value = 'success';
   snackbarText.value = `Bienvenido ${userData.nombre}!`;
   showSnackbar.value = true;
 };
-// login error event
+
 const handleLoginError = (errorMessage) => {
   snackbarColor.value = 'error';
   snackbarText.value = errorMessage;
   showSnackbar.value = true;
 };
-// close login dialog
-const closeLoginDialog = () => {
-  showLoginMenu.value = false;
+
+const closeSnackbar = () => {
+  showSnackbar.value = false;
+};
+
+const handleSnackbarUpdate = (value) => {
+  if (!value) {
+    showSnackbar.value = false;
+  }
 };
 </script>
