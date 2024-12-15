@@ -1,65 +1,82 @@
-
 <template>
   <v-card>
     <v-card-title class="headline">
       Register
     </v-card-title>
     <v-card-text>
-      <!-- datos varios para regustrarse eb la web -->
-      <v-form>
+      <v-alert
+        v-if="error"
+        type="error"
+        class="mb-4"
+        closable
+      >
+        {{ error }}
+      </v-alert>
+
+      <v-form
+        ref="form"
+        v-model="isFormValid"
+        @submit.prevent="handleRegister"
+      >
         <v-text-field
           v-model="nombre"
           label="Nombre"
+          :rules="[v => !!v || 'Nombre es requerido']"
           required
         />
         <v-text-field
           v-model="apellidos"
           label="Apellidos"
+          :rules="[v => !!v || 'Apellidos es requerido']"
           required
         />
-        <v-text-field
+        <rut-input
           v-model="rut"
-          label="RUT"
           required
+          @validation="handleRutValidation"
         />
         <v-text-field
           v-model="telefono"
           label="Teléfono"
+          :rules="telefonoRules"
           required
         />
         <v-text-field
           v-model="email"
           label="Correo"
+          :rules="emailRules"
           required
         />
         <v-text-field
           v-model="password"
           label="Contraseña"
           type="password"
+          :rules="passwordRules"
           required
         />
         <v-text-field
           v-model="confirmPassword"
           label="Confirmar Contraseña"
           type="password"
+          :rules="confirmPasswordRules"
           required
         />
       </v-form>
     </v-card-text>
     <v-card-actions>
       <v-spacer />
-      <!-- only botones lol -->
       <v-btn
-        color="blue darken-1"
+        color="grey"
         text
-        @click="close"
+        @click="handleCancel"
       >
         Cancelar
       </v-btn>
       <v-btn
-        color="blue darken-1"
-        text
-        @click="register"
+        color="primary"
+        :loading="loading"
+        :disabled="!isFormValid"
+        @click="handleRegister"
       >
         Registrarse
       </v-btn>
@@ -67,55 +84,105 @@
   </v-card>
 </template>
 
-<script>
-import { ref, watch } from 'vue';
+<script setup>
+import {ref} from 'vue';
+import {useAuthStore} from '@/stores/auth';
+import {useRouter} from 'vue-router';
+import RutInput from "@/components/auth/RutInput.vue";
+import {useUsuarioService} from "@/services/UsuarioService.js";
 
-export default {
-  props: ['visible'],
-  setup(props, { emit }) {
-    const nombre = ref('');
-    const apellidos = ref('');
-    const rut = ref('');
-    const telefono = ref('');
-    const email = ref('');
-    const password = ref('');
-    const confirmPassword = ref('');
-    const isVisible = ref(props.visible);
+const router = useRouter();
+const authStore = useAuthStore();
+const emit = defineEmits(['close', 'register-success', 'register-error']);
 
-    watch(() => props.visible, (newVal) => {
-      isVisible.value = newVal;
-    });
+// Referencias y estado
+const form = ref(null);
+const isFormValid = ref(false);
+const loading = ref(false);
+const error = ref('');
+const isRutValid = ref(false);
 
-    const close = () => {
-      isVisible.value = false;
-      emit('close');
+// Campos del formulario
+const nombre = ref('');
+const apellidos = ref('');
+const rut = ref('');
+const telefono = ref('');
+const email = ref('');
+const password = ref('');
+const confirmPassword = ref('');
+
+// Reglas de validación
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
+
+const emailRules = [
+  v => !!v || 'Email es requerido',
+  v => emailRegex.test(v) || 'Email invalido'
+];
+
+const telefonoRules = [
+  v => !!v || 'Telefono es requerido',
+  v => phoneRegex.test(v) || 'Telefono invalido'
+];
+
+const passwordRules = [
+  v => !!v || 'Contraseña es requerida',
+];
+
+const confirmPasswordRules = [
+  v => !!v || 'Confirmar contraseña es requerida',
+  v => v === password.value || 'Las contraseñas no coinciden'
+];
+
+// methods
+const handleRutValidation = (isValid) => {
+  isRutValid.value = isValid;
+};
+
+const validateForm = () => {
+  return form.value?.validate() && isRutValid.value;
+};
+
+const handleRegister = async () => {
+  if (!validateForm()) return;
+
+  loading.value = true;
+  error.value = '';
+
+  try {
+    const usuarioData = {
+      rut: rut.value,
+      nombre: nombre.value.trim(),
+      apellido: apellidos.value.trim(),
+      password: password.value,
+      rol: 'ARRENDATARIO'
     };
 
-    const register = () => {
-      if (password.value !== confirmPassword.value) {
-        alert("Las contraseñas no coinciden, verifique que esté bien escrito.");
-        return;
-      }
+    // Registrar usuario
+    const nuevoUsuario = await useUsuarioService().crearUsuario(usuarioData);
 
-      if (!rut.value || !nombre.value || !apellidos.value || !telefono.value || !email.value){
-        alert("Queda información incompleta, por favor llene todos los campos.");
-        return;
-      }
-      close();
-    };
+    // Login automático después del registro
+    const usuarioLogueado = await authStore.login(
+      nuevoUsuario.rut,
+      password.value,
+      'ARRENDATARIO'
+    );
 
-    return {
-      nombre,
-      apellidos,
-      rut,
-      telefono,
-      email,
-      password,
-      confirmPassword,
-      isVisible,
-      close,
-      register
-    };
+    emit('register-success', usuarioLogueado); // Emitir el evento con los datos del usuario
+    emit('close'); // Cerrar el diálogo
+
+    await router.push('/');
+  } catch (err) {
+    error.value = err.message || 'Error al registrar usuario';
+    emit('register-error', error.value);
+  } finally {
+    loading.value = false;
   }
+};
+const handleCancel = () => {
+  if (form.value) {
+    form.value.reset();
+  }
+  emit('close');
 };
 </script>

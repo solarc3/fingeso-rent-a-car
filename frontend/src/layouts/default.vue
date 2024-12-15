@@ -22,7 +22,11 @@
       v-model="showRegisterMenu"
       max-width="500px"
     >
-      <register-form />
+      <register-form
+        @register-success="handleRegisterSuccess"
+        @register-error="handleRegisterError"
+        @close="closeRegisterDialog"
+      />
     </v-dialog>
 
     <v-main>
@@ -93,5 +97,20 @@ const handleSnackbarUpdate = (value) => {
   if (!value) {
     showSnackbar.value = false;
   }
+};
+const closeRegisterDialog = () => {
+  showRegisterMenu.value = false;
+};
+const handleRegisterSuccess = (userData) => {
+  closeRegisterDialog();
+  snackbarColor.value = 'success';
+  snackbarText.value = `¡Bienvenido ${userData.nombre}! Registro exitoso.`;
+  showSnackbar.value = true;
+};
+
+const handleRegisterError = (errorMessage) => {
+  snackbarColor.value = 'error';
+  snackbarText.value = errorMessage;
+  showSnackbar.value = true;
 };
 </script>

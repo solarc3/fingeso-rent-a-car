@@ -41,8 +41,7 @@ public class UsuarioController {
                                                    .toString());
                 sucursal = sucursalService.obtenerSucursalPorId(sucursalId);
             }
-
-            // Validaciones
+            
             if (rut == null || nombre == null || apellido == null || password == null) {
                 return ResponseEntity.badRequest()
                     .body("Todos los campos son requeridos");

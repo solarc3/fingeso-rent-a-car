@@ -60,13 +60,11 @@ public class UsuarioService {
     public UsuarioEntity crearUsuario(String rut, String nombre, String apellido,
                                       String password, UsuarioEntity.RolUsuario rol,
                                       SucursalEntity sucursal) {
-        // Verificar si ya existe un usuario con ese RUT
         if (usuarioRepository.findByRut(rut)
             .isPresent()) {
             throw new RuntimeException("Ya existe un usuario con RUT " + rut);
         }
 
-        // Validaciones de contraseña
         if (password == null || password.trim()
             .isEmpty()) {
             throw new RuntimeException("La contraseña no puede estar vacía");

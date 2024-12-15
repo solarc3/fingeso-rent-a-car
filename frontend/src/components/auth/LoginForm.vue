@@ -15,26 +15,31 @@
           {{ error }}
         </v-alert>
 
-        <v-form @submit.prevent="handleLogin">
-          <v-text-field
+        <v-form
+          ref="form"
+          v-model="isFormValid"
+          @submit.prevent="handleLogin"
+        >
+          <rut-input
             v-model="rut"
-            label="RUT"
             required
-            :error-messages="rutError ? 'RUT es requerido' : []"
+            @validation="handleRutValidation"
           />
+
           <v-text-field
             v-model="password"
             label="Contraseña"
             type="password"
+            :rules="passwordRules"
             required
-            :error-messages="passwordError ? 'Contraseña es requerida' : []"
           />
+
           <v-select
             v-model="rol"
             :items="roles"
             label="Tipo de Usuario"
+            :rules="rolRules"
             required
-            :error-messages="rolError ? 'Seleccione un rol' : []"
           />
         </v-form>
       </v-card-text>
@@ -50,6 +55,7 @@
         <v-btn
           color="primary"
           :loading="loading"
+          :disabled="!isFormValid || !isRutValid"
           @click="handleLogin"
         >
           Iniciar sesión
@@ -58,11 +64,11 @@
     </v-card>
   </v-container>
 </template>
-
 <script setup>
-import {ref, computed} from 'vue';
+import {ref} from 'vue';
 import {useAuthStore} from '@/stores/auth';
 import {useRouter} from 'vue-router';
+import RutInput from "@/components/auth/RutInput.vue";
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -70,28 +76,35 @@ const authStore = useAuthStore();
 // Props y Emits
 const emit = defineEmits(['login-success', 'login-error', 'close']);
 
+// Referencias y estado
+const form = ref(null);
+const isFormValid = ref(false);
+const isRutValid = ref(false);
+const loading = ref(false);
+const error = ref('');
+
 // Estado del formulario
 const rut = ref('');
 const password = ref('');
 const rol = ref('');
 const roles = ['ARRENDATARIO', 'TRABAJADOR', 'ADMINISTRADOR'];
-const error = ref('');
-const loading = ref(false);
 
-// validaciones
-const rutError = computed(() => rut.value.length === 0);
-const passwordError = computed(() => password.value.length === 0);
-const rolError = computed(() => !rol.value);
+// validate
+const passwordRules = [
+  v => !!v || 'Contraseña es requerida',
+];
+
+const rolRules = [
+  v => !!v || 'Seleccione un rol'
+];
 
 // metodos
-const validateForm = () => {
-  error.value = '';
+const handleRutValidation = (isValid) => {
+  isRutValid.value = isValid;
+};
 
-  if (!rut.value || !password.value || !rol.value) {
-    error.value = 'Por favor complete todos los campos';
-    return false;
-  }
-  return true;
+const validateForm = () => {
+  return form.value?.validate() && isRutValid.value;
 };
 
 const handleLogin = async () => {
@@ -101,7 +114,12 @@ const handleLogin = async () => {
   error.value = '';
 
   try {
-    const result = await authStore.login(rut.value, password.value, rol.value);
+    const result = await authStore.login(
+      rut.value,
+      password.value,
+      rol.value
+    );
+
     emit('login-success', result);
     emit('close');
     await router.push('/');
@@ -112,7 +130,11 @@ const handleLogin = async () => {
     loading.value = false;
   }
 };
+
 const handleCancel = () => {
+  if (form.value) {
+    form.value.reset();
+  }
   emit('close');
 };
 </script>
