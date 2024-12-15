@@ -57,21 +57,31 @@ public class UsuarioService {
     }
 
     //Crear nuevo usuario
-    public UsuarioEntity crearUsuario(String rut, String nombre, String apellido, UsuarioEntity.RolUsuario rol, SucursalEntity sucursal) {
+    public UsuarioEntity crearUsuario(String rut, String nombre, String apellido,
+                                      String password, UsuarioEntity.RolUsuario rol,
+                                      SucursalEntity sucursal) {
+        // Verificar si ya existe un usuario con ese RUT
         if (usuarioRepository.findByRut(rut)
             .isPresent()) {
             throw new RuntimeException("Ya existe un usuario con RUT " + rut);
         }
 
+        // Validaciones de contraseña
+        if (password == null || password.trim()
+            .isEmpty()) {
+            throw new RuntimeException("La contraseña no puede estar vacía");
+        }
         UsuarioEntity usuario = new UsuarioEntity();
         usuario.setRut(rut);
         usuario.setNombre(nombre);
         usuario.setApellido(apellido);
+        usuario.setPassword(password);
         usuario.setEstaEnListaNegra(false);
         usuario.setRol(rol);
 
-        // Solo asignar sucursal si es TRABAJADOR o ADMINISTRADOR
-        if (rol == UsuarioEntity.RolUsuario.TRABAJADOR || rol == UsuarioEntity.RolUsuario.ADMINISTRADOR) {
+        // Asignar sucursal si es necesario
+        if (rol == UsuarioEntity.RolUsuario.TRABAJADOR ||
+            rol == UsuarioEntity.RolUsuario.ADMINISTRADOR) {
             if (sucursal == null) {
                 throw new RuntimeException("Los trabajadores y administradores deben tener una sucursal asignada");
             }
@@ -116,5 +126,18 @@ public class UsuarioService {
 
     public List<UsuarioEntity> obtenerArrendatarios() {
         return usuarioRepository.findByRol(UsuarioEntity.RolUsuario.ARRENDATARIO);
+    }
+    
+
+    public Optional<UsuarioEntity> validarCredenciales(String rut, String password) {
+        Optional<UsuarioEntity> usuario = usuarioRepository.findByRut(rut);
+
+        if (usuario.isPresent() && usuario.get()
+            .getPassword()
+            .equals(password)) {
+            return usuario;
+        }
+
+        return Optional.empty();
     }
 }

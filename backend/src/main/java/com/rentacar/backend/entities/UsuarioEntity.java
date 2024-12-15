@@ -42,6 +42,8 @@ public class UsuarioEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RolUsuario rol;
+    @Column(nullable = false)
+    private String password;
 
     @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
     @JsonManagedReference(value = "usuario-valoracion")
