@@ -35,7 +35,7 @@
 <script setup>
 import {ref, computed} from 'vue';
 import Buscador from "@/components/Buscador.vue";
-import VehiculoCard from "@/components/VehiculoCard.vue";
+import VehiculoCard from "@/components/vehicles/VehiculoCard.vue";
 
 //paginacion
 const itemsPerPage = 12;
