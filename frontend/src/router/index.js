@@ -17,6 +17,25 @@ const routes = [
         component: () => import('@/pages/About.vue')
       },
       {
+        path: 'payment',
+        name: 'payment',
+        component: () => import('@/pages/Payment.vue'),
+        props: route => ({
+          vehiculoId: Number(route.query.vehiculoId),
+          sucursalId: Number(route.query.sucursal),
+          precioArriendo: Number(route.query.precioArriendo)
+        }),
+        beforeEnter: (to, from, next) => {
+          const {vehiculoId, sucursal, precioArriendo} = to.query;
+          if (!vehiculoId || !sucursal || !precioArriendo) {
+            console.warn('Faltan parámetros requeridos');
+            next('/');
+            return;
+          }
+          next();
+        }
+      },
+      {
         path: 'admin',
         meta: {requiresAuth: true, requiresAdmin: true},
         children: [

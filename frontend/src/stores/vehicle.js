@@ -39,30 +39,46 @@ export const useVehicleStore = defineStore('vehicle', {
                 }
             });
         },
-
+        async getVehicleById(id) {
+            // Si no hay vehículos cargados, cargarlos primero
+            if (this.vehicles.length === 0) {
+                await this.fetchVehicles();
+            }
+            const vehicle = this.vehicles.find(v => v.id === Number(id));
+            if (!vehicle) {
+                throw new Error(`No se encontró vehículo con ID: ${id}`);
+            }
+            return vehicle;
+        },
         async fetchVehicles() {
             this.loading = true;
             try {
                 const vehiculoService = useVehiculoService();
                 const data = await vehiculoService.obtenerVehiculos();
-                console.log('Vehicles fetched:', data);
 
-                // Normalizar el formato de los vehículos
-                this.vehicles = data.map(vehicle => {
-                    // Si sucursal es un número, convertirlo a objeto
-                    const sucursal = typeof vehicle.sucursal === 'number'
-                        ? {id: vehicle.sucursal}
-                        : vehicle.sucursal;
+                if (!data || !Array.isArray(data)) {
+                    throw new Error('Datos de vehículos inválidos');
+                }
 
+                // Procesar los vehículos asegurándonos de que la información de la sucursal esté completa
+                this.vehicles = data.map(vehiculo => {
                     return {
-                        ...vehicle,
-                        sucursal: sucursal
+                        ...vehiculo,
+                        // Asegurarnos de que la sucursal tenga la estructura correcta
+                        sucursal: vehiculo.sucursal ? {
+                            id: vehiculo.sucursal.id,
+                            nombre: vehiculo.sucursal.nombre,
+                            direccion: vehiculo.sucursal.direccion
+                        } : null
                     };
                 });
 
+                console.log('Vehículos procesados:', this.vehicles);
+                return this.vehicles;
             } catch (error) {
-                console.error('Error fetching vehicles:', error);
+                console.error('Error al cargar vehículos:', error);
                 this.error = error.message;
+                throw error;
             } finally {
                 this.loading = false;
             }
@@ -291,6 +307,14 @@ export const useVehicleStore = defineStore('vehicle', {
         availableVehicles: (state) => {
             return state.vehicles.filter(v => v.estado === 'DISPONIBLE');
         },
+        getSucursalName: () => (vehiculo) => {
+            if (!vehiculo) return 'No asignada';
+            if (!vehiculo.sucursal) return 'No asignada';
+            if (typeof vehiculo.sucursal === 'object') {
+                return vehiculo.sucursal.nombre || 'No asignada';
+            }
+            return 'No asignada';
+        },
 
         // Obtener vehículos en mantenimiento
         vehiclesInMaintenance: (state) => {
@@ -299,14 +323,8 @@ export const useVehicleStore = defineStore('vehicle', {
             );
         },
 
-        // Obtener vehículos por estado
         getVehiclesByState: (state) => (estado) => {
-            return state.vehicles.filter(v => v.estado === estado);
+            return state.vehicles.filter((v) => v.estado === estado);
         },
-
-        // Obtener vehículo por ID
-        getVehicleById: (state) => (id) => {
-            return state.vehicles.find(v => v.id === id);
-        }
-    }
+    },
 });

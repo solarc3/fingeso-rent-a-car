@@ -58,9 +58,14 @@ public class SucursalController {
     }
 
     @GetMapping("/obtenerPorId")
-    public ResponseEntity<?> obtenerSucursalPorId(@RequestParam Long id) {
+    public ResponseEntity<?> obtenerSucursalPorId(@RequestParam("id") Long id) {
         try {
-            return ResponseEntity.ok(sucursalService.obtenerSucursalPorId(id));
+            if (id == null) {
+                return ResponseEntity.badRequest()
+                    .body("El ID de la sucursal es requerido");
+            }
+            SucursalEntity sucursal = sucursalService.obtenerSucursalPorId(id);
+            return ResponseEntity.ok(sucursal);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(e.getMessage());

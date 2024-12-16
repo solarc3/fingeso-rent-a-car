@@ -2,6 +2,7 @@ package com.rentacar.backend.controllers;
 
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
+import com.rentacar.backend.repositories.VehiculoRepository;
 import com.rentacar.backend.services.SucursalService;
 import com.rentacar.backend.services.VehiculoService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,11 +22,13 @@ import java.util.Objects;
 public class VehiculoController {
     private final VehiculoService vehiculoService;
     private final SucursalService sucursalService;
+    private final VehiculoRepository vehiculoRepository;
 
     @Autowired
-    public VehiculoController(VehiculoService vehiculoService, SucursalService sucursalService) {
+    public VehiculoController(VehiculoService vehiculoService, SucursalService sucursalService, VehiculoRepository vehiculoRepository) {
         this.vehiculoService = vehiculoService;
         this.sucursalService = sucursalService;
+        this.vehiculoRepository = vehiculoRepository;
     }
 
     @PostMapping("/crear")
@@ -65,9 +68,12 @@ public class VehiculoController {
         }
     }
 
+
     @GetMapping("/listing")
-    public List<VehiculoEntity> obtenerVehiculos() {
-        List<VehiculoEntity> vehiculos = vehiculoService.obtenerVehiculos();
+    public ResponseEntity<List<VehiculoEntity>> obtenerVehiculos() {
+        List<VehiculoEntity> vehiculos = vehiculoRepository.findAllWithSucursales();
+
+        // Forzar la inicialización de la relación con sucursal
         vehiculos.forEach(v -> {
             if (v.getSucursal() != null) {
                 v.getSucursal()
@@ -76,9 +82,10 @@ public class VehiculoController {
                     .getNombre();
             }
         });
-        return vehiculos;
 
+        return ResponseEntity.ok(vehiculos);
     }
+
 
     @GetMapping("/listing/enSucursal")
     public ResponseEntity<List<VehiculoEntity>> obtenerVehiculosDisponiblesEnSucursal(@RequestParam Long id) {

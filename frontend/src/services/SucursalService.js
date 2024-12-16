@@ -27,15 +27,19 @@ export const useSucursalService = () => {
   };
 
   const obtenerSucursalPorId = async (id) => {
-    // GET /api/sucursal/obtenerPorId
-    // @RequestParam Long id
+    if (!id) {
+      throw new Error('ID de sucursal requerido');
+    }
     try {
-      const {data} = await axiosInstance.get('/api/sucursal/obtenerPorId', {
-        params: {id}
+      const response = await axiosInstance.get('/api/sucursal/obtenerPorId', {
+        params: {
+          id: Number(id)
+        }
       });
-      return data;
+      return response.data;
     } catch (error) {
-      throw error.response.data;
+      console.error('Error obteniendo sucursal:', error);
+      throw new Error(error.response?.data || 'Error al obtener la sucursal');
     }
   };
 

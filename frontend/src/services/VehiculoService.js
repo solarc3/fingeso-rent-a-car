@@ -2,12 +2,19 @@ import axiosInstance from "@/services/axiosConfig.js";
 
 export const useVehiculoService = () => {
   const obtenerVehiculos = async () => {
-    // GET /api/vehiculo/listing
     try {
       const {data} = await axiosInstance.get('/api/vehiculo/listing');
+      console.log('Datos crudos del backend:', data);
+
+      // Verificar la estructura de cada vehículo
+      data.forEach(vehiculo => {
+        console.log('Sucursal del vehículo:', vehiculo.id, vehiculo.sucursal);
+      });
+
       return data;
     } catch (error) {
-      throw error.response.data;
+      console.error('Error obteniendo vehículos:', error);
+      throw error;
     }
   };
 

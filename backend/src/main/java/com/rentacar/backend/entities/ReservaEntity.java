@@ -1,6 +1,6 @@
 package com.rentacar.backend.entities;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -44,17 +44,17 @@ public class ReservaEntity {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
-    @JsonBackReference(value = "usuario-reserva")
+    @JsonIgnoreProperties({"reservas", "valoraciones", "sucursal"})
     private UsuarioEntity usuario;
 
     @ManyToOne
     @JoinColumn(name = "vehiculo_id")
-    @JsonBackReference(value = "vehiculo-reserva")
+    @JsonIgnoreProperties({"reservas", "valoraciones", "sucursal"})
     private VehiculoEntity vehiculo;
 
     @ManyToOne
     @JoinColumn(name = "sucursal_id")
-    @JsonBackReference(value = "sucursal-reserva")
+    @JsonIgnoreProperties({"reservas", "vehiculos", "empleados"})
     private SucursalEntity sucursal;
 
 }

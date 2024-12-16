@@ -27,4 +27,10 @@ public interface VehiculoRepository extends JpaRepository<VehiculoEntity, Long> 
 
     @Query("SELECT DISTINCT v.marca FROM VehiculoEntity v ORDER BY v.marca")
     List<String> findDistinctMarcas();
+
+
+    @Query("SELECT v FROM VehiculoEntity v LEFT JOIN FETCH v.sucursal")
+    List<VehiculoEntity> findAllWithSucursales();
+
+
 }

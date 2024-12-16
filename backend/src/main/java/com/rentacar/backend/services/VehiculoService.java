@@ -88,12 +88,9 @@ public class VehiculoService {
      *
      * @return Lista de todos los vehículos
      */
+
     public List<VehiculoEntity> obtenerVehiculos() {
-        List<VehiculoEntity> vehiculos = vehiculoRepository.findAll();
-        // Opcionalmente, puedes filtrar los vehículos que no tienen sucursal
-        return vehiculos.stream()
-            .filter(v -> v.getSucursal() != null)
-            .collect(Collectors.toList());
+        return vehiculoRepository.findAllWithSucursales();
     }
 
     public VehiculoEntity obtenerVehiculoPorId(Long id) {

@@ -1,8 +1,7 @@
 package com.rentacar.backend.entities;
 
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,10 +14,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@JsonIdentityInfo(
-    generator = ObjectIdGenerators.PropertyGenerator.class,
-    property = "id"
-)
+
 public class SucursalEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,14 +32,14 @@ public class SucursalEntity {
     private String email;
 
     @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JsonManagedReference(value = "sucursal-usuario")
+    @JsonIgnoreProperties({"sucursal", "valoraciones", "reservas"})
     private List<UsuarioEntity> empleados;
 
     @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER)
-    @JsonManagedReference(value = "sucursal-vehiculo")
+    @JsonIgnoreProperties({"sucursal", "valoraciones", "reservas"})
     private List<VehiculoEntity> vehiculos;
 
     @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER)
-    @JsonManagedReference(value = "sucursal-reserva")
+    @JsonIgnoreProperties({"sucursal", "usuario", "vehiculo"})
     private List<ReservaEntity> reservas;
 }

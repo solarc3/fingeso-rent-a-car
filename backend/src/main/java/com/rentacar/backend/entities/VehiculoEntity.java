@@ -1,8 +1,7 @@
 package com.rentacar.backend.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -49,16 +48,17 @@ public class VehiculoEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sucursal_id")
-    @JsonIdentityReference(alwaysAsId = false)
+    @JsonIgnoreProperties({"vehiculos", "empleados", "reservas"})
     private SucursalEntity sucursal;
+
+    @OneToMany(mappedBy = "vehiculo", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"vehiculo", "usuario"})
+    private List<ValoracionEntity> valoraciones;
+    
 
     private boolean disponible;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private EstadoVehiculo estado;
-
-    @OneToMany(mappedBy = "vehiculo", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JsonManagedReference(value = "vehiculo-valoracion")
-    private List<ValoracionEntity> valoraciones;
 }

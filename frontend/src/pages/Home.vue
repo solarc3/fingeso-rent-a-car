@@ -230,7 +230,7 @@ const seleccionarVehiculo = (vehiculo) => {
     path: '/payment',
     query: {
       vehiculoId: vehiculo.id,
-      sucursal: filtros.value.sucursal?.id,
+      sucursal: vehiculo.sucursal?.id, // Usar la sucursal del vehículo directamente
       precioArriendo: vehiculo.precioArriendo
     }
   });

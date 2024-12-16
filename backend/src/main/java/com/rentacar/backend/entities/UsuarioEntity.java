@@ -1,7 +1,7 @@
 package com.rentacar.backend.entities;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -46,17 +46,18 @@ public class UsuarioEntity {
     private String password;
 
     @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
-    @JsonManagedReference(value = "usuario-valoracion")
+    @JsonIgnoreProperties({"usuario", "vehiculo"})
     private List<ValoracionEntity> valoraciones;
 
     @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
-    @JsonManagedReference(value = "usuario-reserva")
+    @JsonIgnoreProperties({"usuario", "vehiculo", "sucursal"})
     private List<ReservaEntity> reservas;
 
     @ManyToOne
     @JoinColumn(name = "sucursal_id")
-    @JsonBackReference(value = "sucursal-usuario")
+    @JsonIgnoreProperties({"empleados", "vehiculos", "reservas"})
     private SucursalEntity sucursal;
+    
 
     public boolean isAdministrador() {
         return rol == RolUsuario.ADMINISTRADOR;
