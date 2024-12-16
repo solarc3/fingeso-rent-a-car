@@ -18,10 +18,9 @@ export const useSucursalService = () => {
   };
 
   const listarSucursales = async () => {
-    // GET /api/sucursal/listar
     try {
       const {data} = await axiosInstance.get('/api/sucursal/listar');
-      return data;
+      return data; // data debe ser un array de objetos con { id, nombre }
     } catch (error) {
       throw error.response.data;
     }

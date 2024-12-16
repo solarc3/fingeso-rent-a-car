@@ -1,145 +1,238 @@
 <template>
-  <v-form>
-    <v-container
-      min-width="100%"
-    >
+  <v-form @submit.prevent="handleSubmit">
+    <v-container min-width="100%">
       <v-card
         class="pa-6"
         rounded="l"
       >
-        <div class="d-flex">
-          <v-card class="pa-4 flex-grow-1 mr-4">
-            <v-row>
-              <v-col
-                cols="12"
-                md="4"
-              >
-                <label class="text-subtitle-2 font-weight-bold mb-2">Sucursal de retiro</label>
-                <v-select
-                  v-model="sucursal"
-                  :items="sucursales"
+        <v-row>
+          <!-- Filtro de marca -->
+          <v-col
+            cols="12"
+            md="3"
+          >
+            <v-select
+              v-model="formData.marca"
+              :items="metadataStore.marcasDisponibles"
+              label="Marca"
+              item-title="nombre"
+              item-value="valor"
+              clearable
+              outlined
+              dense
+              :loading="metadataStore.loading"
+            />
+          </v-col>
+
+          <!-- Filtro de sucursal -->
+          <v-col
+            cols="12"
+            md="3"
+          >
+            <v-select
+              v-model="formData.sucursal"
+              :items="sucursales"
+              :loading="loading"
+              :error-messages="error"
+              label="Sucursal"
+              item-title="nombre"
+              item-value="id"
+              clearable
+              outlined
+              dense
+              return-object
+            />
+          </v-col>
+
+          <!-- Filtro de tipo de vehículo -->
+          <v-col
+            cols="12"
+            md="3"
+          >
+            <v-select
+              v-model="formData.tipoVehiculo"
+              :items="metadataStore.tiposVehiculo"
+              label="Tipo de Vehículo"
+              item-title="texto"
+              item-value="valor"
+              clearable
+              outlined
+              dense
+              :loading="metadataStore.loading"
+            />
+          </v-col>
+
+          <!-- Filtro de transmisión -->
+          <v-col
+            cols="12"
+            md="3"
+          >
+            <v-select
+              v-model="formData.transmision"
+              :items="metadataStore.tiposTransmision"
+              label="Transmisión"
+              item-title="texto"
+              item-value="valor"
+              clearable
+              outlined
+              dense
+              :loading="metadataStore.loading"
+            />
+          </v-col>
+        </v-row>
+
+        <v-row>
+          <!-- Filtro de rango de precio -->
+          <v-col
+            cols="12"
+            md="6"
+          >
+            <v-range-slider
+              v-model="formData.rangoPrecio"
+              :min="metadataStore.precioMinimo"
+              :max="metadataStore.precioMaximo"
+              :step="5000"
+              label="Rango de Precio"
+              thumb-label="always"
+              class="mt-4"
+            >
+              <template #prepend>
+                <v-text-field
+                  v-model="formData.rangoPrecio[0]"
+                  type="number"
                   outlined
                   dense
-                  required
-                  placeholder="Selecciona tu sucursal"
-                />
-              </v-col>
-
-              <v-col
-                cols="12"
-                md="4"
-              >
-                <label class="text-subtitle-2 font-weight-bold mb-2">Fecha de retiro</label>
-                <div class="d-flex">
-                  <v-text-field
-                    v-model="fechaRetiro"
-                    type="date"
-                    outlined
-                    dense
-                    class="mr-2 flex-grow-1"
-                  />
-                  <v-select
-                    v-model="horaRetiro"
-                    :items="horasDisponibles"
-                    outlined
-                    dense
-                    style="max-width: 120px"
-                  />
-                </div>
-              </v-col>
-
-              <v-col
-                cols="12"
-                md="4"
-              >
-                <label class="text-subtitle-2 font-weight-bold mb-2">Fecha de devolucion</label>
-                <div class="d-flex">
-                  <v-text-field
-                    v-model="fechaDevolucion"
-                    type="date"
-                    outlined
-                    dense
-                    class="mr-2 flex-grow-1"
-                  />
-                  <v-select
-                    v-model="horaDevolucion"
-                    :items="horasDisponibles"
-                    outlined
-                    dense
-                    style="max-width: 120px"
-                  />
-                </div>
-              </v-col>
-            </v-row>
-
-            <v-row class="mt-4">
-              <v-col
-                cols="12"
-                md="6"
-              >
-                <v-checkbox
-                  v-model="otraSucursal"
-                  label="Quiero devolver en otra sucursal"
-                  color="success"
                   hide-details
+                  prefix="$"
                 />
-              </v-col>
-            </v-row>
-          </v-card>
-          <div class="d-flex align-center">
+              </template>
+              <template #append>
+                <v-text-field
+                  v-model="formData.rangoPrecio[1]"
+                  type="number"
+                  outlined
+                  dense
+                  hide-details
+                  prefix="$"
+                />
+              </template>
+            </v-range-slider>
+          </v-col>
+
+          <!-- Ordenamiento -->
+          <v-col
+            cols="12"
+            md="3"
+          >
+            <v-select
+              v-model="formData.ordenarPor"
+              :items="metadataStore.opcionesOrdenamiento"
+              label="Ordenar por"
+              item-title="texto"
+              item-value="valor"
+              outlined
+              dense
+            />
+          </v-col>
+
+          <!-- Botón de búsqueda -->
+          <v-col
+            cols="12"
+            md="3"
+            class="d-flex align-center justify-end"
+          >
             <v-btn
               color="#be1784"
               x-large
-              height="64"
               min-width="150"
               class="text-h6 font-weight-bold elevation-6"
-              @click="modificarReserva"
+              :loading="loading"
+              @click="handleSubmit"
             >
               Buscar
             </v-btn>
-          </div>
-        </div>
+          </v-col>
+        </v-row>
       </v-card>
     </v-container>
   </v-form>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      sucursal: '',
-      fechaRetiro: '',
-      fechaDevolucion: '',
-      horaRetiro: '',
-      horaDevolucion: '',
-      otraSucursal: false,
-      sucursales: [
-        'Sucursal Iquique',
-        'Sucursal Santiago',
-        'Sucursal Antofagasta'
-      ],
-      horasDisponibles: [
-        '08:30', '09:00', '09:30', '10:00', '10:30',
-        '11:00', '11:30', '12:00', '12:30', '13:00',
-        '13:30', '14:00', '14:30', '15:00', '15:30',
-        '16:00', '16:30', '17:00', '17:30'
-      ]
-    };
-  },
-  methods: {
-    modificarReserva() {
-      alert(`Reserva modificada para la sucursal: ${this.sucursal},
-             Fecha de retiro: ${this.fechaRetiro} ${this.horaRetiro},
-             Fecha de devolucion: ${this.fechaDevolucion} ${this.horaDevolucion}`);
-    }
+<script setup>
+import {ref, reactive, onMounted} from 'vue';
+import {useMetadataStore} from '@/stores/metadata';
+import {useSucursalService} from '@/services/SucursalService';
+
+const emit = defineEmits(['submit']);
+const metadataStore = useMetadataStore();
+
+// Estado
+const loading = ref(false);
+const error = ref(null);
+const sucursales = ref([]);
+
+// Datos del formulario
+const formData = reactive({
+  marca: null,
+  sucursal: null,
+  tipoVehiculo: null,
+  transmision: null,
+  rangoPrecio: [metadataStore.precioMinimo, metadataStore.precioMaximo],
+  ordenarPor: metadataStore.opcionesOrdenamiento[0]
+});
+
+// Métodos
+const loadSucursales = async () => {
+  loading.value = true;
+  error.value = null;
+
+  try {
+    const sucursalService = useSucursalService();
+    sucursales.value = await sucursalService.listarSucursales();
+    console.log('Sucursales cargadas:', sucursales.value);
+  } catch (err) {
+    error.value = 'Error al cargar sucursales';
+    console.error('Error loading sucursales:', err);
+  } finally {
+    loading.value = false;
   }
 };
+
+const handleSubmit = () => {
+  const searchData = {
+    marca: formData.marca,
+    sucursal: formData.sucursal,
+    tipoVehiculo: formData.tipoVehiculo,
+    transmision: formData.transmision,
+    precioMinimo: Number(formData.rangoPrecio[0]),
+    precioMaximo: Number(formData.rangoPrecio[1]),
+    ordenarPor: formData.ordenarPor
+  };
+
+  console.log('Submitting search:', searchData);
+  emit('submit', searchData);
+};
+// Lifecycle hooks
+onMounted(async () => {
+  console.log('Buscador mounted');
+  await Promise.all([
+    loadSucursales(),
+    metadataStore.loadMetadata()
+  ]);
+  console.log('Metadata loaded:', {
+    marcas: metadataStore.marcasDisponibles,
+    tipos: metadataStore.tiposVehiculo,
+    transmisiones: metadataStore.tiposTransmision
+  });
+});
 </script>
 
 <style scoped>
-.v-text-field >>> .v-input__slot {
-  min-height: 40px !important;
+.v-card {
+  background-color: rgba(255, 255, 255, 0.9);
+}
+
+.v-btn {
+  text-transform: none;
 }
 </style>
-

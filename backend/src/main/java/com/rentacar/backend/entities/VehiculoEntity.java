@@ -46,7 +46,7 @@ public class VehiculoEntity {
     @Column(name = "precio_arriendo", nullable = false)
     private BigDecimal precioArriendo;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sucursal_id")
     @JsonBackReference(value = "sucursal-vehiculo")
     private SucursalEntity sucursal;

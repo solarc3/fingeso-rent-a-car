@@ -8,10 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
 public class VehiculoService {
@@ -83,7 +82,11 @@ public class VehiculoService {
      * @return Lista de todos los vehículos
      */
     public List<VehiculoEntity> obtenerVehiculos() {
-        return vehiculoRepository.findAll();
+        List<VehiculoEntity> vehiculos = vehiculoRepository.findAll();
+        // Opcionalmente, puedes filtrar los vehículos que no tienen sucursal
+        return vehiculos.stream()
+            .filter(v -> v.getSucursal() != null)
+            .collect(Collectors.toList());
     }
 
     public VehiculoEntity obtenerVehiculoPorId(Long id) {
@@ -208,5 +211,30 @@ public class VehiculoService {
         } else {
             vehiculoRepository.deleteById(vehiculoId);
         }
+    }
+
+    public List<String> obtenerMarcasUnicas() {
+        return vehiculoRepository.findDistinctMarcas();
+    }
+
+    public Map<String, String> obtenerTiposVehiculo() {
+        Map<String, String> tipos = new LinkedHashMap<>();
+        tipos.put("ECMR", "Sedán Económico");
+        tipos.put("ICMR", "Sedán Intermedio");
+        tipos.put("CFAR", "SUV Compacta");
+        tipos.put("IFAR", "SUV Mediana");
+        tipos.put("PFAR", "Camioneta");
+        tipos.put("XDAR", "Deportivo");
+        tipos.put("LDAR", "Lujo");
+        tipos.put("HDAR", "Híbrido/Eléctrico");
+        tipos.put("MVAR", "Minivan");
+        return tipos;
+    }
+
+    public Map<String, String> obtenerTiposTransmision() {
+        Map<String, String> tipos = new LinkedHashMap<>();
+        tipos.put("M", "Manual");
+        tipos.put("A", "Automática");
+        return tipos;
     }
 }

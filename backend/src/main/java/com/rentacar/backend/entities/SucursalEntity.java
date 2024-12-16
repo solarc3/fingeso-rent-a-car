@@ -2,14 +2,14 @@ package com.rentacar.backend.entities;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
 @Entity
 @Table(name = "sucursales")
+@Getter
+@Setter
 @Data
 @NoArgsConstructor
 @AllArgsConstructor

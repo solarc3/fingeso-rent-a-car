@@ -26,7 +26,7 @@ const routes = [
           },
           {
             path: 'vehiculos',
-            //component: () => import('@/pages/admin/VehicleManagement.vue')
+            component: () => import('@/pages/admin/VehicleManagement.vue')
           }
         ]
       },

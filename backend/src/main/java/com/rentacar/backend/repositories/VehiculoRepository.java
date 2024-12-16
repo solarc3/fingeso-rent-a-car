@@ -3,6 +3,7 @@ package com.rentacar.backend.repositories;
 import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.entities.SucursalEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
@@ -24,4 +25,6 @@ public interface VehiculoRepository extends JpaRepository<VehiculoEntity, Long> 
 
     List<VehiculoEntity> findByEstado(String estado);
 
+    @Query("SELECT DISTINCT v.marca FROM VehiculoEntity v ORDER BY v.marca")
+    List<String> findDistinctMarcas();
 }

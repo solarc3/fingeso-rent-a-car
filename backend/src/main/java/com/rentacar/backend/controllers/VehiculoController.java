@@ -42,7 +42,17 @@ public class VehiculoController {
 
     @GetMapping("/listing")
     public List<VehiculoEntity> obtenerVehiculos() {
-        return vehiculoService.obtenerVehiculos();
+        List<VehiculoEntity> vehiculos = vehiculoService.obtenerVehiculos();
+        vehiculos.forEach(v -> {
+            if (v.getSucursal() != null) {
+                v.getSucursal()
+                    .getId();
+                v.getSucursal()
+                    .getNombre();
+            }
+        });
+        return vehiculos;
+
     }
 
     @GetMapping("/listing/enSucursal")
