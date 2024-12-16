@@ -164,7 +164,7 @@ public class VehiculoService {
      * @return Lista de vehículos en ese estado
      */
     public List<VehiculoEntity> obtenerVehiculosPorEstado(String estado) {
-        List<VehiculoEntity> v = vehiculoRepository.findByEstado(estado);
+        List<VehiculoEntity> v = vehiculoRepository.findByEstado(VehiculoEntity.EstadoVehiculo.valueOf(estado));
         if (v.isEmpty()) throw new RuntimeException("No se encontraron vehiculos en ese estado");
         return v;
     }

@@ -53,6 +53,11 @@ const routes = [
         //component: () => import('@/pages/MyReservations.vue')
       }
     ]
+  },
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: () => import('@/pages/NotFound.vue')
   }
 ]
 
