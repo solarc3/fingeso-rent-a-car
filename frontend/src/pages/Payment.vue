@@ -194,14 +194,16 @@
 import {ref, computed, onMounted} from 'vue';
 import {useRouter} from 'vue-router';
 import {useSucursalService} from '@/services/SucursalService';
-import {useAuthStore} from '@/stores/auth';
 import {useVehiculoService} from "@/services/VehiculoService.js";
-
 import {useVehicleStore} from '@/stores/vehicle';
+import {useReservationStore} from '@/stores/reservation';
+import {useAuthStore} from '@/stores/auth';
 
+const reservationStore = useReservationStore();
+const authStore = useAuthStore();
 const vehicleStore = useVehicleStore();
 const router = useRouter();
-const authStore = useAuthStore();
+
 
 // Estado
 const loading = ref(true);
@@ -265,38 +267,6 @@ const calcularTotal = () => {
 
 const cancelarReserva = () => {
   router.push('/');
-};
-
-const confirmarReserva = async () => {
-  if (!authStore.isAuthenticated) {
-    snackbar.value = {
-      show: true,
-      color: 'warning',
-      text: 'Debe iniciar sesión para realizar una reserva'
-    };
-    return;
-  }
-
-  procesando.value = true;
-  try {
-    // Aquí iría la lógica para crear la reserva
-    snackbar.value = {
-      show: true,
-      color: 'success',
-      text: 'Reserva confirmada exitosamente'
-    };
-    setTimeout(() => {
-      router.push('/mis-reservas');
-    }, 1500);
-  } catch (error) {
-    snackbar.value = {
-      show: true,
-      color: 'error',
-      text: 'Error al procesar la reserva'
-    };
-  } finally {
-    procesando.value = false;
-  }
 };
 
 // Lifecycle hooks
@@ -438,4 +408,46 @@ const loadData = async () => {
 onMounted(() => {
   loadData();
 });
+const confirmarReserva = async () => {
+  if (!authStore.isAuthenticated) {
+    snackbar.value = {
+      show: true,
+      color: 'warning',
+      text: 'Debe iniciar sesión para realizar una reserva'
+    };
+    return;
+  }
+
+  procesando.value = true;
+  try {
+    const reservaData = {
+      fechaInicio: new Date(fechaInicio.value).toISOString(),
+      fechaFin: new Date(fechaFin.value).toISOString(),
+      costo: totalArriendo.value,
+      usuarioId: authStore.user.id,
+      vehiculoId: props.vehiculoId,
+      sucursalId: props.sucursalId
+    };
+
+    await reservationStore.createReservation(reservaData);
+
+    snackbar.value = {
+      show: true,
+      color: 'success',
+      text: 'Reserva confirmada exitosamente'
+    };
+
+    setTimeout(() => {
+      router.push('/mis-reservas');
+    }, 1500);
+  } catch (error) {
+    snackbar.value = {
+      show: true,
+      color: 'error',
+      text: 'Error al procesar la reserva: ' + error.message
+    };
+  } finally {
+    procesando.value = false;
+  }
+};
 </script>

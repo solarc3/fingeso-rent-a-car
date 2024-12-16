@@ -46,6 +46,10 @@ const routes = [
           {
             path: 'vehiculos',
             component: () => import('@/pages/admin/VehicleManagement.vue')
+          },
+          {
+            path: 'financial',
+            //component: () => import('@/pages/admin/FinancialDashboard.vue')
           }
         ]
       },
@@ -69,7 +73,7 @@ const routes = [
       {
         path: 'mis-reservas',
         meta: {requiresAuth: true},
-        //component: () => import('@/pages/MyReservations.vue')
+        component: () => import('@/pages/MyReservations.vue')
       }
     ]
   },

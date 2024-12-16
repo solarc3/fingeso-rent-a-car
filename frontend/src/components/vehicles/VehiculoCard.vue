@@ -15,10 +15,10 @@
     <v-card-title class="d-flex justify-space-between align-center">
       <span>{{ vehiculo.marca }} {{ vehiculo.modelo }}</span>
       <v-chip
-        :color="getStatusColor(vehiculo.estado)"
+        :color="vehicleStore.getStatusColor(vehiculo.estado)"
         size="small"
       >
-        {{ vehiculo.estado }}
+        {{ vehicleStore.getStatusText(vehiculo.estado) }}
       </v-chip>
     </v-card-title>
 
@@ -102,7 +102,7 @@
   </v-card>
 </template>
 <script setup>
-import {useVehicleStore} from '@/stores/vehicle';
+import {useVehicleStore} from '@/stores/vehicle'
 
 const vehicleStore = useVehicleStore();
 
@@ -123,15 +123,6 @@ const seleccionarVehiculo = () => {
   emit('seleccionar', props.vehiculo);
 };
 
-const getStatusColor = (estado) => {
-  const colors = {
-    'DISPONIBLE': 'success',
-    'NO_DISPONIBLE': 'error',
-    'EN_MANTENCION': 'warning',
-    'EN_REPARACION': 'orange'
-  };
-  return colors[estado] || 'grey';
-};
 
 const formatPrice = (price) => {
   return new Intl.NumberFormat('es-CL').format(price);

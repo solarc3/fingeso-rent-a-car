@@ -2,8 +2,6 @@ import axiosInstance from "@/services/axiosConfig.js";
 
 export const useReservaService = () => {
   const crearReserva = async (reserva) => {
-    // POST /api/reserva/crear
-    // @RequestBody ReservaEntity reserva
     try {
       const {data} = await axiosInstance.post('/api/reserva/crear', {
         fechaInicio: reserva.fechaInicio,
@@ -19,11 +17,17 @@ export const useReservaService = () => {
           id: reserva.sucursalId
         }
       });
-      return data;
+
+      // Asegurarse de que los datos devueltos tengan la estructura correcta
+      return {
+        ...data,
+        fechaInicio: new Date(data.fechaInicio),
+        fechaFin: new Date(data.fechaFin)
+      };
     } catch (error) {
-      throw error.response.data;
+      throw new Error(error.response?.data || 'Error al crear la reserva');
     }
-  };
+  }
 
   const obtenerReservas = async () => {
     // GET /api/reserva/obtener
@@ -35,12 +39,10 @@ export const useReservaService = () => {
     }
   };
 
-  const obtenerReservasPorUsuario = async (id) => {
-    // GET /api/reserva/obtener/porUsuario
-    // @RequestParam Long id
+  const obtenerReservasPorUsuario = async (userId) => {
     try {
       const {data} = await axiosInstance.get('/api/reserva/obtener/porUsuario', {
-        params: {id}
+        params: {id: userId}
       });
       return data;
     } catch (error) {
@@ -49,9 +51,6 @@ export const useReservaService = () => {
   };
 
   const actualizarEstado = async (id, estado) => {
-    // PUT /api/reserva/{id}/estado
-    // @PathVariable Long id
-    // @RequestBody EstadoReserva estado
     try {
       const {data} = await axiosInstance.put(`/api/reserva/${id}/estado`, estado);
       return data;

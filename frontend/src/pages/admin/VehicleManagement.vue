@@ -91,6 +91,13 @@
         <!-- Acciones -->
         <template #[`item.actions`]="{ item }">
           <v-btn
+            icon="mdi-information"
+            size="small"
+            class="mr-2"
+            color="info"
+            @click="openDetailsDialog(item)"
+          />
+          <v-btn
             v-if="canEdit(item)"
             icon="mdi-pencil"
             size="small"
@@ -312,18 +319,137 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
+    <v-dialog
+      v-model="dialogs.details"
+      max-width="900"
+      persistent
+    >
+      <v-card v-if="selectedVehicle">
+        <v-card-title class="d-flex justify-space-between align-center">
+          <span>{{ selectedVehicle.marca }} {{ selectedVehicle.modelo }} - {{ selectedVehicle.patente }}</span>
+          <v-btn
+            icon="mdi-close"
+            size="small"
+            @click="closeDetailsDialog"
+          />
+        </v-card-title>
+
+        <v-card-text>
+          <v-tabs v-model="activeTab">
+            <v-tab value="info">
+              Información
+            </v-tab>
+            <v-tab value="history">
+              Historial
+            </v-tab>
+            <v-tab value="maintenance">
+              Mantenimiento
+            </v-tab>
+          </v-tabs>
+
+          <v-window v-model="activeTab">
+            <!-- Tab de Información -->
+            <v-window-item value="info">
+              <v-card flat>
+                <v-card-text>
+                  <v-list>
+                    <v-list-item>
+                      <v-list-item-title class="font-weight-bold">
+                        Marca
+                      </v-list-item-title>
+                      <v-list-item-subtitle>{{ selectedVehicle.marca }}</v-list-item-subtitle>
+                    </v-list-item>
+
+                    <v-list-item>
+                      <v-list-item-title class="font-weight-bold">
+                        Modelo
+                      </v-list-item-title>
+                      <v-list-item-subtitle>{{ selectedVehicle.modelo }}</v-list-item-subtitle>
+                    </v-list-item>
+
+                    <v-list-item>
+                      <v-list-item-title class="font-weight-bold">
+                        Patente
+                      </v-list-item-title>
+                      <v-list-item-subtitle>{{ selectedVehicle.patente }}</v-list-item-subtitle>
+                    </v-list-item>
+
+                    <v-list-item>
+                      <v-list-item-title class="font-weight-bold">
+                        Año
+                      </v-list-item-title>
+                      <v-list-item-subtitle>{{ selectedVehicle.anio }}</v-list-item-subtitle>
+                    </v-list-item>
+
+                    <v-list-item>
+                      <v-list-item-title class="font-weight-bold">
+                        Precio de Arriendo
+                      </v-list-item-title>
+                      <v-list-item-subtitle>
+                        ${{
+                          selectedVehicle.precioArriendo.toLocaleString()
+                        }}
+                      </v-list-item-subtitle>
+                    </v-list-item>
+
+                    <v-list-item>
+                      <v-list-item-title class="font-weight-bold">
+                        Sucursal
+                      </v-list-item-title>
+                      <v-list-item-subtitle>{{ vehicleStore.getSucursalName(selectedVehicle) }}</v-list-item-subtitle>
+                    </v-list-item>
+
+                    <v-list-item>
+                      <v-list-item-title class="font-weight-bold">
+                        Estado
+                      </v-list-item-title>
+                      <v-list-item-subtitle>
+                        <v-chip
+                          :color="getStatusColor(selectedVehicle.estado)"
+                          size="small"
+                        >
+                          {{ getStatusText(selectedVehicle.estado) }}
+                        </v-chip>
+                      </v-list-item-subtitle>
+                    </v-list-item>
+                  </v-list>
+                </v-card-text>
+              </v-card>
+            </v-window-item>
+
+            <!-- Tab de Historial -->
+            <v-window-item value="history">
+              <VehicleHistory
+                :vehiculo-id="selectedVehicle.id"
+                :should-refresh="historyRefreshTrigger"
+              />
+            </v-window-item>
+
+            <!-- Tab de Mantenimiento -->
+            <v-window-item value="maintenance">
+              <MaintenanceSchedule
+                :vehiculo-id="selectedVehicle.id"
+                :active-tab="activeTab"
+                @refresh-history="refreshHistory"
+              />
+            </v-window-item>
+          </v-window>
+        </v-card-text>
+      </v-card>
+    </v-dialog>
   </v-container>
+
+  
   <v-snackbar
     v-model="snackbar.show"
     :color="snackbar.color"
-    :timeout="3000"
+    :timeout="6000"
   >
     {{ snackbar.text }}
-
     <template #actions>
       <v-btn
         color="white"
-        text
+        variant="text"
         @click="snackbar.show = false"
       >
         Cerrar
@@ -337,25 +463,39 @@ import {ref, computed, onMounted} from 'vue'
 import {useVehicleStore} from '@/stores/vehicle'
 import {useAuthStore} from '@/stores/auth'
 import {useSucursalService} from '@/services/SucursalService'
-
+import VehicleHistory from '@/components/vehicles/VehicleHistory.vue'
+import MaintenanceSchedule from '@/components/vehicles/MaintenceSchedule.vue'
 // Stores
 const vehicleStore = useVehicleStore()
 const authStore = useAuthStore()
 
 // Estado
+
 const loading = ref(false)
 const saving = ref(false)
 const formValid = ref(false)
 const reportValid = ref(false)
 const vehicleForm = ref(null)
 const reportForm = ref(null)
+const historyRefreshTrigger = ref(false);
 
+const refreshHistory = () => {
+  historyRefreshTrigger.value = !historyRefreshTrigger.value;
+};
 // Estado para sucursales
 const sucursales = ref([])
 const sucursalLoading = ref(false)
 const sucursalError = ref(null)
 
 // Datos de formularios
+const activeTab = ref('info')
+const dialogs = ref({
+  vehicle: false,
+  report: false,
+  delete: false,
+  details: false
+})
+
 const vehicleData = ref({
   marca: '',
   modelo: '',
@@ -370,14 +510,16 @@ const reportData = ref({
   tipoFalla: '',
   severidad: ''
 })
-
-// Control de diálogos
-const dialogs = ref({
-  vehicle: false,
-  report: false,
-  delete: false
-})
-
+const openDetailsDialog = (vehicle) => {
+  selectedVehicle.value = vehicle
+  activeTab.value = 'info'
+  dialogs.value.details = true
+}
+const closeDetailsDialog = () => {
+  dialogs.value.details = false
+  selectedVehicle.value = null
+  activeTab.value = 'info'
+}
 // Estado de edición
 const isEditing = ref(false)
 const selectedVehicle = ref(null)
@@ -466,16 +608,16 @@ const loadSucursales = async () => {
 const filteredVehicles = computed(() => {
   return vehicleStore.vehicles.filter(vehicle => {
     const vehicleSucursalId = typeof vehicle.sucursal === 'number'
-      ? vehicle.sucursal
-      : vehicle.sucursal?.id;
+        ? vehicle.sucursal
+        : vehicle.sucursal?.id;
 
     if (filters.value.sucursal && vehicleSucursalId !== filters.value.sucursal) return false;
     if (filters.value.estado && vehicle.estado !== filters.value.estado) return false;
     if (filters.value.search) {
       const search = filters.value.search.toLowerCase();
       return vehicle.patente.toLowerCase().includes(search) ||
-        vehicle.marca.toLowerCase().includes(search) ||
-        vehicle.modelo.toLowerCase().includes(search);
+          vehicle.marca.toLowerCase().includes(search) ||
+          vehicle.modelo.toLowerCase().includes(search);
     }
     return true;
   });
@@ -548,16 +690,29 @@ const confirmDelete = (vehicle) => {
 }
 
 const deleteVehicle = async () => {
-  saving.value = true
+  saving.value = true;
   try {
-    await vehicleStore.deleteVehicle(selectedVehicle.value.id)
-    dialogs.value.delete = false
-    selectedVehicle.value = null
-    await loadData()
+    await vehicleStore.deleteVehicle(selectedVehicle.value.id);
+    dialogs.value.delete = false;
+    selectedVehicle.value = null;
+    snackbar.value = {
+      show: true,
+      color: 'success',
+      text: 'Vehículo eliminado correctamente'
+    };
+    await loadData();
+  } catch (error) {
+    snackbar.value = {
+      show: true,
+      color: 'error',
+      text: error.message || 'Error al eliminar el vehículo'
+    };
+    // Cerrar el diálogo de confirmación
+    dialogs.value.delete = false;
   } finally {
-    saving.value = false
+    saving.value = false;
   }
-}
+};
 
 // Helpers
 const getStatusColor = (status) => {
@@ -580,7 +735,7 @@ const canEdit = () => {
 
 const canReport = (vehicle) => {
   return vehicle.estado === 'DISPONIBLE' &&
-    (authStore.isAdmin || authStore.isWorker)
+      (authStore.isAdmin || authStore.isWorker)
 }
 
 const canDelete = (vehicle) => {
@@ -594,8 +749,8 @@ const openVehicleDialog = (vehicle = null) => {
 
     // Obtener el ID de la sucursal de manera segura
     const sucursalId = typeof vehicle.sucursal === 'number'
-      ? vehicle.sucursal
-      : vehicle.sucursal?.id || null;
+        ? vehicle.sucursal
+        : vehicle.sucursal?.id || null;
 
     // Asignar todos los datos incluyendo la sucursal
     vehicleData.value = {
@@ -608,11 +763,6 @@ const openVehicleDialog = (vehicle = null) => {
       sucursalId: sucursalId
     };
 
-    console.log('Opening dialog with vehicle:', {
-      vehicle,
-      extractedSucursalId: sucursalId,
-      vehicleData: vehicleData.value
-    });
   } else {
     isEditing.value = false;
     selectedVehicle.value = null;
@@ -641,34 +791,43 @@ const saveVehicle = async () => {
     modelo: vehicleData.value.modelo,
     patente: vehicleData.value.patente,
     precioArriendo: Number(vehicleData.value.precioArriendo),
-    anio: new Date().getFullYear(), // o un campo del formulario
     sucursal: Number(vehicleData.value.sucursalId),
     estado: vehicleData.value.estado || 'DISPONIBLE'
   };
 
-  console.log('Datos a enviar:', vehiculoData);
+  if (isEditing.value) {
+    vehiculoData.id = selectedVehicle.value.id;
+  }
 
   saving.value = true;
   try {
-    await vehicleStore.createVehicle(vehiculoData);
-    snackbar.value = {
-      show: true,
-      color: 'success',
-      text: 'Vehículo creado correctamente'
-    };
+    if (isEditing.value) {
+      await vehicleStore.updateVehicle(vehiculoData);
+      snackbar.value = {
+        show: true,
+        color: 'success',
+        text: 'Vehículo actualizado correctamente'
+      };
+    } else {
+      await vehicleStore.createVehicle(vehiculoData);
+      snackbar.value = {
+        show: true,
+        color: 'success',
+        text: 'Vehículo creado correctamente'
+      };
+    }
     closeVehicleDialog();
     await loadData();
   } catch (error) {
     snackbar.value = {
       show: true,
       color: 'error',
-      text: `Error al crear el vehículo: ${error.message}`
+      text: `Error: ${error.message}`
     };
   } finally {
     saving.value = false;
   }
 };
-
 </script>
 <style scoped>
 .header-row {
@@ -748,5 +907,24 @@ const saveVehicle = async () => {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+.v-window {
+  margin-top: 20px;
+}
+
+.v-list-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+}
+
+.v-list-item-title {
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.v-window-item {
+  padding: 20px;
 }
 </style>

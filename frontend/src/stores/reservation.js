@@ -1,0 +1,62 @@
+import {defineStore} from 'pinia';
+import {useReservaService} from '@/services/ReservaService';
+
+export const useReservationStore = defineStore('reservation', {
+  state: () => ({
+    reservations: [],
+    loading: false,
+    error: null
+  }),
+
+  actions: {
+    async fetchUserReservations(userId) {
+      this.loading = true;
+      try {
+        const reservaService = useReservaService();
+        const reservations = await reservaService.obtenerReservasPorUsuario(userId);
+        this.reservations = reservations;
+        return reservations;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async createReservation(reservationData) {
+      this.loading = true;
+      try {
+        const reservaService = useReservaService();
+        const newReservation = await reservaService.crearReserva(reservationData);
+        this.reservations.push(newReservation);
+        return newReservation;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
+    async updateReservationStatus(reservationId, newStatus) {
+      this.loading = true;
+      try {
+        const reservaService = useReservaService();
+        const updatedReservation = await reservaService.actualizarEstado(reservationId, newStatus);
+
+        // Actualizar la reserva en el estado local
+        const index = this.reservations.findIndex(r => r.id === reservationId);
+        if (index !== -1) {
+          this.reservations[index] = updatedReservation;
+        }
+
+        return updatedReservation;
+      } catch (error) {
+        this.error = error.message;
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    }
+  }
+});
