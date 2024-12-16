@@ -6,6 +6,7 @@ import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.entities.SucursalEntity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -42,4 +43,14 @@ public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
     // Buscar todas las reservas de una sucursal
     List<ReservaEntity> findBySucursal(SucursalEntity sucursal);
 
+    @Query("SELECT r FROM ReservaEntity r WHERE r.vehiculo.id = :vehiculoId " +
+            "AND ((r.fechaInicio BETWEEN :fechaInicio AND :fechaFin) OR " +
+            "(r.fechaFin BETWEEN :fechaInicio AND :fechaFin))")
+    List<ReservaEntity> findByVehiculoAndFechasSuperpuestas(
+            Long vehiculoId,
+            LocalDateTime fechaInicio,
+            LocalDateTime fechaFin
+    );
+
+    List<ReservaEntity> findByVehiculoAndEstado(VehiculoEntity vehiculo, ReservaEntity.EstadoReserva estado);
 }

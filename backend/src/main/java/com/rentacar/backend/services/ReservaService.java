@@ -4,18 +4,18 @@ import com.rentacar.backend.entities.ReservaEntity;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
+import com.rentacar.backend.entities.VehiculoEntity.EstadoVehiculo;
 import com.rentacar.backend.repositories.ReservaRepository;
 import com.rentacar.backend.repositories.SucursalRepository;
 import com.rentacar.backend.repositories.UsuarioRepository;
 import com.rentacar.backend.repositories.VehiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.Period;
 import java.util.NoSuchElementException;
 import java.util.Optional;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -70,26 +70,36 @@ public class ReservaService {
         return reservaRepository.save(r);
     }
 
+    @Transactional
     public ReservaEntity crearReserva(LocalDateTime fechaInicio, LocalDateTime fechaFin,
                                       BigDecimal costo, Long usuarioID, Long vehiculoID,
                                       Long sucursalID) {
+        // Verificar disponibilidad
+        if (!verificarDisponibilidad(vehiculoID, fechaInicio, fechaFin)) {
+            throw new RuntimeException("Vehículo no disponible en las fechas seleccionadas");
+        }
+
+        // Crear reserva
         ReservaEntity reserva = new ReservaEntity();
         reserva.setFechaInicio(fechaInicio);
         reserva.setFechaFin(fechaFin);
         reserva.setCosto(costo);
         reserva.setEstado(ReservaEntity.EstadoReserva.PENDIENTE); // Usar el enum
-        reserva.setUsuario(usuarioRepository.findById(usuarioID)
-                               .orElseThrow());
-        reserva.setVehiculo(vehiculoRepository.findById(vehiculoID)
-                                .orElseThrow());
-        reserva.setSucursal(sucursalRepository.findById(sucursalID)
-                                .orElseThrow());
+        reserva.setUsuario(usuarioRepository.findById(usuarioID).orElseThrow());
+        reserva.setVehiculo(vehiculoRepository.findById(vehiculoID).orElseThrow());
+        reserva.setSucursal(sucursalRepository.findById(sucursalID).orElseThrow());
+
+        // Actualizar estado del vehículo
+        VehiculoEntity vehiculo = reserva.getVehiculo();
+        vehiculo.setEstado(EstadoVehiculo.ARRENDADO);
+        vehiculoRepository.save(vehiculo);
+
         return reservaRepository.save(reserva);
     }
 
     public ReservaEntity actualizarEstado(Long reservaId, ReservaEntity.EstadoReserva nuevoEstado) {
         ReservaEntity reserva = reservaRepository.findById(reservaId)
-            .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
         reserva.setEstado(nuevoEstado);
         return reservaRepository.save(reserva);
     }
@@ -98,4 +108,11 @@ public class ReservaService {
         return reservaRepository.findByEstado(estado);
     }
 
+    // Método para verificar disponibilidad
+    public boolean verificarDisponibilidad(Long vehiculoId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
+        List<ReservaEntity> reservasExistentes = reservaRepository.findByVehiculoAndFechasSuperpuestas(
+                vehiculoId, fechaInicio, fechaFin
+        );
+        return reservasExistentes.isEmpty();
+    }
 }

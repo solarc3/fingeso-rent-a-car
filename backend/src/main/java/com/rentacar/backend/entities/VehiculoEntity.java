@@ -21,7 +21,8 @@ public class VehiculoEntity {
         DISPONIBLE,
         NO_DISPONIBLE,
         EN_MANTENCION,
-        EN_REPARACION
+        EN_REPARACION,
+        ARRENDADO
     }
 
     @Id

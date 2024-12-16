@@ -98,7 +98,7 @@
                     <v-row>
                       <v-col cols="6">
                         <v-text-field
-                          v-model="fechaInicio"
+                          v-model="selectedDates.start"
                           label="Fecha de inicio"
                           type="date"
                           :min="minDate"
@@ -108,10 +108,10 @@
                       </v-col>
                       <v-col cols="6">
                         <v-text-field
-                          v-model="fechaFin"
+                          v-model="selectedDates.end"
                           label="Fecha de término"
                           type="date"
-                          :min="fechaInicio || minDate"
+                          :min="selectedDates.start || minDate"
                           :rules="dateRules"
                           @update:model-value="calcularTotal"
                         />
@@ -191,27 +191,29 @@
 </template>
 
 <script setup>
-import {ref, computed, onMounted} from 'vue';
-import {useRouter} from 'vue-router';
-import {useSucursalService} from '@/services/SucursalService';
-import {useVehiculoService} from "@/services/VehiculoService.js";
-import {useVehicleStore} from '@/stores/vehicle';
-import {useReservationStore} from '@/stores/reservation';
-import {useAuthStore} from '@/stores/auth';
+import { ref, computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
+import { useSucursalService } from '@/services/SucursalService';
+import { useVehiculoService } from "@/services/VehiculoService.js";
+import { useVehicleStore } from '@/stores/vehicle';
+import { useReservationStore } from '@/stores/reservation';
+import { useAuthStore } from '@/stores/auth';
 
 const reservationStore = useReservationStore();
 const authStore = useAuthStore();
 const vehicleStore = useVehicleStore();
 const router = useRouter();
 
-
 // Estado
 const loading = ref(true);
 const procesando = ref(false);
-const fechaInicio = ref('');
-const fechaFin = ref('');
 const vehiculo = ref(null);
 const sucursal = ref(null);
+
+const selectedDates = ref({
+  start: '',
+  end: ''
+});
 
 const snackbar = ref({
   show: false,
@@ -226,9 +228,9 @@ const minDate = computed(() => {
 });
 
 const diasArriendo = computed(() => {
-  if (!fechaInicio.value || !fechaFin.value) return 0;
-  const inicio = new Date(fechaInicio.value);
-  const fin = new Date(fechaFin.value);
+  if (!selectedDates.value.start || !selectedDates.value.end) return 0;
+  const inicio = new Date(selectedDates.value.start);
+  const fin = new Date(selectedDates.value.end);
   return Math.ceil((fin - inicio) / (1000 * 60 * 60 * 24));
 });
 
@@ -241,7 +243,7 @@ const mostrarTotal = computed(() => {
 });
 
 const isFormValid = computed(() => {
-  return fechaInicio.value && fechaFin.value && diasArriendo.value > 0;
+  return selectedDates.value.start && selectedDates.value.end && diasArriendo.value > 0;
 });
 
 // Reglas de validación
@@ -254,13 +256,41 @@ const dateRules = [
   }
 ];
 
+// Function to check if dates overlap
+const hasDateOverlap = (start1, end1, start2, end2) => {
+  return (start1 < end2) && (start2 < end1);
+};
+
+// Function to check if a vehicle is available in the selected date range
+const isVehicleAvailable = (vehicle, start, end) => {
+  return !vehicle.reservas?.some(reserva => {
+    return hasDateOverlap(
+      reserva.fechaInicio,
+      reserva.fechaFin,
+      start,
+      end
+    );
+  });
+};
+
+// Computed property to filter vehicles based on availability and other criteria
+computed(() => {
+  return vehicleStore.vehicles.value.filter(vehicle => {
+    // Verificar disponibilidad en fechas seleccionadas
+    if (selectedDates.value) {
+      const {start, end} = selectedDates.value;
+      if (!isVehicleAvailable(vehicle, start, end)) return false;
+    }
+    return true;
+  });
+});
 // Métodos
 const calcularTotal = () => {
-  if (fechaInicio.value && fechaFin.value) {
-    const inicio = new Date(fechaInicio.value);
-    const fin = new Date(fechaFin.value);
+  if (selectedDates.value.start && selectedDates.value.end) {
+    const inicio = new Date(selectedDates.value.start);
+    const fin = new Date(selectedDates.value.end);
     if (fin < inicio) {
-      fechaFin.value = fechaInicio.value;
+      selectedDates.value.end = selectedDates.value.start;
     }
   }
 };
@@ -270,43 +300,45 @@ const cancelarReserva = () => {
 };
 
 // Lifecycle hooks
-onMounted(async () => {
-  try {
-    if (!props.vehiculoId || !props.sucursalId) {
-      throw new Error('Faltan parámetros requeridos');
+onMounted(async () =>
+  {
+    try {
+      if (!props.vehiculoId || !props.sucursalId) {
+        throw new Error('Faltan parámetros requeridos');
+      }
+
+      useVehiculoService();
+      const sucursalService = useSucursalService();
+
+      const [vehiculoData, sucursalData] = await Promise.all([
+        vehicleStore.getVehicleById(Number(props.vehiculoId)),
+        sucursalService.obtenerSucursalPorId(Number(props.sucursalId))
+      ]);
+
+      if (!vehiculoData) {
+        throw new Error('No se encontró el vehículo');
+      }
+
+      if (!sucursalData) {
+        throw new Error('No se encontró la sucursal');
+      }
+
+      vehiculo.value = vehiculoData;
+      sucursal.value = sucursalData;
+
+    } catch (error) {
+      console.error('Error cargando datos:', error);
+      snackbar.value = {
+        show: true,
+        color: 'error',
+        text: 'Error al cargar los datos: ' + (error.message || 'Error desconocido')
+      };
+      setTimeout(() => router.push('/'), 3000);
+    } finally {
+      loading.value = false;
     }
-
-    const vehiculoService = useVehiculoService();
-    const sucursalService = useSucursalService();
-
-    const [vehiculoData, sucursalData] = await Promise.all([
-      vehicleStore.getVehicleById(Number(props.vehiculoId)),
-      sucursalService.obtenerSucursalPorId(Number(props.sucursalId))
-    ]);
-
-    if (!vehiculoData) {
-      throw new Error('No se encontró el vehículo');
-    }
-
-    if (!sucursalData) {
-      throw new Error('No se encontró la sucursal');
-    }
-
-    vehiculo.value = vehiculoData;
-    sucursal.value = sucursalData;
-
-  } catch (error) {
-    console.error('Error cargando datos:', error);
-    snackbar.value = {
-      show: true,
-      color: 'error',
-      text: 'Error al cargar los datos: ' + (error.message || 'Error desconocido')
-    };
-    setTimeout(() => router.push('/'), 3000);
-  } finally {
-    loading.value = false;
   }
-});
+);
 const props = defineProps({
   vehiculoId: {
     type: [String, Number],
@@ -324,38 +356,6 @@ const props = defineProps({
   }
 });
 
-// Modificar el onMounted para mejor manejo de errores
-onMounted(async () => {
-  try {
-    const vehiculoService = useVehiculoService();
-    const sucursalService = useSucursalService();
-
-    // Cargar datos en paralelo
-    const [vehiculoData, sucursalData] = await Promise.all([
-      vehicleStore.getVehicleById(Number(props.vehiculoId)),
-      sucursalService.obtenerSucursalPorId(Number(props.sucursalId))
-    ]);
-
-    vehiculo.value = vehiculoData;
-    sucursal.value = sucursalData;
-
-    if (!vehiculo.value || !sucursal.value) {
-      throw new Error('No se encontraron los datos del vehículo o sucursal');
-    }
-
-  } catch (error) {
-    console.error('Error cargando datos:', error);
-    snackbar.value = {
-      show: true,
-      color: 'error',
-      text: 'Error al cargar los datos: ' + (error.message || 'Error desconocido')
-    };
-    // Opcional: Redirigir al home después de un error
-    setTimeout(() => router.push('/'), 3000);
-  } finally {
-    loading.value = false;
-  }
-});
 const loadData = async () => {
   try {
     loading.value = true;
@@ -421,8 +421,8 @@ const confirmarReserva = async () => {
   procesando.value = true;
   try {
     const reservaData = {
-      fechaInicio: new Date(fechaInicio.value).toISOString(),
-      fechaFin: new Date(fechaFin.value).toISOString(),
+      fechaInicio: new Date(selectedDates.value.start).toISOString(),
+      fechaFin: new Date(selectedDates.value.end).toISOString(),
       costo: totalArriendo.value,
       usuarioId: authStore.user.id,
       vehiculoId: props.vehiculoId,

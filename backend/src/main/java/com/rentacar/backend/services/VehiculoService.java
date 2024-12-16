@@ -23,13 +23,13 @@ public class VehiculoService {
 
     @Autowired
     public VehiculoService(
-        VehiculoRepository vehiculoRepository,
-        ReservaRepository reservaRepository,
-        SucursalRepository sucursalRepository,
-        UsuarioRepository usuarioRepository,
-        FallaVehiculoRepository fallaRepository,
-        HistorialVehiculoRepository historialRepository
-                          ) {
+            VehiculoRepository vehiculoRepository,
+            ReservaRepository reservaRepository,
+            SucursalRepository sucursalRepository,
+            UsuarioRepository usuarioRepository,
+            FallaVehiculoRepository fallaRepository,
+            HistorialVehiculoRepository historialRepository
+    ) {
         this.vehiculoRepository = vehiculoRepository;
         this.reservaRepository = reservaRepository;
         this.sucursalRepository = sucursalRepository;
@@ -61,7 +61,7 @@ public class VehiculoService {
 
         // Buscar la sucursal
         SucursalEntity sucursal = sucursalRepository.findById(sucursalId)
-            .orElseThrow(() -> new IllegalArgumentException("Sucursal no encontrada"));
+                .orElseThrow(() -> new IllegalArgumentException("Sucursal no encontrada"));
 
         VehiculoEntity vehiculo = new VehiculoEntity();
         vehiculo.setMarca(marca);
@@ -86,13 +86,13 @@ public class VehiculoService {
     boolean validarAcriss(String acriss) {
         // Corroborar con tabla ACRISS
         final String ACRISS_REGEX =
-            "^[MNEHCDIJRSFGPULWOX]" +       // Categoría / tamaño
-            "[BCDWVLSTFJXPQZEMRHYNKG]" +    // Tipo / carrocería
-            "[MNCABD]" +                    // Transmisión / manual, automática
-            "[RNDQHIECMLSABFVZUX]$";        // Combustible / Aire Acondicionado
+                "^[MNEHCDIJRSFGPULWOX]" +       // Categoría / tamaño
+                        "[BCDWVLSTFJXPQZEMRHYNKG]" +    // Tipo / carrocería
+                        "[MNCABD]" +                    // Transmisión / manual, automática
+                        "[RNDQHIECMLSABFVZUX]$";        // Combustible / Aire Acondicionado
         Pattern patternAcriss = Pattern.compile(ACRISS_REGEX);
         return patternAcriss.matcher(acriss.toUpperCase())
-            .matches();
+                .matches();
     }
 
     /**
@@ -100,7 +100,6 @@ public class VehiculoService {
      *
      * @return Lista de todos los vehículos
      */
-
     public List<VehiculoEntity> obtenerVehiculos() {
         return vehiculoRepository.findAllWithSucursales();
     }
@@ -194,9 +193,33 @@ public class VehiculoService {
      */
     public VehiculoEntity actualizarEstadoVehiculoPorId(Long vehiculoId, String estado) {
         VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
-            .orElseThrow();
+                .orElseThrow();
         vehiculo.setEstado(VehiculoEntity.EstadoVehiculo.valueOf(estado));
         return vehiculoRepository.save(vehiculo);
+    }
+
+    /**
+     * Permite actualizar el estado de un vehículo dado su ID y validar que no tenga reservas activas
+     * @param id ID del vehículo a actualizar
+     * @param nuevoEstado Estado nuevo del vehículo
+     */
+    public void actualizarEstado(Long id, VehiculoEntity.EstadoVehiculo nuevoEstado) {
+        VehiculoEntity vehiculo = vehiculoRepository.findById(id)
+                .orElseThrow();
+
+        // Validar que no tenga reservas activas
+        if (tieneReservasActivas(vehiculo)) {
+            throw new RuntimeException("No se puede cambiar el estado - tiene reservas activas");
+        }
+
+        vehiculo.setEstado(nuevoEstado);
+        vehiculoRepository.save(vehiculo);
+    }
+
+    private boolean tieneReservasActivas(VehiculoEntity vehiculo) {
+        return !reservaRepository
+                .findByVehiculoAndEstado(vehiculo, ReservaEntity.EstadoReserva.EN_PROGRESO)
+                .isEmpty();
     }
 
     /**
@@ -208,7 +231,7 @@ public class VehiculoService {
      */
     public VehiculoEntity actualizarPrecioArriendoVehiculoPorId(Long vehiculoId, BigDecimal precio) {
         VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
-            .orElseThrow();
+                .orElseThrow();
         vehiculo.setPrecioArriendo(precio);
         return vehiculoRepository.save(vehiculo);
     }
@@ -220,9 +243,9 @@ public class VehiculoService {
      */
     public void eliminarVehiculoPorId(Long vehiculoId) {
         VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
-            .orElseThrow();
+                .orElseThrow();
         if (!reservaRepository.findByVehiculo(vehiculo)
-            .isEmpty()) {
+                .isEmpty()) {
             throw new RuntimeException("El vehiculo" + vehiculoId + "tiene reservas pendientes");
         } else {
             vehiculoRepository.deleteById(vehiculoId);
@@ -259,24 +282,24 @@ public class VehiculoService {
                                         String descripcion, Long reportadoPorId) {
         // Validaciones más específicas
         if (descripcion == null || descripcion.trim()
-            .isEmpty()) {
+                .isEmpty()) {
             throw new IllegalArgumentException("La descripción de la falla es requerida");
         }
 
         // Validar que el vehículo esté disponible para reportar falla
         VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
-            .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
 
         if (vehiculo.getEstado() == VehiculoEntity.EstadoVehiculo.EN_MANTENCION ||
-            vehiculo.getEstado() == VehiculoEntity.EstadoVehiculo.EN_REPARACION) {
+                vehiculo.getEstado() == VehiculoEntity.EstadoVehiculo.EN_REPARACION) {
             throw new IllegalStateException("El vehículo ya está en mantenimiento o reparación");
         }
 
         // Verificar si tiene reservas activas
         List<ReservaEntity> reservasActivas = reservaRepository.findByVehiculo(vehiculo)
-            .stream()
-            .filter(r -> r.getEstado() == ReservaEntity.EstadoReserva.EN_PROGRESO)
-            .toList();
+                .stream()
+                .filter(r -> r.getEstado() == ReservaEntity.EstadoReserva.EN_PROGRESO)
+                .toList();
 
         if (!reservasActivas.isEmpty()) {
             throw new IllegalStateException("No se puede reportar falla en un vehículo con reserva activa");
@@ -288,13 +311,13 @@ public class VehiculoService {
 
         // Obtener el usuario que reporta
         UsuarioEntity reportadoPor = usuarioRepository.findById(reportadoPorId)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
         // Validar que el usuario sea trabajador o administrador
         if (!reportadoPor.getRol()
-            .equals(UsuarioEntity.RolUsuario.TRABAJADOR) &&
-            !reportadoPor.getRol()
-                .equals(UsuarioEntity.RolUsuario.ADMINISTRADOR)) {
+                .equals(UsuarioEntity.RolUsuario.TRABAJADOR) &&
+                !reportadoPor.getRol()
+                        .equals(UsuarioEntity.RolUsuario.ADMINISTRADOR)) {
             throw new RuntimeException("Usuario no autorizado para reportar fallas");
         }
 
@@ -310,7 +333,7 @@ public class VehiculoService {
 
         // Actualizar estado del vehículo
         String estadoAnterior = vehiculo.getEstado()
-            .toString();
+                .toString();
         vehiculo.setEstado(VehiculoEntity.EstadoVehiculo.EN_MANTENCION);
         vehiculo = vehiculoRepository.save(vehiculo);
 
@@ -320,10 +343,10 @@ public class VehiculoService {
         historial.setFecha(LocalDateTime.now());
         historial.setTipoEvento("REPORTE_FALLA");
         historial.setDescripcion(String.format("Falla %s reportada: %s (Severidad: %s)",
-                                               tipo, descripcion, severidad));
+                tipo, descripcion, severidad));
         historial.setEstadoAnterior(estadoAnterior);
         historial.setEstadoNuevo(vehiculo.getEstado()
-                                     .toString());
+                .toString());
         historial.setRegistradoPor(reportadoPor);
         historialRepository.save(historial);
 
@@ -334,18 +357,18 @@ public class VehiculoService {
     // Método adicional para obtener el historial de fallas de un vehículo
     public List<FallaVehiculoEntity> obtenerHistorialFallas(Long vehiculoId) {
         VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
-            .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
         return fallaRepository.findByVehiculoOrderByFechaReporteDesc(vehiculo);
     }
 
     @Transactional
     public VehiculoEntity resolverFalla(Long fallaId, String solucion, Long tecnicoId) {
         FallaVehiculoEntity falla = fallaRepository.findById(fallaId)
-            .orElseThrow(() -> new RuntimeException("Falla no encontrada"));
+                .orElseThrow(() -> new RuntimeException("Falla no encontrada"));
 
         VehiculoEntity vehiculo = falla.getVehiculo();
         UsuarioEntity tecnico = usuarioRepository.findById(tecnicoId)
-            .orElseThrow(() -> new RuntimeException("Técnico no encontrado"));
+                .orElseThrow(() -> new RuntimeException("Técnico no encontrado"));
 
         // Registrar solución en el historial
         HistorialVehiculoEntity historial = new HistorialVehiculoEntity();
@@ -354,7 +377,7 @@ public class VehiculoService {
         historial.setTipoEvento("RESOLUCION_FALLA");
         historial.setDescripcion("Falla resuelta: " + solucion);
         historial.setEstadoAnterior(vehiculo.getEstado()
-                                        .toString());
+                .toString());
         historial.setEstadoNuevo(VehiculoEntity.EstadoVehiculo.DISPONIBLE.toString());
         historial.setRegistradoPor(tecnico);
         historialRepository.save(historial);
