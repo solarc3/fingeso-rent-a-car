@@ -1,6 +1,7 @@
 package com.rentacar.backend.entities;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -48,7 +49,7 @@ public class VehiculoEntity {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sucursal_id")
-    @JsonBackReference(value = "sucursal-vehiculo")
+    @JsonIdentityReference(alwaysAsId = false)
     private SucursalEntity sucursal;
 
     private boolean disponible;

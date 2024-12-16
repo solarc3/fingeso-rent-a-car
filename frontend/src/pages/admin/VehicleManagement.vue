@@ -189,6 +189,8 @@
                   :loading="sucursalLoading"
                   :error-messages="sucursalError"
                   :disabled="sucursalLoading"
+                  persistent-hint
+                  :hint="vehicleData.sucursalId ? `Sucursal actual: ${getSucursalName(vehicleData.sucursalId)}` : 'Seleccione una sucursal'"
                 />
               </v-col>
               <v-col
@@ -311,8 +313,26 @@
       </v-card>
     </v-dialog>
   </v-container>
+  <v-snackbar
+    v-model="snackbar.show"
+    :color="snackbar.color"
+    :timeout="3000"
+  >
+    {{ snackbar.text }}
+
+    <template #actions>
+      <v-btn
+        color="white"
+        text
+        @click="snackbar.show = false"
+      >
+        Cerrar
+      </v-btn>
+    </template>
+  </v-snackbar>
 </template>
 <script setup>
+import {watch} from 'vue';
 import {ref, computed, onMounted} from 'vue'
 import {useVehicleStore} from '@/stores/vehicle'
 import {useAuthStore} from '@/stores/auth'
@@ -369,7 +389,12 @@ const estadosVehiculo = [
   'EN_MANTENCION',
   'EN_REPARACION'
 ]
-
+const getSucursalName = (sucursalId) => {
+  // Asegurarse de que sucursalId sea un número
+  const id = typeof sucursalId === 'object' ? sucursalId.id : Number(sucursalId);
+  const sucursal = sucursales.value.find(s => s.value === id);
+  return sucursal ? sucursal.title : 'No asignada';
+};
 const tiposFalla = [
   'MECANICA',
   'ELECTRICA',
@@ -398,7 +423,13 @@ const filters = ref({
   estado: null,
   search: ''
 })
-
+watch(() => vehicleData.value.sucursalId, (newVal, oldVal) => {
+  console.log('Sucursal ID changed:', {
+    from: oldVal,
+    to: newVal,
+    type: typeof newVal
+  });
+});
 // Headers para la tabla
 const headers = [
   {title: 'Patente', key: 'patente'},
@@ -411,16 +442,19 @@ const headers = [
 
 // Método para cargar sucursales
 const loadSucursales = async () => {
-  sucursalLoading.value = true
-  sucursalError.value = null
+  sucursalLoading.value = true;
+  sucursalError.value = null;
   try {
     const sucursalService = useSucursalService();
     const data = await sucursalService.listarSucursales();
+
     sucursales.value = data.map(s => ({
       title: s.nombre,
       value: s.id,
       direccion: s.direccion
     }));
+
+    console.log('Sucursales disponibles:', sucursales.value);
   } catch (error) {
     console.error('Error cargando sucursales:', error);
     sucursalError.value = 'Error al cargar las sucursales';
@@ -428,21 +462,24 @@ const loadSucursales = async () => {
     sucursalLoading.value = false;
   }
 };
-
 // Computed
 const filteredVehicles = computed(() => {
   return vehicleStore.vehicles.filter(vehicle => {
-    if (filters.value.sucursal && vehicle.sucursal?.id !== filters.value.sucursal) return false
-    if (filters.value.estado && vehicle.estado !== filters.value.estado) return false
+    const vehicleSucursalId = typeof vehicle.sucursal === 'number'
+      ? vehicle.sucursal
+      : vehicle.sucursal?.id;
+
+    if (filters.value.sucursal && vehicleSucursalId !== filters.value.sucursal) return false;
+    if (filters.value.estado && vehicle.estado !== filters.value.estado) return false;
     if (filters.value.search) {
-      const search = filters.value.search.toLowerCase()
+      const search = filters.value.search.toLowerCase();
       return vehicle.patente.toLowerCase().includes(search) ||
         vehicle.marca.toLowerCase().includes(search) ||
-        vehicle.modelo.toLowerCase().includes(search)
+        vehicle.modelo.toLowerCase().includes(search);
     }
-    return true
-  })
-})
+    return true;
+  });
+});
 
 // Métodos
 onMounted(async () => {
@@ -466,29 +503,6 @@ const loadData = async () => {
   } finally {
     loading.value = false
   }
-}
-
-const openVehicleDialog = (vehicle = null) => {
-  if (vehicle) {
-    isEditing.value = true
-    selectedVehicle.value = vehicle
-    vehicleData.value = {
-      ...vehicle,
-      sucursalId: vehicle.sucursal?.id
-    }
-  } else {
-    isEditing.value = false
-    selectedVehicle.value = null
-    vehicleData.value = {
-      marca: '',
-      modelo: '',
-      patente: '',
-      precioArriendo: '',
-      sucursalId: null,
-      estado: 'DISPONIBLE'
-    }
-  }
-  dialogs.value.vehicle = true
 }
 
 const closeVehicleDialog = () => {
@@ -560,7 +574,7 @@ const getStatusText = (status) => {
   return status.replace('_', ' ')
 }
 
-const canEdit = (vehicle) => {
+const canEdit = () => {
   return authStore.isAdmin
 }
 
@@ -573,35 +587,88 @@ const canDelete = (vehicle) => {
   return authStore.isAdmin && vehicle.estado === 'DISPONIBLE'
 }
 
+const openVehicleDialog = (vehicle = null) => {
+  if (vehicle) {
+    isEditing.value = true;
+    selectedVehicle.value = vehicle;
+
+    // Obtener el ID de la sucursal de manera segura
+    const sucursalId = typeof vehicle.sucursal === 'number'
+      ? vehicle.sucursal
+      : vehicle.sucursal?.id || null;
+
+    // Asignar todos los datos incluyendo la sucursal
+    vehicleData.value = {
+      id: vehicle.id,
+      marca: vehicle.marca,
+      modelo: vehicle.modelo,
+      patente: vehicle.patente,
+      precioArriendo: vehicle.precioArriendo,
+      estado: vehicle.estado,
+      sucursalId: sucursalId
+    };
+
+    console.log('Opening dialog with vehicle:', {
+      vehicle,
+      extractedSucursalId: sucursalId,
+      vehicleData: vehicleData.value
+    });
+  } else {
+    isEditing.value = false;
+    selectedVehicle.value = null;
+    vehicleData.value = {
+      marca: '',
+      modelo: '',
+      patente: '',
+      precioArriendo: '',
+      sucursalId: null,
+      estado: 'DISPONIBLE'
+    };
+  }
+  dialogs.value.vehicle = true;
+};
+const snackbar = ref({
+  show: false,
+  text: '',
+  color: 'success'
+});
+
 const saveVehicle = async () => {
   if (!vehicleForm.value?.validate()) return;
 
   const vehiculoData = {
-    ...vehicleData.value,
-    sucursal: sucursales.value.find(s => s.value === vehicleData.value.sucursalId)
+    marca: vehicleData.value.marca,
+    modelo: vehicleData.value.modelo,
+    patente: vehicleData.value.patente,
+    precioArriendo: Number(vehicleData.value.precioArriendo),
+    anio: new Date().getFullYear(), // o un campo del formulario
+    sucursal: Number(vehicleData.value.sucursalId),
+    estado: vehicleData.value.estado || 'DISPONIBLE'
   };
 
-  const {isValid, errors} = vehicleStore.validateVehicleData(vehiculoData);
-  if (!isValid) {
-    errors.forEach(error => {
-      console.error(error);
-    });
-    return;
-  }
+  console.log('Datos a enviar:', vehiculoData);
 
   saving.value = true;
   try {
-    if (isEditing.value) {
-      await vehicleStore.updateVehicle(vehiculoData);
-    } else {
-      await vehicleStore.createVehicle(vehiculoData);
-    }
+    await vehicleStore.createVehicle(vehiculoData);
+    snackbar.value = {
+      show: true,
+      color: 'success',
+      text: 'Vehículo creado correctamente'
+    };
     closeVehicleDialog();
     await loadData();
+  } catch (error) {
+    snackbar.value = {
+      show: true,
+      color: 'error',
+      text: `Error al crear el vehículo: ${error.message}`
+    };
   } finally {
     saving.value = false;
   }
 };
+
 </script>
 <style scoped>
 .header-row {
@@ -675,5 +742,11 @@ const saveVehicle = async () => {
   .main-table-card {
     height: calc(100vh - 400px);
   }
+}
+
+:deep(.v-snackbar__content) {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 </style>

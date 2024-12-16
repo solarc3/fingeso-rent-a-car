@@ -12,22 +12,29 @@ export const useVehiculoService = () => {
   };
 
   const crearVehiculo = async (vehiculo) => {
-    // POST /api/vehiculo/crear
-    // @RequestBody VehiculoEntity vehiculo
     try {
-      const {data} = await axiosInstance.post('/api/vehiculo/crear', {
+      const vehiculoData = {
         marca: vehiculo.marca,
         modelo: vehiculo.modelo,
-        acriss: vehiculo.acriss,
+        acriss: 'ECMR',
         patente: vehiculo.patente,
-        precioArriendo: vehiculo.precioArriendo
-      });
+        precioArriendo: vehiculo.precioArriendo,
+        anio: vehiculo.anio || new Date().getFullYear(),
+        estado: vehiculo.estado || 'DISPONIBLE',
+        // Modificar esta parte
+        sucursal: {
+          id: Number(vehiculo.sucursal) // Asegurarse que sea un número
+        }
+      };
+
+      console.log('Enviando datos del vehículo:', vehiculoData);
+      const {data} = await axiosInstance.post('/api/vehiculo/crear', vehiculoData);
       return data;
     } catch (error) {
-      throw error.response.data;
+      console.error('Error en crearVehiculo:', error);
+      throw error.response?.data || error;
     }
   };
-
   const obtenerVehiculosDisponiblesEnSucursal = async (id) => {
     // GET /api/vehiculo/listing/enSucursal
     // @RequestParam Long id

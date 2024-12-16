@@ -5,10 +5,15 @@ import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.services.SucursalService;
 import com.rentacar.backend.services.VehiculoService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -24,19 +29,39 @@ public class VehiculoController {
     }
 
     @PostMapping("/crear")
-    public ResponseEntity<?> crearVehiculo(@RequestBody VehiculoEntity vehiculo) {
+    public ResponseEntity<?> crearVehiculo(@RequestBody Map<String, Object> vehiculoData) {
         try {
-            vehiculoService.crearVehiculo(
-                vehiculo.getMarca(),
-                vehiculo.getModelo(),
-                vehiculo.getAcriss(),
-                vehiculo.getPatente(),
-                vehiculo.getPrecioArriendo());
-            return ResponseEntity.ok()
-                .body("Vehiculo creado correctamente");
-        } catch (Exception e) {
+            Long sucursalId;
+            if (vehiculoData.get("sucursal") instanceof Number) {
+                sucursalId = ((Number) vehiculoData.get("sucursal")).longValue();
+            } else if (vehiculoData.get("sucursal") instanceof Map) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> sucursalMap = (Map<String, Object>) vehiculoData.get("sucursal");
+                sucursalId = ((Number) sucursalMap.get("id")).longValue();
+            } else {
+                throw new IllegalArgumentException("Formato de sucursal inválido");
+            }
+
+            // Crear vehículo
+            VehiculoEntity nuevoVehiculo = vehiculoService.crearVehiculo(
+                (String) vehiculoData.get("marca"),
+                (String) vehiculoData.get("modelo"),
+                (String) vehiculoData.get("acriss"),
+                (String) vehiculoData.get("patente"),
+                new BigDecimal(vehiculoData.get("precioArriendo")
+                                   .toString()),
+                (Integer) vehiculoData.get("anio"),
+                VehiculoEntity.EstadoVehiculo.valueOf((String) vehiculoData.get("estado")),
+                sucursalId
+                                                                        );
+
+            return ResponseEntity.ok(nuevoVehiculo);
+        } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest()
                 .body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error al crear el vehículo: " + e.getMessage());
         }
     }
 

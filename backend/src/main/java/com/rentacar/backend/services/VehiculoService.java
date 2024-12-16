@@ -3,6 +3,7 @@ package com.rentacar.backend.services;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.repositories.ReservaRepository;
+import com.rentacar.backend.repositories.SucursalRepository;
 import com.rentacar.backend.repositories.VehiculoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,11 +17,13 @@ import java.util.stream.Collectors;
 public class VehiculoService {
     private final VehiculoRepository vehiculoRepository;
     private final ReservaRepository reservaRepository;
+    private final SucursalRepository sucursalRepository;
 
     @Autowired
-    public VehiculoService(VehiculoRepository vehiculoRepository, ReservaRepository reservaRepository) {
+    public VehiculoService(VehiculoRepository vehiculoRepository, ReservaRepository reservaRepository, SucursalRepository sucursalRepository) {
         this.vehiculoRepository = vehiculoRepository;
         this.reservaRepository = reservaRepository;
+        this.sucursalRepository = sucursalRepository;
     }
 
     /**
@@ -34,27 +37,31 @@ public class VehiculoService {
      * @return Entidad Vehículo creada
      */
     public VehiculoEntity crearVehiculo(String marca, String modelo, String acriss,
-                                        String patente, BigDecimal precio) {
-        // Sanitización de datos
-
-        // Patentes en Chile -> 2 letras, 2 letras o 2 números, 2 números
-        final String CL_PLATE_REGEX = "^[A-Z]{2}([A-Z]{2}|[0-9]{2})[0-9]{2}$";
-        Pattern patternClPlate = Pattern.compile(CL_PLATE_REGEX);
-
-        // Verificar formato ACRISS, formato patente, y valor positivo del precio
-        if (!validarAcriss(acriss) || !patternClPlate.matcher(patente.toUpperCase())
-            .matches()
-            || precio.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Parámetros de vehículo inválidos");
+                                        String patente, BigDecimal precio, Integer anio,
+                                        VehiculoEntity.EstadoVehiculo estado, Long sucursalId) {
+        // Validar precio
+        if (precio.compareTo(BigDecimal.ZERO) < 0) {
+            throw new IllegalArgumentException("Precio inválido");
         }
 
-        // Almacenar si no hay problemas con lo de arriba
+        // Usar ACRISS por defecto si no se proporciona o es inválido
+        String acrissValidado = validarAcriss(acriss) ? acriss : "ECMR";
+
+        // Buscar la sucursal
+        SucursalEntity sucursal = sucursalRepository.findById(sucursalId)
+            .orElseThrow(() -> new IllegalArgumentException("Sucursal no encontrada"));
+
         VehiculoEntity vehiculo = new VehiculoEntity();
         vehiculo.setMarca(marca);
         vehiculo.setModelo(modelo);
-        vehiculo.setAcriss(acriss);
+        vehiculo.setAcriss(acrissValidado);
         vehiculo.setPatente(patente);
         vehiculo.setPrecioArriendo(precio);
+        vehiculo.setAnio(anio);
+        vehiculo.setSucursal(sucursal);
+        vehiculo.setEstado(estado != null ? estado : VehiculoEntity.EstadoVehiculo.DISPONIBLE);
+        vehiculo.setDisponible(estado == VehiculoEntity.EstadoVehiculo.DISPONIBLE);
+
         return vehiculoRepository.save(vehiculo);
     }
 
