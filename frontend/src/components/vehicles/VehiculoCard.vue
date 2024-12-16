@@ -8,12 +8,11 @@
     ripple
   >
     <v-img
-      min-width="450px"
-      min-height="200px"
-      src="../../assets/Autocard.png"
+      class="vehiculo-imagen"
+      :src="obtenerImagen(vehiculo.id)"
       cover
     />
-    
+
     <v-card-title>
       {{ vehiculo.marca }} {{ vehiculo.modelo }}
     </v-card-title>
@@ -43,4 +42,17 @@ const emit = defineEmits(['seleccionar'])
 const seleccionarVehiculo = () => {
   emit('seleccionar', props.vehiculo)
 }
+
+function obtenerImagen(id) {
+  return new URL(`../../assets/${id}.png`, import.meta.url).href;
+}
+
 </script>
+
+<style scoped>
+.vehiculo-imagen {
+  width:600px;
+  height: 300px;
+  object-fit: cover;
+}
+</style>
