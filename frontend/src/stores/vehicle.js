@@ -1,6 +1,8 @@
 import {defineStore} from 'pinia';
 import {useVehiculoService} from '@/services/VehiculoService';
 import {useMetadataStore} from "@/stores/metadata.js";
+import axiosInstance from "@/services/axiosConfig.js";
+import {useMantenimientoService} from "@/services/MantenimientoService.js";
 
 export const useVehicleStore = defineStore('vehicle', {
   state: () => ({
@@ -179,24 +181,22 @@ export const useVehicleStore = defineStore('vehicle', {
         const vehiculoDTO = {
           marca: vehicleData.marca,
           modelo: vehicleData.modelo,
-          acriss: 'ECMR',
           patente: vehicleData.patente,
-          precioArriendo: Number(vehicleData.precioArriendo),
           anio: vehicleData.anio || new Date().getFullYear(),
+          tipoVehiculo: vehicleData.tipoVehiculo,
+          transmision: vehicleData.transmision,
+          precioArriendo: Number(vehicleData.precioArriendo),
           estado: vehicleData.estado || 'DISPONIBLE',
-          // Modificar esta parte
-          sucursal: Number(vehicleData.sucursal) // Asegurarse que sea un número
+          sucursal: Number(vehicleData.sucursal)
         };
 
         console.log('Enviando datos:', vehiculoDTO);
         const newVehicle = await useVehiculoService().crearVehiculo(vehiculoDTO);
-
-        // Actualizar la lista local de vehículos
         this.vehicles.push(newVehicle);
         return newVehicle;
       } catch (error) {
         console.error('Error creating vehicle:', error);
-        throw error;
+        throw new Error('Error al crear el vehículo: ' + error.message);
       } finally {
         this.loading = false;
       }
@@ -252,25 +252,55 @@ export const useVehicleStore = defineStore('vehicle', {
         this.loading = false;
       }
     },
+    async reportarFalla(fallaData) {
+      this.loading = true;
+      try {
+        const mantenimientoService = useMantenimientoService();
+        const resultado = await mantenimientoService.reportarFalla({
+          vehiculoId: fallaData.vehiculoId,
+          tipo: fallaData.tipo,
+          severidad: fallaData.severidad,
+          descripcion: fallaData.descripcion,
+          reportadoPorId: fallaData.reportadoPorId
+        });
 
-    // Reportar problema con vehículo
+        // Actualizar el estado del vehículo en la lista local
+        const index = this.vehicles.findIndex(v => v.id === fallaData.vehiculoId);
+        if (index !== -1) {
+          this.vehicles[index] = {
+            ...this.vehicles[index],
+            estado: 'EN_MANTENCION'
+          };
+        }
+
+        return resultado;
+      } catch (error) {
+        console.error('Error reportando falla:', error);
+        throw error;
+      } finally {
+        this.loading = false;
+      }
+    },
     async reportVehicleIssue(reportData) {
       this.loading = true;
       try {
-        const vehiculoService = useVehiculoService();
-        const updatedVehicle = await vehiculoService.actualizarVehiculo({
-          id: reportData.vehiculoId,
-          estado: reportData.estado,
-          // Aquí podrías agregar más campos según necesites
-        });
+        const response = await axiosInstance.post(
+          `/api/vehiculo/${reportData.vehiculoId}/falla`,
+          {
+            tipo: reportData.tipoFalla,
+            severidad: reportData.severidad,
+            descripcion: reportData.descripcion,
+            reportadoPorId: this.authStore.user.id
+          }
+        );
 
         // Actualizar el vehículo en la lista local
         const index = this.vehicles.findIndex(v => v.id === reportData.vehiculoId);
         if (index !== -1) {
-          this.vehicles[index] = updatedVehicle;
+          this.vehicles[index] = response.data;
         }
 
-        return updatedVehicle;
+        return response.data;
       } catch (error) {
         console.error('Error reporting vehicle issue:', error);
         throw error;

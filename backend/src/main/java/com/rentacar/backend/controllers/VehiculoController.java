@@ -1,5 +1,6 @@
 package com.rentacar.backend.controllers;
 
+import com.rentacar.backend.entities.FallaVehiculoEntity;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.repositories.VehiculoRepository;
@@ -133,4 +134,22 @@ public class VehiculoController {
                 .body(vehiculo);
         }
     }
+
+    @PostMapping("/{id}/falla")
+    public ResponseEntity<?> reportarFalla(@PathVariable Long id, @RequestBody FallaVehiculoEntity falla) {
+        try {
+            VehiculoEntity vehiculo = vehiculoService.reportarFalla(
+                id,
+                falla.getTipo(),
+                falla.getSeveridad(),
+                falla.getDescripcion(),
+                falla.getReportadoPorId()
+                                                                   );
+            return ResponseEntity.ok(vehiculo);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body(e.getMessage());
+        }
+    }
 }
+

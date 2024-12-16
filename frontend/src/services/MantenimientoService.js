@@ -4,15 +4,28 @@ export const useMantenimientoService = () => {
   const obtenerHistorial = async (vehiculoId) => {
     try {
       const {data} = await axiosInstance.get(`/api/mantenimiento/historial/${vehiculoId}`);
-      console.log('Respuesta del backend:', data);
-      // Si data es un objeto con estructura { cantidad, eventos }
-      return data.eventos || data; // Retorna los eventos si viene en esa estructura, o data directamente
+      return data;
     } catch (error) {
       console.error('Error obteniendo historial:', error);
       throw error;
     }
   };
+  const reportarFalla = async (fallaData) => {
+    try {
+      const response = await axiosInstance.post(`/api/mantenimiento/fallas/reportar`, {
+        vehiculoId: fallaData.vehiculoId,
+        tipo: fallaData.tipo,
+        severidad: fallaData.severidad,
+        descripcion: fallaData.descripcion,
+        reportadoPorId: fallaData.reportadoPorId
+      });
 
+      return response.data;
+    } catch (error) {
+      console.error('Error reportando falla:', error);
+      throw new Error(error.response?.data || 'Error al reportar falla');
+    }
+  };
   const obtenerMantenimientos = async (vehiculoId) => {
     try {
       const {data} = await axiosInstance.get(`/api/mantenimiento/mantenimientos/${vehiculoId}`);
@@ -47,9 +60,32 @@ export const useMantenimientoService = () => {
       throw error;
     }
   };
-
+  const resolverFalla = async (fallaId, solucion, tecnicoId) => {
+    try {
+      const {data} = await axiosInstance.post(`/api/mantenimiento/${fallaId}/resolver`, {
+        solucion,
+        tecnicoId
+      });
+      return data;
+    } catch (error) {
+      console.error('Error resolviendo falla:', error);
+      throw new Error(error.response?.data || 'Error al resolver falla');
+    }
+  };
+  const obtenerHistorialFallas = async (vehiculoId) => {
+    try {
+      const {data} = await axiosInstance.get(`/api/mantenimiento/fallas/${vehiculoId}`);
+      return data;
+    } catch (error) {
+      console.error('Error obteniendo historial de fallas:', error);
+      throw error;
+    }
+  };
   return {
     obtenerHistorial,
+    reportarFalla,
+    resolverFalla,
+    obtenerHistorialFallas,
     obtenerMantenimientos,
     programarMantenimiento,
     actualizarEstado

@@ -1,14 +1,13 @@
 package com.rentacar.backend.services;
 
-import com.rentacar.backend.entities.SucursalEntity;
-import com.rentacar.backend.entities.VehiculoEntity;
-import com.rentacar.backend.repositories.ReservaRepository;
-import com.rentacar.backend.repositories.SucursalRepository;
-import com.rentacar.backend.repositories.VehiculoRepository;
+import com.rentacar.backend.entities.*;
+import com.rentacar.backend.repositories.*;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -18,12 +17,25 @@ public class VehiculoService {
     private final VehiculoRepository vehiculoRepository;
     private final ReservaRepository reservaRepository;
     private final SucursalRepository sucursalRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final FallaVehiculoRepository fallaRepository;
+    private final HistorialVehiculoRepository historialRepository;
 
     @Autowired
-    public VehiculoService(VehiculoRepository vehiculoRepository, ReservaRepository reservaRepository, SucursalRepository sucursalRepository) {
+    public VehiculoService(
+        VehiculoRepository vehiculoRepository,
+        ReservaRepository reservaRepository,
+        SucursalRepository sucursalRepository,
+        UsuarioRepository usuarioRepository,
+        FallaVehiculoRepository fallaRepository,
+        HistorialVehiculoRepository historialRepository
+                          ) {
         this.vehiculoRepository = vehiculoRepository;
         this.reservaRepository = reservaRepository;
         this.sucursalRepository = sucursalRepository;
+        this.usuarioRepository = usuarioRepository;
+        this.fallaRepository = fallaRepository;
+        this.historialRepository = historialRepository;
     }
 
     /**
@@ -240,5 +252,115 @@ public class VehiculoService {
         tipos.put("M", "Manual");
         tipos.put("A", "Automática");
         return tipos;
+    }
+
+    @Transactional
+    public VehiculoEntity reportarFalla(Long vehiculoId, String tipo, String severidad,
+                                        String descripcion, Long reportadoPorId) {
+        // Validaciones más específicas
+        if (descripcion == null || descripcion.trim()
+            .isEmpty()) {
+            throw new IllegalArgumentException("La descripción de la falla es requerida");
+        }
+
+        // Validar que el vehículo esté disponible para reportar falla
+        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
+            .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+
+        if (vehiculo.getEstado() == VehiculoEntity.EstadoVehiculo.EN_MANTENCION ||
+            vehiculo.getEstado() == VehiculoEntity.EstadoVehiculo.EN_REPARACION) {
+            throw new IllegalStateException("El vehículo ya está en mantenimiento o reparación");
+        }
+
+        // Verificar si tiene reservas activas
+        List<ReservaEntity> reservasActivas = reservaRepository.findByVehiculo(vehiculo)
+            .stream()
+            .filter(r -> r.getEstado() == ReservaEntity.EstadoReserva.EN_PROGRESO)
+            .toList();
+
+        if (!reservasActivas.isEmpty()) {
+            throw new IllegalStateException("No se puede reportar falla en un vehículo con reserva activa");
+        }
+        // Validaciones
+        if (vehiculoId == null || tipo == null || severidad == null) {
+            throw new IllegalArgumentException("Datos de falla incompletos");
+        }
+
+        // Obtener el usuario que reporta
+        UsuarioEntity reportadoPor = usuarioRepository.findById(reportadoPorId)
+            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        // Validar que el usuario sea trabajador o administrador
+        if (!reportadoPor.getRol()
+            .equals(UsuarioEntity.RolUsuario.TRABAJADOR) &&
+            !reportadoPor.getRol()
+                .equals(UsuarioEntity.RolUsuario.ADMINISTRADOR)) {
+            throw new RuntimeException("Usuario no autorizado para reportar fallas");
+        }
+
+        // Crear y guardar la falla
+        FallaVehiculoEntity falla = new FallaVehiculoEntity();
+        falla.setVehiculo(vehiculo);
+        falla.setTipo(tipo);
+        falla.setSeveridad(severidad);
+        falla.setDescripcion(descripcion);
+        falla.setFechaReporte(LocalDateTime.now());
+        falla.setReportadoPor(reportadoPor);
+        fallaRepository.save(falla);
+
+        // Actualizar estado del vehículo
+        String estadoAnterior = vehiculo.getEstado()
+            .toString();
+        vehiculo.setEstado(VehiculoEntity.EstadoVehiculo.EN_MANTENCION);
+        vehiculo = vehiculoRepository.save(vehiculo);
+
+        // Registrar en historial
+        HistorialVehiculoEntity historial = new HistorialVehiculoEntity();
+        historial.setVehiculo(vehiculo);
+        historial.setFecha(LocalDateTime.now());
+        historial.setTipoEvento("REPORTE_FALLA");
+        historial.setDescripcion(String.format("Falla %s reportada: %s (Severidad: %s)",
+                                               tipo, descripcion, severidad));
+        historial.setEstadoAnterior(estadoAnterior);
+        historial.setEstadoNuevo(vehiculo.getEstado()
+                                     .toString());
+        historial.setRegistradoPor(reportadoPor);
+        historialRepository.save(historial);
+
+
+        return vehiculo;
+    }
+
+    // Método adicional para obtener el historial de fallas de un vehículo
+    public List<FallaVehiculoEntity> obtenerHistorialFallas(Long vehiculoId) {
+        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
+            .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
+        return fallaRepository.findByVehiculoOrderByFechaReporteDesc(vehiculo);
+    }
+
+    @Transactional
+    public VehiculoEntity resolverFalla(Long fallaId, String solucion, Long tecnicoId) {
+        FallaVehiculoEntity falla = fallaRepository.findById(fallaId)
+            .orElseThrow(() -> new RuntimeException("Falla no encontrada"));
+
+        VehiculoEntity vehiculo = falla.getVehiculo();
+        UsuarioEntity tecnico = usuarioRepository.findById(tecnicoId)
+            .orElseThrow(() -> new RuntimeException("Técnico no encontrado"));
+
+        // Registrar solución en el historial
+        HistorialVehiculoEntity historial = new HistorialVehiculoEntity();
+        historial.setVehiculo(vehiculo);
+        historial.setFecha(LocalDateTime.now());
+        historial.setTipoEvento("RESOLUCION_FALLA");
+        historial.setDescripcion("Falla resuelta: " + solucion);
+        historial.setEstadoAnterior(vehiculo.getEstado()
+                                        .toString());
+        historial.setEstadoNuevo(VehiculoEntity.EstadoVehiculo.DISPONIBLE.toString());
+        historial.setRegistradoPor(tecnico);
+        historialRepository.save(historial);
+
+        // Actualizar estado del vehículo
+        vehiculo.setEstado(VehiculoEntity.EstadoVehiculo.DISPONIBLE);
+        return vehiculoRepository.save(vehiculo);
     }
 }

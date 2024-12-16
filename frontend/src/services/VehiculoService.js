@@ -20,17 +20,21 @@ export const useVehiculoService = () => {
 
   const crearVehiculo = async (vehiculo) => {
     try {
+      // Generar código ACRISS basado en el tipo de vehículo y transmisión
+      const acriss = generateAcrissCode(vehiculo.tipoVehiculo, vehiculo.transmision);
+
       const vehiculoData = {
         marca: vehiculo.marca,
         modelo: vehiculo.modelo,
-        acriss: 'ECMR',
         patente: vehiculo.patente,
+        anio: vehiculo.anio,
+        tipoVehiculo: vehiculo.tipoVehiculo,
+        transmision: vehiculo.transmision,
         precioArriendo: vehiculo.precioArriendo,
-        anio: vehiculo.anio || new Date().getFullYear(),
-        estado: vehiculo.estado || 'DISPONIBLE',
-        // Modificar esta parte
+        estado: vehiculo.estado,
+        acriss: acriss, // Agregar el código ACRISS
         sucursal: {
-          id: Number(vehiculo.sucursal) // Asegurarse que sea un número
+          id: Number(vehiculo.sucursal)
         }
       };
 
@@ -41,6 +45,22 @@ export const useVehiculoService = () => {
       console.error('Error en crearVehiculo:', error);
       throw error.response?.data || error;
     }
+  };
+  const generateAcrissCode = (tipoVehiculo, transmision) => {
+    // Primera letra: Categoría del vehículo (E = Economy)
+    // Segunda letra: Tipo de carrocería (C = 2/4 Door)
+    // Tercera letra: Transmisión (M = Manual, A = Automatic)
+    // Cuarta letra: Combustible/Aire acondicionado (R = Aire acondicionado)
+
+    let code = 'EC';
+
+    // Agregar tipo de transmisión
+    code += transmision || 'M';
+
+    // Agregar R por defecto (con aire acondicionado)
+    code += 'R';
+
+    return code;
   };
   const obtenerVehiculosDisponiblesEnSucursal = async (id) => {
     // GET /api/vehiculo/listing/enSucursal
@@ -56,26 +76,24 @@ export const useVehiculoService = () => {
   };
 
   const eliminarVehiculo = async (id) => {
-    // DELETE /api/vehiculo/eliminar
-    // @RequestParam Long id
     try {
-      const {data} = await axiosInstance.delete('/api/vehiculo/eliminar', {
+      await axiosInstance.delete('/api/vehiculo/eliminar', {
         params: {id}
       });
-      return data;
     } catch (error) {
-      throw error.response.data;
+      if (error.response?.data) {
+        throw new Error(error.response.data);
+      }
+      throw error;
     }
   };
 
   const actualizarVehiculo = async (vehiculo) => {
-    // PUT /api/vehiculo/actualizar
-    // @RequestBody VehiculoEntity vehiculo
     try {
       const {data} = await axiosInstance.put('/api/vehiculo/actualizar', vehiculo);
       return data;
     } catch (error) {
-      throw error.response.data;
+      throw error.response?.data || error;
     }
   };
 
