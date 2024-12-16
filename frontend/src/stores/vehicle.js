@@ -234,8 +234,7 @@ export const useVehicleStore = defineStore('vehicle', {
       this.loading = true;
       try {
         const vehiculoService = useVehiculoService();
-        const vehicles = await vehiculoService.obtenerVehiculosDisponiblesEnSucursal(sucursalId);
-        return vehicles;
+        return await vehiculoService.obtenerVehiculosDisponiblesEnSucursal(sucursalId);
       } catch (error) {
         console.error('Error fetching vehicles by sucursal:', error);
         throw error;

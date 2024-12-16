@@ -23,7 +23,7 @@ public interface VehiculoRepository extends JpaRepository<VehiculoEntity, Long> 
 
     List<VehiculoEntity> findByPrecioArriendoBetween(BigDecimal min, BigDecimal max);
 
-    List<VehiculoEntity> findByEstado(String estado);
+    List<VehiculoEntity> findByEstado(VehiculoEntity.EstadoVehiculo estado);
 
     @Query("SELECT DISTINCT v.marca FROM VehiculoEntity v ORDER BY v.marca")
     List<String> findDistinctMarcas();
