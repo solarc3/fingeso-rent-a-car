@@ -8,8 +8,6 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
 
 @Entity
 @Table(name = "reservas")
@@ -57,4 +55,8 @@ public class ReservaEntity {
     @JsonIgnoreProperties({"reservas", "vehiculos", "empleados"})
     private SucursalEntity sucursal;
 
+    @ManyToOne
+    @JoinColumn(name = "sucursal_devolucion_id")  // New field for return location
+    @JsonIgnoreProperties({"reservas", "vehiculos", "empleados"})
+    private SucursalEntity sucursalDevolucion;
 }

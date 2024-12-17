@@ -31,22 +31,28 @@ public class ReservaController {
     }
 
     @PostMapping("/crear")
-    public ResponseEntity<?> crearReserva(@RequestBody ReservaEntity reserva) {
+    public ResponseEntity<?> crearReserva(@RequestBody Map<String, Object> request) {
         try {
-            ReservaEntity nuevaReserva = reservaService.crearReserva(
-                reserva.getFechaInicio(),
-                reserva.getFechaFin(),
-                reserva.getCosto(),
-                reserva.getUsuario()
-                    .getId(),
-                reserva.getVehiculo()
-                    .getId(),
-                reserva.getSucursal()
-                    .getId());
+            // Ensure all necessary fields are present in the request
+            if (!request.containsKey("fechaInicio") || !request.containsKey("fechaFin") || !request.containsKey("costo") ||
+                    !request.containsKey("usuarioId") || !request.containsKey("vehiculoId") || !request.containsKey("sucursalId") ||
+                    !request.containsKey("sucursalDevolucionId")) {
+                return ResponseEntity.badRequest().body("Missing required fields in request body");
+            }
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss");
+            LocalDateTime fechaInicio = LocalDateTime.parse((String) request.get("fechaInicio"), formatter);
+            LocalDateTime fechaFin = LocalDateTime.parse((String) request.get("fechaFin"), formatter);
+            BigDecimal costo = new BigDecimal(request.get("costo").toString());
+            Long usuarioId = Long.parseLong(request.get("usuarioId").toString());
+            Long vehiculoId = Long.parseLong(request.get("vehiculoId").toString());
+            Long sucursalId = Long.parseLong(request.get("sucursalId").toString());
+            Long sucursalDevolucionId = Long.parseLong(request.get("sucursalDevolucionId").toString());
+
+            ReservaEntity nuevaReserva = reservaService.crearReserva(fechaInicio, fechaFin, costo, usuarioId, vehiculoId, sucursalId, sucursalDevolucionId);
             return ResponseEntity.ok(nuevaReserva);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body("Error al procesar la reserva: " + e.getMessage());
         }
     }
 
@@ -60,24 +66,19 @@ public class ReservaController {
         try {
             UsuarioEntity u = usuarioService.obtenerUsuarioPorId(id);
             List<ReservaEntity> reservas = reservaService.obtenerReservasDeUsuario(u);
-            return ResponseEntity.ok()
-                .body(reservas);
-
+            return ResponseEntity.ok().body(reservas);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("/{id}/estado")
-    public ResponseEntity<?> actualizarEstado(@PathVariable Long id,
-                                              @RequestBody ReservaEntity.EstadoReserva estado) {
+    public ResponseEntity<?> actualizarEstado(@PathVariable Long id, @RequestBody ReservaEntity.EstadoReserva estado) {
         try {
             ReservaEntity reserva = reservaService.actualizarEstado(id, estado);
             return ResponseEntity.ok(reserva);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -86,30 +87,22 @@ public class ReservaController {
         try {
             VehiculoEntity v = vehiculoService.obtenerVehiculoPorId(id);
             List<ReservaEntity> reservas = reservaService.obtenerReservasDeVehiculo(v);
-            return ResponseEntity.ok()
-                .body(reservas);
-
+            return ResponseEntity.ok().body(reservas);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("/extender")
     public ResponseEntity<?> extenderReserva(@RequestBody Map<String, Object> nuevaFechaJsonMap) {
         try {
-            // En el cuerpo de la peticion va un json de dos componentes:
-            //  reservaId, fechaFin (nueva fecha de termino)
-
             DateTimeFormatter formatoFecha = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss");
             reservaService.extenderReserva(
-                Long.valueOf((Integer) nuevaFechaJsonMap.get("reservaId")),
-                LocalDateTime.parse((String) nuevaFechaJsonMap.get("fechaFin"), formatoFecha));
-            return ResponseEntity.ok()
-                .body("Reserva extendida");
+                    Long.valueOf((Integer) nuevaFechaJsonMap.get("reservaId")),
+                    LocalDateTime.parse((String) nuevaFechaJsonMap.get("fechaFin"), formatoFecha));
+            return ResponseEntity.ok().body("Reserva extendida");
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -119,8 +112,7 @@ public class ReservaController {
             List<ReservaEntity> reservas = reservaService.obtenerPorEstado(estado);
             return ResponseEntity.ok(reservas);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

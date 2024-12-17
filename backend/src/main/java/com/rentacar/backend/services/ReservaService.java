@@ -27,6 +27,7 @@ public class ReservaService {
     private final SucursalRepository sucursalRepository;
     private final VehiculoRepository vehiculoRepository;
 
+    @Autowired
     public ReservaService(ReservaRepository reservaRepository, UsuarioRepository usuarioRepository,
                           SucursalRepository sucursalRepository, VehiculoRepository vehiculoRepository) {
         this.reservaRepository = reservaRepository;
@@ -73,7 +74,7 @@ public class ReservaService {
     @Transactional
     public ReservaEntity crearReserva(LocalDateTime fechaInicio, LocalDateTime fechaFin,
                                       BigDecimal costo, Long usuarioID, Long vehiculoID,
-                                      Long sucursalID) {
+                                      Long sucursalID, Long sucursalDevolucionID) {
         // Verificar disponibilidad
         if (!verificarDisponibilidad(vehiculoID, fechaInicio, fechaFin)) {
             throw new RuntimeException("Vehículo no disponible en las fechas seleccionadas");
@@ -88,6 +89,7 @@ public class ReservaService {
         reserva.setUsuario(usuarioRepository.findById(usuarioID).orElseThrow());
         reserva.setVehiculo(vehiculoRepository.findById(vehiculoID).orElseThrow());
         reserva.setSucursal(sucursalRepository.findById(sucursalID).orElseThrow());
+        reserva.setSucursalDevolucion(sucursalRepository.findById(sucursalDevolucionID).orElseThrow()); // Set return location
 
         // Actualizar estado del vehículo
         VehiculoEntity vehiculo = reserva.getVehiculo();

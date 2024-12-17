@@ -11,10 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-
-//Crear
-//Leer todos, algunos por id, eliminar
-
 @RestController
 @RequestMapping("/api/sucursal")
 public class SucursalController {
@@ -29,31 +25,29 @@ public class SucursalController {
     public ResponseEntity<?> crearSucursal(@RequestBody SucursalEntity sucursal) {
         try {
             SucursalEntity nuevaSucursal = sucursalService.crearSucursal(
-                sucursal.getNombre(),
-                sucursal.getDireccion(),
-                sucursal.getTelefono(),
-                sucursal.getEmail());
-            return ResponseEntity.ok()
-                .body(nuevaSucursal);
+                    sucursal.getNombre(),
+                    sucursal.getDireccion(),
+                    sucursal.getTelefono(),
+                    sucursal.getEmail()
+            );
+            return ResponseEntity.ok().body(nuevaSucursal);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
-
     }
 
     @GetMapping("/listar")
     public ResponseEntity<List<Map<String, Object>>> listarSucursales() {
         List<SucursalEntity> sucursales = sucursalService.obtenerSucursales();
         List<Map<String, Object>> sucursalesSimplificadas = sucursales.stream()
-            .map(sucursal -> {
-                Map<String, Object> map = new HashMap<>();
-                map.put("id", sucursal.getId());
-                map.put("nombre", sucursal.getNombre());
-                map.put("direccion", sucursal.getDireccion());
-                return map;
-            })
-            .collect(Collectors.toList());
+                .map(sucursal -> {
+                    Map<String, Object> map = new HashMap<>();
+                    map.put("id", sucursal.getId());
+                    map.put("nombre", sucursal.getNombre());
+                    map.put("direccion", sucursal.getDireccion());
+                    return map;
+                })
+                .collect(Collectors.toList());
         return ResponseEntity.ok(sucursalesSimplificadas);
     }
 
@@ -61,32 +55,28 @@ public class SucursalController {
     public ResponseEntity<?> obtenerSucursalPorId(@RequestParam("id") Long id) {
         try {
             if (id == null) {
-                return ResponseEntity.badRequest()
-                    .body("El ID de la sucursal es requerido");
+                return ResponseEntity.badRequest().body("El ID de la sucursal es requerido");
             }
             SucursalEntity sucursal = sucursalService.obtenerSucursalPorId(id);
             return ResponseEntity.ok(sucursal);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    //Params id
-    //Body sucursal {nombre, direccion, telefono, email}
     @PutMapping("/actualizar")
     public ResponseEntity<?> actualizarSucursalPorId(@RequestParam Long id, @RequestBody SucursalEntity sucursal) {
         try {
             SucursalEntity sucursalActualizada = sucursalService.actualizarSucursal(
-                id,
-                sucursal.getNombre(),
-                sucursal.getDireccion(),
-                sucursal.getTelefono(),
-                sucursal.getEmail());
+                    id,
+                    sucursal.getNombre(),
+                    sucursal.getDireccion(),
+                    sucursal.getTelefono(),
+                    sucursal.getEmail()
+            );
             return ResponseEntity.ok(sucursalActualizada);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -94,11 +84,9 @@ public class SucursalController {
     public ResponseEntity<?> eliminarSucursal(@RequestParam Long id) {
         try {
             sucursalService.eliminarSucursalPorId(id);
-            return ResponseEntity.ok()
-                .body("Sucursal eliminada correctamente");
+            return ResponseEntity.ok().body("Sucursal eliminada correctamente");
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
@@ -106,23 +94,19 @@ public class SucursalController {
     public ResponseEntity<?> agregarEmpleadoPorIdEmpleado(@RequestParam Long IdEmpleado, @RequestParam Long IdSucursal) {
         try {
             sucursalService.agregarEmpleado(IdEmpleado, IdSucursal);
-            return ResponseEntity.ok()
-                .body("Empleado agregado correctamente");
+            return ResponseEntity.ok().body("Empleado agregado correctamente");
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
     @PutMapping("/agregarVehiculo")
-    public ResponseEntity<?> agregarVehiculoPorIdEmpleado(@RequestParam Long IdVehiculo, @RequestParam Long IdSucursal) {
+    public ResponseEntity<?> agregarVehiculoPorIdVehiculo(@RequestParam Long IdVehiculo, @RequestParam Long IdSucursal) {
         try {
             sucursalService.agregarVehiculo(IdVehiculo, IdSucursal);
-            return ResponseEntity.ok()
-                .body("Vehiculo agregado correctamente");
+            return ResponseEntity.ok().body("Vehiculo agregado correctamente");
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 }

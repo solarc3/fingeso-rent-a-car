@@ -7,7 +7,8 @@ export default class Reserva {
     estado = 'PENDIENTE',
     usuario = null,
     vehiculo = null,
-    sucursal = null
+    sucursalRetiro = null,
+    sucursalDevolucion = null,
   ) {
     this.id = id;
     this.fechaInicio = fechaInicio;
@@ -16,6 +17,7 @@ export default class Reserva {
     this.estado = estado; // PENDIENTE, CONFIRMADA, EN_PROGRESO, COMPLETADA, CANCELADA
     this.usuario = usuario;
     this.vehiculo = vehiculo;
-    this.sucursal = sucursal;
+    this.sucursalRetiro = sucursalRetiro;
+    this.sucursalDevolucion = sucursalDevolucion
   }
 }

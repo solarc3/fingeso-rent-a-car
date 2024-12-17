@@ -73,9 +73,7 @@
                             mdi-office-building-marker
                           </v-icon>
                         </template>
-                        <v-list-item-title>
-                          Sucursal: {{ vehicleStore.getSucursalName(vehiculo) }}
-                        </v-list-item-title>
+                        <v-list-item-title>Sucursal: {{ sucursal?.nombre }}</v-list-item-title>
                       </v-list-item>
                     </v-list>
                   </v-card-text>
@@ -117,6 +115,28 @@
                         />
                       </v-col>
                     </v-row>
+                  </v-card-text>
+                </v-card>
+              </v-col>
+
+              <!-- Dropdown for return location -->
+              <v-col cols="12">
+                <v-card
+                  flat
+                  class="bg-grey-lighten-4"
+                >
+                  <v-card-text>
+                    <h3 class="text-h6 mb-2">
+                      Sucursal de Retorno
+                    </h3>
+                    <v-select
+                      v-model="reservation.sucursalRetorno"
+                      :items="locations"
+                      item-text="nombre"
+                      item-value="id"
+                      label="Selecciona la sucursal de retorno"
+                      :rules="[v => !!v || 'La sucursal de retorno es requerida']"
+                    />
                   </v-card-text>
                 </v-card>
               </v-col>
@@ -176,7 +196,6 @@
       :timeout="3000"
     >
       {{ snackbar.text }}
-
       <template #actions>
         <v-btn
           color="white"
@@ -193,11 +212,29 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { useSucursalService } from '@/services/SucursalService';
-import { useVehiculoService } from "@/services/VehiculoService.js";
+import { listarSucursales } from '@/services/SucursalService'; // Correctly import the listarSucursales method
 import { useVehicleStore } from '@/stores/vehicle';
 import { useReservationStore } from '@/stores/reservation';
 import { useAuthStore } from '@/stores/auth';
+import dayjs from 'dayjs'; // Import dayjs for date formatting
+
+// Define props
+const props = defineProps({
+  vehiculoId: {
+    type: [String, Number],
+    required: true,
+    validator: (value) => !isNaN(Number(value))
+  },
+  sucursalId: {
+    type: [String, Number],
+    required: true,
+    validator: (value) => !isNaN(Number(value))
+  },
+  precioArriendo: {
+    type: Number,
+    required: true
+  }
+});
 
 const reservationStore = useReservationStore();
 const authStore = useAuthStore();
@@ -209,10 +246,21 @@ const loading = ref(true);
 const procesando = ref(false);
 const vehiculo = ref(null);
 const sucursal = ref(null);
+const locations = ref([]);
 
 const selectedDates = ref({
   start: '',
   end: ''
+});
+
+const reservation = ref({
+  fechaInicio: '',
+  fechaFin: '',
+  costo: 0,
+  usuario: { id: null },
+  vehiculo: { id: null },
+  sucursal: { id: null },
+  sucursalRetorno: null  // Initialize return location
 });
 
 const snackbar = ref({
@@ -243,7 +291,7 @@ const mostrarTotal = computed(() => {
 });
 
 const isFormValid = computed(() => {
-  return selectedDates.value.start && selectedDates.value.end && diasArriendo.value > 0;
+  return selectedDates.value.start && selectedDates.value.end && diasArriendo.value > 0 && reservation.value.sucursalRetorno;
 });
 
 // Reglas de validación
@@ -256,35 +304,6 @@ const dateRules = [
   }
 ];
 
-// Function to check if dates overlap
-const hasDateOverlap = (start1, end1, start2, end2) => {
-  return (start1 < end2) && (start2 < end1);
-};
-
-// Function to check if a vehicle is available in the selected date range
-const isVehicleAvailable = (vehicle, start, end) => {
-  return !vehicle.reservas?.some(reserva => {
-    return hasDateOverlap(
-      reserva.fechaInicio,
-      reserva.fechaFin,
-      start,
-      end
-    );
-  });
-};
-
-// Computed property to filter vehicles based on availability and other criteria
-computed(() => {
-  return vehicleStore.vehicles.value.filter(vehicle => {
-    // Verificar disponibilidad en fechas seleccionadas
-    if (selectedDates.value) {
-      const {start, end} = selectedDates.value;
-      if (!isVehicleAvailable(vehicle, start, end)) return false;
-    }
-    return true;
-  });
-});
-// Métodos
 const calcularTotal = () => {
   if (selectedDates.value.start && selectedDates.value.end) {
     const inicio = new Date(selectedDates.value.start);
@@ -299,98 +318,45 @@ const cancelarReserva = () => {
   router.push('/');
 };
 
-// Lifecycle hooks
-onMounted(async () =>
-  {
-    try {
-      if (!props.vehiculoId || !props.sucursalId) {
-        throw new Error('Faltan parámetros requeridos');
-      }
-
-      useVehiculoService();
-      const sucursalService = useSucursalService();
-
-      const [vehiculoData, sucursalData] = await Promise.all([
-        vehicleStore.getVehicleById(Number(props.vehiculoId)),
-        sucursalService.obtenerSucursalPorId(Number(props.sucursalId))
-      ]);
-
-      if (!vehiculoData) {
-        throw new Error('No se encontró el vehículo');
-      }
-
-      if (!sucursalData) {
-        throw new Error('No se encontró la sucursal');
-      }
-
-      vehiculo.value = vehiculoData;
-      sucursal.value = sucursalData;
-
-    } catch (error) {
-      console.error('Error cargando datos:', error);
-      snackbar.value = {
-        show: true,
-        color: 'error',
-        text: 'Error al cargar los datos: ' + (error.message || 'Error desconocido')
-      };
-      setTimeout(() => router.push('/'), 3000);
-    } finally {
-      loading.value = false;
-    }
-  }
-);
-const props = defineProps({
-  vehiculoId: {
-    type: [String, Number],
-    required: true,
-    validator: (value) => !isNaN(Number(value))
-  },
-  sucursalId: {
-    type: [String, Number],
-    required: true,
-    validator: (value) => !isNaN(Number(value))
-  },
-  precioArriendo: {
-    type: Number,
-    required: true
-  }
-});
-
-const loadData = async () => {
+const fetchLocations = async () => {
   try {
-    loading.value = true;
+    locations.value = await listarSucursales();  // Correctly fetch locations
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+    snackbar.value = {
+      show: true,
+      color: 'error',
+      text: 'Error al cargar las sucursales: ' + (error.message || 'Error desconocido')
+    };
+  }
+};
 
-    // Convertir IDs a números
-    const vehiculoId = Number(props.vehiculoId);
-    const sucursalId = Number(props.sucursalId);
-
-    if (!vehiculoId || !sucursalId) {
-      throw new Error('IDs inválidos');
+// Lifecycle hooks
+onMounted(async () => {
+  try {
+    if (!props.vehiculoId || !props.sucursalId) {
+      throw new Error('Faltan parámetros requeridos');
     }
 
-    // Cargar datos en paralelo
     const [vehiculoData, sucursalData] = await Promise.all([
-      vehicleStore.getVehicleById(vehiculoId),
-      useSucursalService().obtenerSucursalPorId(sucursalId)
+      vehicleStore.getVehicleById(Number(props.vehiculoId)),
+      listarSucursales()  // Fetch all sucursales
     ]);
 
-    // Validar datos
     if (!vehiculoData) {
       throw new Error('No se encontró el vehículo');
     }
 
-    if (!sucursalData) {
+    vehiculo.value = vehiculoData;
+    sucursal.value = sucursalData.find(sucursal => sucursal.id === Number(props.sucursalId));
+
+    if (!sucursal.value) {
       throw new Error('No se encontró la sucursal');
     }
 
-    // Asignar datos
-    vehiculo.value = vehiculoData;
-    sucursal.value = sucursalData;
+    locations.value = sucursalData;  // Store the list of sucursales
 
-    console.log('Datos cargados:', {
-      vehiculo: vehiculo.value,
-      sucursal: sucursal.value
-    });
+    await fetchLocations();  // Fetch locations on mount
 
   } catch (error) {
     console.error('Error cargando datos:', error);
@@ -399,15 +365,12 @@ const loadData = async () => {
       color: 'error',
       text: 'Error al cargar los datos: ' + (error.message || 'Error desconocido')
     };
-    // Redireccionar después de un error
     setTimeout(() => router.push('/'), 3000);
   } finally {
     loading.value = false;
   }
-};
-onMounted(() => {
-  loadData();
 });
+
 const confirmarReserva = async () => {
   if (!authStore.isAuthenticated) {
     snackbar.value = {
@@ -421,12 +384,13 @@ const confirmarReserva = async () => {
   procesando.value = true;
   try {
     const reservaData = {
-      fechaInicio: new Date(selectedDates.value.start).toISOString(),
-      fechaFin: new Date(selectedDates.value.end).toISOString(),
+      fechaInicio: dayjs(selectedDates.value.start).format('YYYY-MM-DDTHH:mm:ss'),  // Format date correctly
+      fechaFin: dayjs(selectedDates.value.end).format('YYYY-MM-DDTHH:mm:ss'),  // Format date correctly
       costo: totalArriendo.value,
       usuarioId: authStore.user.id,
       vehiculoId: props.vehiculoId,
-      sucursalId: props.sucursalId
+      sucursalId: props.sucursalId,
+      sucursalRetornoId: reservation.value.sucursalRetorno  // Include return location
     };
 
     await reservationStore.createReservation(reservaData);
