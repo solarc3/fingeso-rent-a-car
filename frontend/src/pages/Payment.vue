@@ -132,16 +132,60 @@
                     <v-select
                       v-model="reservation.sucursalRetorno"
                       :items="locations"
-                      item-text="nombre"
+                      item-title="nombre"
                       item-value="id"
                       label="Selecciona la sucursal de retorno"
                       :rules="[v => !!v || 'La sucursal de retorno es requerida']"
-                    />
+                      return-object
+                    >
+                      <template #item="{ props, item }">
+                        <v-list-item v-bind="props">
+                          <v-list-item-subtitle>{{ item.raw.direccion }}</v-list-item-subtitle>
+                        </v-list-item>
+                      </template>
+                    </v-select>
                   </v-card-text>
                 </v-card>
               </v-col>
             </v-row>
-
+            <v-col cols="12">
+              <v-card
+                flat
+                class="bg-grey-lighten-4"
+              >
+                <v-card-title class="text-subtitle-1">
+                  Fechas No Disponibles
+                </v-card-title>
+                <v-card-text>
+                  <v-list
+                    v-if="reservasExistentes.length > 0"
+                    density="compact"
+                  >
+                    <v-list-item
+                      v-for="(reserva, index) in reservasExistentes"
+                      :key="index"
+                    >
+                      <template #prepend>
+                        <v-icon color="warning">
+                          mdi-calendar-lock
+                        </v-icon>
+                      </template>
+                      <v-list-item-title>
+                        {{ formatDate(reserva.fechaInicio) }} - {{ formatDate(reserva.fechaFin) }}
+                      </v-list-item-title>
+                    </v-list-item>
+                  </v-list>
+                  <v-alert
+                    v-else
+                    type="info"
+                    variant="tonal"
+                    density="compact"
+                  >
+                    No hay reservas programadas para este vehículo
+                  </v-alert>
+                </v-card-text>
+              </v-card>
+            </v-col>
             <!-- Total y costos -->
             <v-card
               v-if="mostrarTotal"
@@ -210,12 +254,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useRouter } from 'vue-router';
-import { listarSucursales } from '@/services/SucursalService'; // Correctly import the listarSucursales method
-import { useVehicleStore } from '@/stores/vehicle';
-import { useReservationStore } from '@/stores/reservation';
-import { useAuthStore } from '@/stores/auth';
+import {ref, computed, onMounted} from 'vue';
+import {useRouter} from 'vue-router';
+import {useSucursalService} from '@/services/SucursalService';
+import {useVehicleStore} from '@/stores/vehicle';
+import {useReservationStore} from '@/stores/reservation';
+import {useAuthStore} from '@/stores/auth';
 import dayjs from 'dayjs'; // Import dayjs for date formatting
 
 // Define props
@@ -257,9 +301,9 @@ const reservation = ref({
   fechaInicio: '',
   fechaFin: '',
   costo: 0,
-  usuario: { id: null },
-  vehiculo: { id: null },
-  sucursal: { id: null },
+  usuario: {id: null},
+  vehiculo: {id: null},
+  sucursal: {id: null},
   sucursalRetorno: null  // Initialize return location
 });
 
@@ -320,7 +364,14 @@ const cancelarReserva = () => {
 
 const fetchLocations = async () => {
   try {
-    locations.value = await listarSucursales();  // Correctly fetch locations
+    const sucursalService = useSucursalService();
+    const sucursales = await sucursalService.listarSucursales();
+    // Asegúrate de que cada sucursal tenga las propiedades necesarias
+    locations.value = sucursales.map(sucursal => ({
+      id: sucursal.id,
+      nombre: sucursal.nombre,
+      direccion: sucursal.direccion
+    }));
   } catch (error) {
     console.error('Error fetching locations:', error);
     snackbar.value = {
@@ -338,9 +389,10 @@ onMounted(async () => {
       throw new Error('Faltan parámetros requeridos');
     }
 
+    const sucursalService = useSucursalService();
     const [vehiculoData, sucursalData] = await Promise.all([
       vehicleStore.getVehicleById(Number(props.vehiculoId)),
-      listarSucursales()  // Fetch all sucursales
+      sucursalService.listarSucursales()
     ]);
 
     if (!vehiculoData) {
@@ -354,9 +406,9 @@ onMounted(async () => {
       throw new Error('No se encontró la sucursal');
     }
 
-    locations.value = sucursalData;  // Store the list of sucursales
+    locations.value = sucursalData;
 
-    await fetchLocations();  // Fetch locations on mount
+    await fetchLocations();
 
   } catch (error) {
     console.error('Error cargando datos:', error);
@@ -381,19 +433,36 @@ const confirmarReserva = async () => {
     return;
   }
 
+  // Validar que todos los campos necesarios estén presentes
+  if (!selectedDates.value.start ||
+    !selectedDates.value.end ||
+    !reservation.value.sucursalRetorno?.id ||
+    !props.vehiculoId ||
+    !props.sucursalId ||
+    !authStore.user.id) {
+    snackbar.value = {
+      show: true,
+      color: 'error',
+      text: 'Por favor complete todos los campos requeridos'
+    };
+    return;
+  }
+
   procesando.value = true;
   try {
     const reservaData = {
-      fechaInicio: dayjs(selectedDates.value.start).format('YYYY-MM-DDTHH:mm:ss'),  // Format date correctly
-      fechaFin: dayjs(selectedDates.value.end).format('YYYY-MM-DDTHH:mm:ss'),  // Format date correctly
+      fechaInicio: dayjs(selectedDates.value.start).format('YYYY-MM-DDTHH:mm:ss'),
+      fechaFin: dayjs(selectedDates.value.end).format('YYYY-MM-DDTHH:mm:ss'),
       costo: totalArriendo.value,
       usuarioId: authStore.user.id,
-      vehiculoId: props.vehiculoId,
-      sucursalId: props.sucursalId,
-      sucursalRetornoId: reservation.value.sucursalRetorno  // Include return location
+      vehiculoId: Number(props.vehiculoId),
+      sucursalId: Number(props.sucursalId),
+      sucursalDevolucionId: Number(reservation.value.sucursalRetorno.id) // Cambiar aquí
     };
 
-    await reservationStore.createReservation(reservaData);
+    console.log('Datos de la reserva a enviar:', reservaData);
+
+    const nuevaReserva = await reservationStore.createReservation(reservaData);
 
     snackbar.value = {
       show: true,
@@ -405,6 +474,7 @@ const confirmarReserva = async () => {
       router.push('/mis-reservas');
     }, 1500);
   } catch (error) {
+    console.error('Error completo:', error);
     snackbar.value = {
       show: true,
       color: 'error',
@@ -413,5 +483,29 @@ const confirmarReserva = async () => {
   } finally {
     procesando.value = false;
   }
+};
+const reservasExistentes = computed(() => {
+  if (!vehiculo.value?.reservas || !Array.isArray(vehiculo.value.reservas)) {
+    return [];
+  }
+
+  const ahora = new Date();
+  return vehiculo.value.reservas
+    .filter(reserva =>
+      ['CONFIRMADA', 'EN_PROGRESO'].includes(reserva.estado) &&
+      new Date(reserva.fechaFin) > ahora
+    )
+    .sort((a, b) => new Date(a.fechaInicio) - new Date(b.fechaInicio));
+});
+
+// Función para formatear fechas
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 </script>

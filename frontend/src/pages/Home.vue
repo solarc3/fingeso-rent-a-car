@@ -3,7 +3,10 @@
     fluid
     style="background-color: white;"
   >
-    <Buscador @submit="handleSearch" />
+    <Buscador
+      :fechas-actuales="fechasSeleccionadas"
+      @submit="handleSearch"
+    />
     <v-container
       width="100%"
       min-width="100%"
@@ -36,12 +39,12 @@
             :key="vehiculo.id"
             cols="12"
             sm="6"
-            md="2"
+            md="4"
             lg="3"
-            style="padding: 10px"
           >
             <VehiculoCard
               :vehiculo="vehiculo"
+              :fechas-seleccionadas="fechasSeleccionadas"
               @seleccionar="seleccionarVehiculo"
             />
           </v-col>
@@ -87,7 +90,19 @@ const paginatedVehiculos = computed(() => {
 });
 
 // Métodos
+const fechasSeleccionadas = ref({
+  inicio: null,
+  fin: null
+});
 
+const handleSearch = (searchData) => {
+  fechasSeleccionadas.value = {
+    inicio: searchData.fechas.inicio,
+    fin: searchData.fechas.fin
+  };
+  vehicleStore.setFilters(searchData);
+  currentPage.value = 1;
+};
 const seleccionarVehiculo = (vehiculo) => {
   router.push({
     path: '/payment',
@@ -106,11 +121,7 @@ onMounted(async () => {
 const vehiculos = computed(() => {
   return vehicleStore.getFilteredVehicles;
 });
-const handleSearch = (searchData) => {
-  console.log('Handling search with data:', searchData);
-  vehicleStore.setFilters(searchData);
-  currentPage.value = 1;
-};
+
 </script>
 
 <style scoped>

@@ -18,7 +18,7 @@ const routes = [
       },
       {
         path: 'payment',
-        name: 'payment',
+        name: 'payment', // Agregar el nombre de la ruta
         component: () => import('@/pages/Payment.vue'),
         props: route => ({
           vehiculoId: Number(route.query.vehiculoId),

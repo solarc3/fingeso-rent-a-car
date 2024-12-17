@@ -3,31 +3,25 @@ import axiosInstance from "@/services/axiosConfig.js";
 export const useReservaService = () => {
   const crearReserva = async (reserva) => {
     try {
-      const {data} = await axiosInstance.post('/api/reserva/crear', {
+      const requestData = {
         fechaInicio: reserva.fechaInicio,
         fechaFin: reserva.fechaFin,
         costo: reserva.costo,
-        usuario: {
-          id: reserva.usuarioId
-        },
-        vehiculo: {
-          id: reserva.vehiculoId
-        },
-        sucursal: {
-          id: reserva.sucursalId
-        }
-      });
-
-      // Asegurarse de que los datos devueltos tengan la estructura correcta
-      return {
-        ...data,
-        fechaInicio: new Date(data.fechaInicio),
-        fechaFin: new Date(data.fechaFin)
+        usuarioId: reserva.usuarioId,
+        vehiculoId: reserva.vehiculoId,
+        sucursalId: reserva.sucursalId,
+        sucursalDevolucionId: reserva.sucursalDevolucionId // Cambiar aquí
       };
+
+      console.log('Enviando datos al servidor:', requestData);
+
+      const {data} = await axiosInstance.post('/api/reserva/crear', requestData);
+      return data;
     } catch (error) {
+      console.error('Error en crearReserva:', error.response?.data || error);
       throw new Error(error.response?.data || 'Error al crear la reserva');
     }
-  }
+  };
 
   const obtenerReservas = async () => {
     // GET /api/reserva/obtener

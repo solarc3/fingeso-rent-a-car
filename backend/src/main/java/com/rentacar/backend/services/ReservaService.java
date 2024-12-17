@@ -86,10 +86,14 @@ public class ReservaService {
         reserva.setFechaFin(fechaFin);
         reserva.setCosto(costo);
         reserva.setEstado(ReservaEntity.EstadoReserva.PENDIENTE); // Usar el enum
-        reserva.setUsuario(usuarioRepository.findById(usuarioID).orElseThrow());
-        reserva.setVehiculo(vehiculoRepository.findById(vehiculoID).orElseThrow());
-        reserva.setSucursal(sucursalRepository.findById(sucursalID).orElseThrow());
-        reserva.setSucursalDevolucion(sucursalRepository.findById(sucursalDevolucionID).orElseThrow()); // Set return location
+        reserva.setUsuario(usuarioRepository.findById(usuarioID)
+                               .orElseThrow());
+        reserva.setVehiculo(vehiculoRepository.findById(vehiculoID)
+                                .orElseThrow());
+        reserva.setSucursal(sucursalRepository.findById(sucursalID)
+                                .orElseThrow());
+        reserva.setSucursalDevolucion(sucursalRepository.findById(sucursalDevolucionID)
+                                          .orElseThrow()); // Set return location
 
         // Actualizar estado del vehículo
         VehiculoEntity vehiculo = reserva.getVehiculo();
@@ -101,7 +105,7 @@ public class ReservaService {
 
     public ReservaEntity actualizarEstado(Long reservaId, ReservaEntity.EstadoReserva nuevoEstado) {
         ReservaEntity reserva = reservaRepository.findById(reservaId)
-                .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
+            .orElseThrow(() -> new RuntimeException("Reserva no encontrada"));
         reserva.setEstado(nuevoEstado);
         return reservaRepository.save(reserva);
     }
@@ -113,8 +117,9 @@ public class ReservaService {
     // Método para verificar disponibilidad
     public boolean verificarDisponibilidad(Long vehiculoId, LocalDateTime fechaInicio, LocalDateTime fechaFin) {
         List<ReservaEntity> reservasExistentes = reservaRepository.findByVehiculoAndFechasSuperpuestas(
-                vehiculoId, fechaInicio, fechaFin
-        );
+            vehiculoId, fechaInicio, fechaFin
+                                                                                                      );
         return reservasExistentes.isEmpty();
     }
+
 }

@@ -27,12 +27,28 @@ export const useReservationStore = defineStore('reservation', {
     async createReservation(reservationData) {
       this.loading = true;
       try {
+        console.log('Creando reserva con datos:', reservationData);
         const reservaService = useReservaService();
-        const newReservation = await reservaService.crearReserva(reservationData);
-        this.reservations.push(newReservation);
+        const newReservation = await reservaService.crearReserva({
+          fechaInicio: reservationData.fechaInicio,
+          fechaFin: reservationData.fechaFin,
+          costo: reservationData.costo,
+          usuarioId: reservationData.usuarioId,
+          vehiculoId: reservationData.vehiculoId,
+          sucursalId: reservationData.sucursalId,
+          sucursalDevolucionId: reservationData.sucursalDevolucionId
+        });
+
+        // Agregar la nueva reserva al estado
+        if (this.reservations) {
+          this.reservations.push(newReservation);
+        } else {
+          this.reservations = [newReservation];
+        }
+
         return newReservation;
       } catch (error) {
-        this.error = error.message;
+        console.error('Error en createReservation:', error);
         throw error;
       } finally {
         this.loading = false;

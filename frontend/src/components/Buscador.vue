@@ -296,6 +296,7 @@ import {useSucursalService} from '@/services/SucursalService';
 import {debounce} from 'lodash';
 
 const emit = defineEmits(['submit']);
+
 const metadataStore = useMetadataStore();
 
 // Estado
@@ -540,9 +541,6 @@ const handleSubmit = () => {
     return;
   }
 
-  const fechaRetiro = new Date(`${formData.fechaRetiro}T${formData.horaRetiro}:00`);
-  const fechaDevolucion = new Date(`${formData.fechaDevolucion}T${formData.horaDevolucion}:00`);
-
   const searchData = {
     marca: formData.marca,
     sucursal: formData.sucursal, // Puede ser null
@@ -550,16 +548,20 @@ const handleSubmit = () => {
     transmision: formData.transmision,
     disponibilidad: formData.estado || 'TODOS',
     fechas: {
-      inicio: fechaRetiro.toISOString(),
-      fin: fechaDevolucion.toISOString()
+      inicio: formData.fechaRetiro
+        ? `${formData.fechaRetiro}T${formData.horaRetiro}:00`
+        : null,
+      fin: formData.fechaDevolucion
+        ? `${formData.fechaDevolucion}T${formData.horaDevolucion}:00`
+        : null
     },
     precioMinimo: Number(formData.rangoPrecio[0]),
     precioMaximo: Number(formData.rangoPrecio[1]),
     ordenarPor: formData.ordenarPor
   };
 
-  console.log('Submitting search:', searchData);
   emit('submit', searchData);
+  console.log('Submitting search:', searchData);
 };
 // Métodos
 const loadSucursales = async () => {

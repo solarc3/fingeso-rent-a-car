@@ -14,12 +14,21 @@
 
     <v-card-title class="d-flex justify-space-between align-center">
       <span>{{ vehiculo.marca }} {{ vehiculo.modelo }}</span>
-      <v-chip
-        :color="vehicleStore.getStatusColor(vehiculo.estado)"
-        size="small"
+      <v-tooltip
+        :text="getAvailabilityTooltip(vehiculo)"
+        location="bottom"
       >
-        {{ vehicleStore.getStatusText(vehiculo.estado) }}
-      </v-chip>
+        <template #activator="{ props }">
+          <v-chip
+            v-bind="props"
+            :color="getChipColor(vehiculo)"
+            size="small"
+            class="status-chip"
+          >
+            {{ getChipText(vehiculo) }}
+          </v-chip>
+        </template>
+      </v-tooltip>
     </v-card-title>
 
     <v-card-text>
@@ -83,14 +92,6 @@
         class="text-white"
         variant="elevated"
         :disabled="vehiculo.estado !== 'DISPONIBLE'"
-        :to="{
-          path: '/payment',
-          query: {
-            vehiculoId: String(vehiculo.id),
-            sucursal: String(vehiculo.sucursal?.id),
-            precioArriendo: vehiculo.precioArriendo
-          }
-        }"
         @click="seleccionarVehiculo"
       >
         <v-icon start>
@@ -102,28 +103,111 @@
   </v-card>
 </template>
 <script setup>
-import {useVehicleStore} from '@/stores/vehicle'
+
+import {useRouter} from 'vue-router';
+import {useVehicleStore} from '@/stores/vehicle';
+import {computed} from 'vue';
 
 const vehicleStore = useVehicleStore();
+const router = useRouter();
 
 const props = defineProps({
   vehiculo: {
     type: Object,
-    required: true,
-    validator: (obj) => {
-      return obj.id && obj.precioArriendo;
-    }
+    required: true
+  },
+  fechasSeleccionadas: {
+    type: Object,
+    default: () => ({
+      inicio: null,
+      fin: null
+    })
   }
 });
+const getChipColor = (vehiculo) => {
+  const tieneReservaActiva = vehiculo.reservas?.some(r =>
+    ['CONFIRMADA', 'EN_PROGRESO'].includes(r.estado) &&
+    new Date(r.fechaFin) > new Date()
+  );
 
-const emit = defineEmits(['seleccionar']);
-
-const seleccionarVehiculo = () => {
-  console.log('Vehículo seleccionado:', props.vehiculo);
-  emit('seleccionar', props.vehiculo);
+  return tieneReservaActiva ? 'blue' : vehicleStore.getStatusColor(vehiculo.estado);
 };
 
 
+const isAvailable = computed(() => {
+  // Primero verificar el estado del vehículo
+  if (props.vehiculo.estado !== 'DISPONIBLE') {
+    return false;
+  }
+
+  // Si no hay fechas seleccionadas, solo considerar el estado
+  if (!props.fechasSeleccionadas.inicio || !props.fechasSeleccionadas.fin) {
+    return true;
+  }
+
+  // Verificar reservas existentes
+  return !hasOverlappingReservations.value;
+});
+const hasOverlappingReservations = computed(() => {
+  if (!props.vehiculo.reservas || !Array.isArray(props.vehiculo.reservas)) {
+    return false;
+  }
+
+  const fechaInicio = new Date(props.fechasSeleccionadas.inicio);
+  const fechaFin = new Date(props.fechasSeleccionadas.fin);
+
+  return props.vehiculo.reservas.some(reserva => {
+    if (!['CONFIRMADA', 'EN_PROGRESO'].includes(reserva.estado)) {
+      return false;
+    }
+
+    const reservaInicio = new Date(reserva.fechaInicio);
+    const reservaFin = new Date(reserva.fechaFin);
+
+    return fechaInicio < reservaFin && reservaInicio < fechaFin;
+  });
+});
+
+
+const emit = defineEmits(['seleccionar']);
+const getAvailabilityTooltip = (vehiculo) => {
+  if (vehiculo.estado !== 'DISPONIBLE') {
+    // Si el estado es ARRENDADO, buscar la reserva activa
+    if (vehiculo.estado === 'ARRENDADO') {
+      const reservaActiva = vehiculo.reservas?.find(r =>
+        r.estado === 'EN_PROGRESO' && new Date(r.fechaFin) > new Date()
+      );
+
+      if (reservaActiva) {
+        return `Arrendado hasta ${formatDate(reservaActiva.fechaFin)}`;
+      }
+    }
+    return vehicleStore.getStatusText(vehiculo.estado);
+  }
+
+  const proximaReserva = vehiculo.reservas
+    ?.filter(r => ['CONFIRMADA', 'EN_PROGRESO', 'ARRENDADO'].includes(r.estado))
+    .sort((a, b) => new Date(a.fechaInicio) - new Date(b.fechaInicio))
+    .find(r => new Date(r.fechaFin) > new Date());
+
+  if (proximaReserva) {
+    return `Reservado desde ${formatDate(proximaReserva.fechaInicio)} hasta ${formatDate(proximaReserva.fechaFin)}`;
+  }
+
+  return 'Disponible para arrendar';
+};
+const seleccionarVehiculo = () => {
+  if (!isAvailable.value) return;
+
+  router.push({
+    name: 'payment',
+    query: {
+      vehiculoId: props.vehiculo.id,
+      sucursal: props.vehiculo.sucursal?.id,
+      precioArriendo: props.vehiculo.precioArriendo
+    }
+  });
+};
 const formatPrice = (price) => {
   return new Intl.NumberFormat('es-CL').format(price);
 };
@@ -131,6 +215,40 @@ const formatPrice = (price) => {
 function obtenerImagen(id) {
   return new URL(`../../assets/${id}.png`, import.meta.url).href;
 }
+
+const getChipText = (vehiculo) => {
+  // Si está arrendado, mostrar fecha de devolución
+  if (vehiculo.estado === 'ARRENDADO') {
+    const reservaActiva = vehiculo.reservas
+      ?.find(r => r.estado === 'EN_PROGRESO' && new Date(r.fechaFin) > new Date());
+
+    if (reservaActiva) {
+      const fechaFin = formatDate(reservaActiva.fechaFin);
+      return `Arrendado hasta ${fechaFin}`;
+    }
+  }
+
+  // Para otros estados, mostrar la próxima reserva
+  const reservaActiva = vehiculo.reservas
+    ?.filter(r => ['CONFIRMADA', 'EN_PROGRESO'].includes(r.estado))
+    .sort((a, b) => new Date(a.fechaInicio) - new Date(b.fechaInicio))
+    .find(r => new Date(r.fechaFin) > new Date());
+
+  if (reservaActiva) {
+    const fechaFin = formatDate(reservaActiva.fechaFin);
+    return `Reservado hasta ${fechaFin}`;
+  }
+
+  return vehicleStore.getStatusText(vehiculo.estado);
+};
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric'
+  });
+};
 </script>
 
 <style scoped>
@@ -220,5 +338,13 @@ function obtenerImagen(id) {
 .font-weight-bold {
   color: #be1784;
   font-size: 1.1rem !important;
+}
+
+.status-chip {
+  transition: transform 0.2s ease;
+}
+
+.status-chip:hover {
+  transform: scale(1.05);
 }
 </style>

@@ -26,8 +26,9 @@ export const useVehicleStore = defineStore('vehicle', {
       'DISPONIBLE': 'Disponible',
       'NO_DISPONIBLE': 'No Disponible',
       'EN_MANTENCION': 'En Mantención',
-      'EN_REPARACION': 'En Reparación'
-    }
+      'EN_REPARACION': 'En Reparación',
+      'ARRENDADO': 'Arrendado'
+    },
 
   }),
 
@@ -122,22 +123,62 @@ export const useVehicleStore = defineStore('vehicle', {
       console.log('Applying filters with:', this.filters);
 
       this.filteredVehicles = this.vehicles.filter(vehiculo => {
-        // Excluir vehículos en mantención o reparación por defecto
-        if (vehiculo.estado === 'EN_MANTENCION' || vehiculo.estado === 'EN_REPARACION') {
-          return false;
+        if (this.filters.fechas?.inicio && this.filters.fechas?.fin) {
+          const fechaInicio = new Date(this.filters.fechas.inicio);
+          const fechaFin = new Date(this.filters.fechas.fin);
+
+          // Verificar si hay reservas que se solapen
+          const tieneReservasSolapadas = vehiculo.reservas?.some(reserva => {
+            if (!['CONFIRMADA', 'EN_PROGRESO'].includes(reserva.estado)) {
+              return false;
+            }
+
+            const reservaInicio = new Date(reserva.fechaInicio);
+            const reservaFin = new Date(reserva.fechaFin);
+
+            return fechaInicio < reservaFin && reservaInicio < fechaFin;
+          });
+
+          if (tieneReservasSolapadas) {
+            return false;
+          }
+        }
+        // Si el filtro es solo DISPONIBLES
+        if (this.filters.disponibilidad === 'DISPONIBLES') {
+          // Verificar disponibilidad actual
+          if (vehiculo.estado !== 'DISPONIBLE') {
+            return false;
+          }
+
+          // Si hay fechas especificadas, verificar disponibilidad en ese rango
+          if (this.filters.fechas) {
+            const disponible = this.isVehicleAvailableInDateRange(
+              vehiculo,
+              this.filters.fechas.inicio,
+              this.filters.fechas.fin
+            );
+            if (!disponible) return false;
+          }
+        } else {
+          // Si es TODOS, aún así excluimos los que están en mantención o reparación
+          if (['EN_MANTENCION', 'EN_REPARACION'].includes(vehiculo.estado)) {
+            return false;
+          }
         }
 
-        // Si hay filtros específicos, aplicarlos
+        // Filtro por marca
         if (this.filters.marca &&
           vehiculo.marca.toLowerCase() !== this.filters.marca.toLowerCase()) {
           return false;
         }
 
+        // Filtro por sucursal
         if (this.filters.sucursal &&
           (!vehiculo.sucursal || vehiculo.sucursal.id !== this.filters.sucursal.id)) {
           return false;
         }
 
+        // Filtro por tipo de transmisión
         if (this.filters.transmision) {
           const transmision = vehiculo.acriss.charAt(2);
           if (transmision !== this.filters.transmision) {
@@ -145,49 +186,95 @@ export const useVehicleStore = defineStore('vehicle', {
           }
         }
 
-        // Filtro por precio
+        // Filtro por tipo de vehículo
+        if (this.filters.tipoVehiculo) {
+          const tipoVehiculo = vehiculo.acriss.charAt(0);
+          if (tipoVehiculo !== this.filters.tipoVehiculo) {
+            return false;
+          }
+        }
+
+        // Filtro por rango de precio
         const precio = Number(vehiculo.precioArriendo);
         if (precio < this.filters.precioMinimo || precio > this.filters.precioMaximo) {
           return false;
         }
 
-        // Verificar disponibilidad solo si hay fechas especificadas
-        if (this.filters.fechas) {
-          const disponible = this.isVehicleAvailableInDateRange(
-            vehiculo,
-            this.filters.fechas.inicio,
-            this.filters.fechas.fin
-          );
+        // Verificar disponibilidad por fechas si están especificadas
+        if (this.filters.fechas && this.filters.fechas.inicio && this.filters.fechas.fin) {
+          const fechaInicio = new Date(this.filters.fechas.inicio);
+          const fechaFin = new Date(this.filters.fechas.fin);
+          const ahora = new Date();
 
-          if (this.filters.disponibilidad === 'DISPONIBLES' && !disponible) {
+          // Verificar que las fechas sean futuras
+          if (fechaInicio < ahora) {
             return false;
+          }
+
+          // Verificar si hay reservas que se solapen
+          if (vehiculo.reservas && Array.isArray(vehiculo.reservas)) {
+            const tieneReservasSolapadas = vehiculo.reservas.some(reserva => {
+              // Solo considerar reservas confirmadas o en progreso
+              if (!['CONFIRMADA', 'EN_PROGRESO'].includes(reserva.estado)) {
+                return false;
+              }
+
+              const reservaInicio = new Date(reserva.fechaInicio);
+              const reservaFin = new Date(reserva.fechaFin);
+
+              // Verificar solapamiento
+              return (fechaInicio < reservaFin && reservaInicio < fechaFin);
+            });
+
+            if (tieneReservasSolapadas) {
+              return false;
+            }
           }
         }
 
         return true;
       });
 
-      // Aplicar ordenamiento si existe
+      // Aplicar ordenamiento
       if (this.filters.ordenarPor) {
-        this.applySorting();
+        switch (this.filters.ordenarPor.valor) {
+          case 'PRECIO_ASC':
+            this.filteredVehicles.sort((a, b) => a.precioArriendo - b.precioArriendo);
+            break;
+          case 'PRECIO_DESC':
+            this.filteredVehicles.sort((a, b) => b.precioArriendo - a.precioArriendo);
+            break;
+          case 'MARCA_ASC':
+            this.filteredVehicles.sort((a, b) => a.marca.localeCompare(b.marca));
+            break;
+          case 'MARCA_DESC':
+            this.filteredVehicles.sort((a, b) => b.marca.localeCompare(a.marca));
+            break;
+        }
       }
 
-      console.log('Filtered vehicles:', this.filteredVehicles);
+      console.log('Vehículos filtrados:', this.filteredVehicles);
     },
     updateFilter(filterName, value) {
       this.filters[filterName] = value;
       this.applyFilters();
     },
-    isVehicleAvailableInDateRange(vehicle, startDate, endDate) {
-      if (!vehicle.reservas || !Array.isArray(vehicle.reservas)) return true;
+    isVehicleAvailableInDateRange(vehiculo, fechaInicio, fechaFin) {
+      if (!vehiculo.reservas || !Array.isArray(vehiculo.reservas)) {
+        return true;
+      }
 
-      const start = new Date(startDate);
-      const end = new Date(endDate);
+      const inicio = new Date(fechaInicio);
+      const fin = new Date(fechaFin);
 
-      return !vehicle.reservas.some(reserva => {
-        const reservaStart = new Date(reserva.fechaInicio);
-        const reservaEnd = new Date(reserva.fechaFin);
-        return (start < reservaEnd && reservaStart < end);
+      return !vehiculo.reservas.some(reserva => {
+        if (!['CONFIRMADA', 'EN_PROGRESO'].includes(reserva.estado)) {
+          return false;
+        }
+        const reservaInicio = new Date(reserva.fechaInicio);
+        const reservaFin = new Date(reserva.fechaFin);
+
+        return inicio < reservaFin && reservaInicio < fin;
       });
     },
     clearFilters() {
@@ -401,7 +488,8 @@ export const useVehicleStore = defineStore('vehicle', {
         'DISPONIBLE': 'success',
         'NO_DISPONIBLE': 'error',
         'EN_MANTENCION': 'warning',
-        'EN_REPARACION': 'orange'
+        'EN_REPARACION': 'orange',
+        'ARRENDADO': 'blue'  // Añadir color para estado arrendado
       }
       return colors[estado] || 'grey'
     }
