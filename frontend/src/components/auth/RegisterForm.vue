@@ -95,14 +95,14 @@ const router = useRouter();
 const authStore = useAuthStore();
 const emit = defineEmits(['close', 'register-success', 'register-error']);
 
-// Referencias y estado
+// referencias y estado
 const form = ref(null);
 const isFormValid = ref(false);
 const loading = ref(false);
 const error = ref('');
 const isRutValid = ref(false);
 
-// Campos del formulario
+// formulario
 const nombre = ref('');
 const apellidos = ref('');
 const rut = ref('');
@@ -111,7 +111,7 @@ const email = ref('');
 const password = ref('');
 const confirmPassword = ref('');
 
-// Reglas de validación
+// validacion
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const phoneRegex = /^[+]?[(]?[0-9]{1,4}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/;
 
@@ -158,18 +158,18 @@ const handleRegister = async () => {
       rol: 'ARRENDATARIO'
     };
 
-    // Registrar usuario
+    // registrar usuario
     const nuevoUsuario = await useUsuarioService().crearUsuario(usuarioData);
 
-    // Login automático después del registro
+    // login automatico despues del registro
     const usuarioLogueado = await authStore.login(
       nuevoUsuario.rut,
       password.value,
       'ARRENDATARIO'
     );
 
-    emit('register-success', usuarioLogueado); // Emitir el evento con los datos del usuario
-    emit('close'); // Cerrar el diálogo
+    emit('register-success', usuarioLogueado);
+    emit('close');
 
     await router.push('/');
   } catch (err) {

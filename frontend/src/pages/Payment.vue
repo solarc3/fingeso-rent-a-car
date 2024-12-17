@@ -13,7 +13,6 @@
             Detalles del Arriendo
           </v-card-title>
 
-          <!-- Loading state -->
           <div
             v-if="loading"
             class="d-flex justify-center align-center py-4"
@@ -25,7 +24,6 @@
           </div>
 
           <template v-else>
-            <!-- Detalles del vehículo -->
             <v-row>
               <v-col
                 cols="12"
@@ -119,7 +117,6 @@
                 </v-card>
               </v-col>
 
-              <!-- Dropdown for return location -->
               <v-col cols="12">
                 <v-card
                   flat
@@ -209,7 +206,6 @@
               </v-card-text>
             </v-card>
 
-            <!-- Botones de acción -->
             <v-card-actions class="mt-4">
               <v-spacer />
               <v-btn
@@ -260,9 +256,8 @@ import {useSucursalService} from '@/services/SucursalService';
 import {useVehicleStore} from '@/stores/vehicle';
 import {useReservationStore} from '@/stores/reservation';
 import {useAuthStore} from '@/stores/auth';
-import dayjs from 'dayjs'; // Import dayjs for date formatting
+import dayjs from 'dayjs';
 
-// Define props
 const props = defineProps({
   vehiculoId: {
     type: [String, Number],
@@ -304,7 +299,7 @@ const reservation = ref({
   usuario: {id: null},
   vehiculo: {id: null},
   sucursal: {id: null},
-  sucursalRetorno: null  // Initialize return location
+  sucursalRetorno: null
 });
 
 const snackbar = ref({
@@ -313,7 +308,6 @@ const snackbar = ref({
   color: 'success'
 });
 
-// Computed properties
 const minDate = computed(() => {
   const today = new Date();
   return today.toISOString().split('T')[0];
@@ -338,7 +332,6 @@ const isFormValid = computed(() => {
   return selectedDates.value.start && selectedDates.value.end && diasArriendo.value > 0 && reservation.value.sucursalRetorno;
 });
 
-// Reglas de validación
 const dateRules = [
   v => !!v || 'La fecha es requerida',
   v => {
@@ -382,7 +375,6 @@ const fetchLocations = async () => {
   }
 };
 
-// Lifecycle hooks
 onMounted(async () => {
   try {
     if (!props.vehiculoId || !props.sucursalId) {
@@ -423,67 +415,68 @@ onMounted(async () => {
   }
 });
 
-const confirmarReserva = async () => {
-  if (!authStore.isAuthenticated) {
-    snackbar.value = {
-      show: true,
-      color: 'warning',
-      text: 'Debe iniciar sesión para realizar una reserva'
-    };
-    return;
+const confirmarReserva = async () =>
+  {
+    if (!authStore.isAuthenticated) {
+      snackbar.value = {
+        show: true,
+        color: 'warning',
+        text: 'Debe iniciar sesión para realizar una reserva'
+      };
+      return;
+    }
+
+    if (!selectedDates.value.start ||
+      !selectedDates.value.end ||
+      !reservation.value.sucursalRetorno?.id ||
+      !props.vehiculoId ||
+      !props.sucursalId ||
+      !authStore.user.id) {
+      snackbar.value = {
+        show: true,
+        color: 'error',
+        text: 'Por favor complete todos los campos requeridos'
+      };
+      return;
+    }
+
+    procesando.value = true;
+    try {
+      const reservaData = {
+        fechaInicio: dayjs(selectedDates.value.start).format('YYYY-MM-DDTHH:mm:ss'),
+        fechaFin: dayjs(selectedDates.value.end).format('YYYY-MM-DDTHH:mm:ss'),
+        costo: totalArriendo.value,
+        usuarioId: authStore.user.id,
+        vehiculoId: Number(props.vehiculoId),
+        sucursalId: Number(props.sucursalId),
+        sucursalDevolucionId: Number(reservation.value.sucursalRetorno.id)
+      };
+
+      console.log('Datos de la reserva a enviar:', reservaData);
+
+      await reservationStore.createReservation(reservaData);
+
+      snackbar.value = {
+        show: true,
+        color: 'success',
+        text: 'Reserva confirmada exitosamente'
+      };
+
+      setTimeout(() => {
+        router.push('/mis-reservas');
+      }, 1500);
+    } catch (error) {
+      console.error('Error completo:', error);
+      snackbar.value = {
+        show: true,
+        color: 'error',
+        text: 'Error al procesar la reserva: ' + error.message
+      };
+    } finally {
+      procesando.value = false;
+    }
   }
-
-  // Validar que todos los campos necesarios estén presentes
-  if (!selectedDates.value.start ||
-    !selectedDates.value.end ||
-    !reservation.value.sucursalRetorno?.id ||
-    !props.vehiculoId ||
-    !props.sucursalId ||
-    !authStore.user.id) {
-    snackbar.value = {
-      show: true,
-      color: 'error',
-      text: 'Por favor complete todos los campos requeridos'
-    };
-    return;
-  }
-
-  procesando.value = true;
-  try {
-    const reservaData = {
-      fechaInicio: dayjs(selectedDates.value.start).format('YYYY-MM-DDTHH:mm:ss'),
-      fechaFin: dayjs(selectedDates.value.end).format('YYYY-MM-DDTHH:mm:ss'),
-      costo: totalArriendo.value,
-      usuarioId: authStore.user.id,
-      vehiculoId: Number(props.vehiculoId),
-      sucursalId: Number(props.sucursalId),
-      sucursalDevolucionId: Number(reservation.value.sucursalRetorno.id) // Cambiar aquí
-    };
-
-    console.log('Datos de la reserva a enviar:', reservaData);
-
-    const nuevaReserva = await reservationStore.createReservation(reservaData);
-
-    snackbar.value = {
-      show: true,
-      color: 'success',
-      text: 'Reserva confirmada exitosamente'
-    };
-
-    setTimeout(() => {
-      router.push('/mis-reservas');
-    }, 1500);
-  } catch (error) {
-    console.error('Error completo:', error);
-    snackbar.value = {
-      show: true,
-      color: 'error',
-      text: 'Error al procesar la reserva: ' + error.message
-    };
-  } finally {
-    procesando.value = false;
-  }
-};
+;
 const reservasExistentes = computed(() => {
   if (!vehiculo.value?.reservas || !Array.isArray(vehiculo.value.reservas)) {
     return [];
@@ -498,7 +491,7 @@ const reservasExistentes = computed(() => {
     .sort((a, b) => new Date(a.fechaInicio) - new Date(b.fechaInicio));
 });
 
-// Función para formatear fechas
+
 const formatDate = (date) => {
   return new Date(date).toLocaleDateString('es-CL', {
     day: '2-digit',

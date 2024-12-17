@@ -40,7 +40,7 @@
 
     <!-- Usuario logged -->
     <template v-else>
-      <!-- Menú admin -->
+      <!-- Menu admin -->
       <template v-if="authStore.isAdmin">
         <v-btn
           to="/admin/usuarios"
@@ -56,7 +56,7 @@
         </v-btn>
       </template>
 
-      <!-- Menú trabajador -->
+      <!-- Menu trabajador -->
       <template v-if="authStore.isWorker">
         <v-btn
           to="/trabajador/reservas"
@@ -66,7 +66,7 @@
         </v-btn>
       </template>
 
-      <!-- Menú usuario -->
+      <!-- Menu usuario -->
       <v-menu
         location="bottom end"
         transition="slide-y-transition"

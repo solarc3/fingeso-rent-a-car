@@ -11,7 +11,6 @@
       width="100%"
       min-width="100%"
     >
-      <!-- Loading state -->
       <div
         v-if="loading"
         class="d-flex justify-center"
@@ -23,7 +22,6 @@
       </div>
 
       <div v-else>
-        <!-- Paginación -->
         <div class="text-center">
           <v-pagination
             v-model="currentPage"
@@ -32,7 +30,6 @@
           />
         </div>
 
-        <!-- Grid de vehículos -->
         <v-row style="padding: 10px">
           <v-col
             v-for="vehiculo in paginatedVehiculos"
@@ -50,7 +47,6 @@
           </v-col>
         </v-row>
 
-        <!-- Mensaje sin resultados -->
         <v-alert
           v-if="!paginatedVehiculos.length"
           type="warning"
@@ -72,11 +68,9 @@ import VehiculoCard from "@/components/vehicles/VehiculoCard.vue";
 const router = useRouter();
 const vehicleStore = useVehicleStore();
 
-// Estado básico
 const currentPage = ref(1);
 const itemsPerPage = 12;
 
-// Computed properties
 const loading = computed(() => vehicleStore.loading);
 
 const numberOfPages = computed(() => {
@@ -89,7 +83,6 @@ const paginatedVehiculos = computed(() => {
   return vehiculos.value.slice(start, end);
 });
 
-// Métodos
 const fechasSeleccionadas = ref({
   inicio: null,
   fin: null
@@ -114,7 +107,6 @@ const seleccionarVehiculo = (vehiculo) => {
   });
 };
 
-// Lifecycle hooks
 onMounted(async () => {
   await vehicleStore.fetchVehicles();
 });

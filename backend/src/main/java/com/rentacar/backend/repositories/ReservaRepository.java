@@ -16,31 +16,16 @@ import java.time.LocalDateTime;
 @Repository
 public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
 
-    //Buscar por fecha inicio
-    List<ReservaEntity> findByFechaInicio(LocalDateTime fechaInicio);
-
-    //Buscar por fecha final
-    List<ReservaEntity> findByFechaFin(LocalDateTime fechaFinal);
-
-    //Buscar entre dos fechas
-    //List<ReservaEntity> findByFechaBetween(LocalDateTime fechaInicio, LocalDateTime fechaFinal);
-
-    //Buscar por costo
-    List<ReservaEntity> findByCosto(BigDecimal costo);
-
-    //Buscar entre dos costos
-    List<ReservaEntity> findByCostoBetween(BigDecimal costoMin, BigDecimal costoMax);
-
-    //Buscar por estado
+    // buscar por estado
     List<ReservaEntity> findByEstado(ReservaEntity.EstadoReserva Estado);
 
-    // Buscar todas las reservas de un usuario
+    // buscar todas las reservas de un usuario
     List<ReservaEntity> findByUsuario(UsuarioEntity usuario);
 
-    // Buscar todas las reservas de un vehículo
+    // buscar todas las reservas de un vehiculo
     List<ReservaEntity> findByVehiculo(VehiculoEntity vehiculo);
 
-    // Buscar todas las reservas de una sucursal
+    // buscar todas las reservas de una sucursal
     List<ReservaEntity> findBySucursal(SucursalEntity sucursal);
 
     @Query("SELECT r FROM ReservaEntity r WHERE r.vehiculo.id = :vehiculoId " +

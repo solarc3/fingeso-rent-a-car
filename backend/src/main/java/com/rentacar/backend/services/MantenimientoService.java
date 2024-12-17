@@ -50,12 +50,12 @@ public class MantenimientoService {
         String estadoAnterior = mantenimiento.getEstado();
         mantenimiento.setEstado(nuevoEstado);
 
-        // Si se completa el mantenimiento
+        // si se completa el mantenimiento
         if (nuevoEstado.equals("COMPLETADO")) {
             mantenimiento.setFechaRealizada(LocalDateTime.now());
         }
 
-        // Registrar en el historial
+        // registrar en el historial
         registrarHistorial(
             mantenimiento.getVehiculo(),
             "ACTUALIZACION_MANTENIMIENTO",
@@ -65,13 +65,13 @@ public class MantenimientoService {
             null // o el usuario que realiza el cambio si está disponible
                           );
 
-        // Si el mantenimiento se completa o cancela, actualizar el estado del vehículo
+        // si el mantenimiento se completa o cancela, actualizar el estado del vehiculo
         if (nuevoEstado.equals("COMPLETADO")) {
             VehiculoEntity vehiculo = mantenimiento.getVehiculo();
             vehiculo.setEstado(VehiculoEntity.EstadoVehiculo.DISPONIBLE);
             vehiculoRepository.save(vehiculo);
 
-            // Registrar el cambio de estado del vehículo
+            // registrar el cambio de estado del vehiculo
             registrarHistorial(
                 vehiculo,
                 "CAMBIO_ESTADO",
@@ -132,11 +132,11 @@ public class MantenimientoService {
             throw new IllegalArgumentException("Tipo de mantenimiento es requerido");
         }
 
-        // Buscar vehículo
+        // Buscar vehiculo
         VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
             .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
 
-        // Buscar técnico si fue especificado
+        // Buscar tecnico si fue especificado
         UsuarioEntity tecnico = null;
         if (tecnicoId != null) {
             tecnico = usuarioRepository.findById(tecnicoId)
@@ -159,7 +159,7 @@ public class MantenimientoService {
         mantenimiento.setTecnico(tecnico);
         mantenimiento.setEstado("PENDIENTE");
 
-        // Actualizar estado del vehículo
+        // Actualizar estado del vehiculo
         vehiculo.setEstado(VehiculoEntity.EstadoVehiculo.EN_MANTENCION);
         vehiculoRepository.save(vehiculo);
 

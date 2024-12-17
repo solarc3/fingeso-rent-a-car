@@ -25,37 +25,6 @@ public class UsuarioService {
         return usuario.get();
     }
 
-    public List<UsuarioEntity> getUsuariosPorValoracion(ValoracionEntity valoracion) {
-        return usuarioRepository.findByValoracionesContaining(valoracion);
-    }
-
-    public List<UsuarioEntity> getUsuariosPorValoraciones(List<ValoracionEntity> valoraciones) {
-        return usuarioRepository.findByValoracionesIn(valoraciones);
-    }
-
-    public List<UsuarioEntity> getUsuariosPorReserva(ReservaEntity reserva) {
-        return usuarioRepository.findByReservasContaining(reserva);
-    }
-
-    public List<UsuarioEntity> getUsuariosPorReservas(List<ReservaEntity> reservas) {
-        return usuarioRepository.findByReservasIn(reservas);
-    }
-
-    //Buscar usuario por rut
-    public Optional<UsuarioEntity> getUsuarioByRut(String rut) {
-        return usuarioRepository.findByRut(rut);
-    }
-
-    //Buscar usuarios por estado de lista negra
-    public List<UsuarioEntity> getUsuariosEnListaNegra(boolean estaEnListaNegra) {
-        return usuarioRepository.findByEstaEnListaNegra(estaEnListaNegra);
-    }
-
-    //Buscar usuarios por sucursal
-    public List<UsuarioEntity> getUsuariosPorSucursal(SucursalEntity sucursal) {
-        return usuarioRepository.findBySucursal(sucursal);
-    }
-
     //Crear nuevo usuario
     public UsuarioEntity crearUsuario(String rut, String nombre, String apellido,
                                       String password, UsuarioEntity.RolUsuario rol,
@@ -89,7 +58,7 @@ public class UsuarioService {
         return usuarioRepository.save(usuario);
     }
 
-    //Actualizar usuario que ya existe, por id
+    // Actualizar usuario que ya existe, por id
     public UsuarioEntity actualizarUsuario(Long id, UsuarioEntity usuarioActualizado) {
         Optional<UsuarioEntity> usuarioExistente = usuarioRepository.findById(id);
         if (usuarioExistente.isPresent()) {
@@ -100,7 +69,7 @@ public class UsuarioService {
         }
     }
 
-    //Eliminar usuario por id
+    // Eliminar usuario por id
     public void eliminarUsuario(Long id) {
         Optional<UsuarioEntity> usuarioExistente = usuarioRepository.findById(id);
         if (usuarioExistente.isPresent()) {
@@ -109,11 +78,7 @@ public class UsuarioService {
             throw new RuntimeException("Usuario no encontrado con ID: " + id);
         }
     }
-
-    public List<UsuarioEntity> obtenerUsuariosPorRol(UsuarioEntity.RolUsuario rol) {
-        return usuarioRepository.findByRol(rol);
-    }
-
+    
     public List<UsuarioEntity> obtenerTrabajadores() {
         return usuarioRepository.findByRol(UsuarioEntity.RolUsuario.TRABAJADOR);
     }

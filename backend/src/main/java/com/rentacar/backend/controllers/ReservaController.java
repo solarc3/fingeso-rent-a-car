@@ -33,7 +33,6 @@ public class ReservaController {
     @PostMapping("/crear")
     public ResponseEntity<?> crearReserva(@RequestBody Map<String, Object> request) {
         try {
-            // Ensure all necessary fields are present in the request
             if (!request.containsKey("fechaInicio") || !request.containsKey("fechaFin") || !request.containsKey("costo") ||
                     !request.containsKey("usuarioId") || !request.containsKey("vehiculoId") || !request.containsKey("sucursalId") ||
                     !request.containsKey("sucursalDevolucionId")) {

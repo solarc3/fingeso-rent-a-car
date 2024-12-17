@@ -57,17 +57,5 @@ public class UsuarioEntity {
     @JoinColumn(name = "sucursal_id")
     @JsonIgnoreProperties({"empleados", "vehiculos", "reservas"})
     private SucursalEntity sucursal;
-    
 
-    public boolean isAdministrador() {
-        return rol == RolUsuario.ADMINISTRADOR;
-    }
-
-    public boolean isTrabajador() {
-        return rol == RolUsuario.TRABAJADOR;
-    }
-
-    public boolean isArrendatario() {
-        return rol == RolUsuario.ARRENDATARIO;
-    }
 }

@@ -19,7 +19,6 @@ import java.util.List;
 public class VehiculoEntity {
     public enum EstadoVehiculo {
         DISPONIBLE,
-        NO_DISPONIBLE,
         EN_MANTENCION,
         EN_REPARACION,
         ARRENDADO

@@ -11,5 +11,4 @@ import java.util.List;
 public interface MantenimientoRepository extends JpaRepository<MantenimientoEntity, Long> {
     List<MantenimientoEntity> findByVehiculo(VehiculoEntity vehiculo);
 
-    List<MantenimientoEntity> findByVehiculoAndEstado(VehiculoEntity vehiculo, String estado);
 }

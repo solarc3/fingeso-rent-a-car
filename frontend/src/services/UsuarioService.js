@@ -25,7 +25,6 @@ export const useUsuarioService = () => {
     }
   };
   const obtenerTrabajadores = async () => {
-    // GET /api/usuario/trabajadores
     try {
       const {data} = await axiosInstance.get('/api/usuario/trabajadores');
       return data;
@@ -35,7 +34,6 @@ export const useUsuarioService = () => {
   };
 
   const obtenerAdministradores = async () => {
-    // GET /api/usuario/administradores
     try {
       const {data} = await axiosInstance.get('/api/usuario/administradores');
       return data;
@@ -45,7 +43,6 @@ export const useUsuarioService = () => {
   };
 
   const obtenerArrendatarios = async () => {
-    // GET /api/usuario/arrendatarios
     try {
       const {data} = await axiosInstance.get('/api/usuario/arrendatarios');
       return data;
@@ -55,8 +52,6 @@ export const useUsuarioService = () => {
   };
 
   const eliminarUsuario = async (id) => {
-    // DELETE /api/usuario/eliminar
-    // @RequestParam Long id
     try {
       const {data} = await axiosInstance.delete('/api/usuario/eliminar', {
         params: {id}
@@ -68,9 +63,6 @@ export const useUsuarioService = () => {
   };
 
   const actualizarUsuario = async (id, usuario) => {
-    // PUT /api/usuario/actualizar
-    // @RequestParam Long id
-    // @RequestBody UsuarioEntity usuario
     try {
       const {data} = await axiosInstance.put('/api/usuario/actualizar', usuario);
       return data;

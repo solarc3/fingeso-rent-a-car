@@ -48,10 +48,6 @@ public class ReservaService {
         return reservaRepository.findByVehiculo(vehiculo);
     }
 
-    public List<ReservaEntity> obtenerReservasDeSucursal(SucursalEntity sucursal) {
-        return reservaRepository.findBySucursal(sucursal);
-    }
-
     public ReservaEntity extenderReserva(Long reservaId, LocalDateTime nuevaFechaFin) {
         Optional<ReservaEntity> reserva = reservaRepository.findById(reservaId);
         if (reserva.isEmpty()) {
@@ -93,9 +89,9 @@ public class ReservaService {
         reserva.setSucursal(sucursalRepository.findById(sucursalID)
                                 .orElseThrow());
         reserva.setSucursalDevolucion(sucursalRepository.findById(sucursalDevolucionID)
-                                          .orElseThrow()); // Set return location
+                                          .orElseThrow());
 
-        // Actualizar estado del vehículo
+        // Actualizar estado del vehiculo
         VehiculoEntity vehiculo = reserva.getVehiculo();
         vehiculo.setEstado(EstadoVehiculo.ARRENDADO);
         vehiculoRepository.save(vehiculo);

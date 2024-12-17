@@ -28,7 +28,6 @@ public class UsuarioController {
     @PostMapping("/crear")
     public ResponseEntity<?> crearUsuario(@RequestBody Map<String, Object> usuario) {
         try {
-            // Extraer los datos del Map
             String rut = (String) usuario.get("rut");
             String nombre = (String) usuario.get("nombre");
             String apellido = (String) usuario.get("apellido");

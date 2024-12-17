@@ -17,7 +17,7 @@
           </v-alert>
         </v-slide-y-transition>
 
-        <!-- Filtros principales -->
+        <!-- filtros principales -->
         <v-row>
           <v-col
             cols="12"
@@ -87,7 +87,7 @@
           </v-col>
         </v-row>
 
-        <!-- Fechas y Sucursales -->
+        <!-- fechas y sucursales -->
         <v-row class="mt-4">
           <v-col
             cols="12"
@@ -165,7 +165,7 @@
           </v-col>
         </v-row>
 
-        <!-- Rango de precios y ordenamiento -->
+        <!-- rango de precios y ordenamiento -->
         <v-row class="mt-4">
           <v-col
             cols="12"
@@ -244,7 +244,7 @@
           </v-col>
         </v-row>
 
-        <!-- Filtros activos -->
+        <!-- filtros activos -->
         <v-slide-y-transition>
           <v-row
             v-if="hasActiveFilters"
@@ -299,7 +299,7 @@ const emit = defineEmits(['submit']);
 
 const metadataStore = useMetadataStore();
 
-// Estado
+// estado
 const loading = ref(false);
 const error = ref(null);
 const sucursales = ref([]);
@@ -311,26 +311,26 @@ const dateErrors = ref({
   horaDevolucion: ''
 });
 
-// Datos del formulario
+// datos del formulario
 const formData = reactive({
   marca: null,
-  sucursal: null, // Mantener null para mostrar todas las sucursales
+  sucursal: null,
   tipoVehiculo: null,
   transmision: null,
   estado: 'TODOS',
   fechaRetiro: new Date().toISOString().split('T')[0], // Fecha actual
-  horaRetiro: '09:00', // Hora por defecto
+  horaRetiro: '09:00',
   fechaDevolucion: (() => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     return tomorrow.toISOString().split('T')[0];
-  })(), // Fecha de mañana
-  horaDevolucion: '09:00', // Hora por defecto
+  })(),
+  horaDevolucion: '09:00',
   rangoPrecio: [metadataStore.precioMinimo, metadataStore.precioMaximo],
   ordenarPor: null
 });
 
-// Constantes
+// horas
 const horasDisponibles = [
   '08:30', '09:00', '09:30', '10:00', '10:30',
   '11:00', '11:30', '12:00', '12:30', '13:00',
@@ -343,7 +343,6 @@ const estadosVehiculo = [
   {text: 'Solo Disponibles', value: 'DISPONIBLES'}
 ];
 
-// Computed
 const minDate = computed(() => {
   const today = new Date();
   return today.toISOString().split('T')[0];
@@ -390,7 +389,6 @@ watch(() => formData.ordenarPor, () => debouncedSubmit());
 watch(() => formData.rangoPrecio, () => debouncedSubmit(), {deep: true});
 const hasActiveFilters = computed(() => activeFilters.value.length > 0);
 
-// Watchers para validación y actualización automática
 watch(() => formData.fechaRetiro, (newDate) => {
   validateDates();
   debouncedSubmit();
@@ -410,7 +408,7 @@ watch(() => formData.horaDevolucion, (newTime) => {
   validateTimes();
   debouncedSubmit();
 });
-// Watchers para validación de fechas
+
 watch(() => formData.fechaRetiro, (newDate) => {
   validateDates();
 });
@@ -433,7 +431,7 @@ const removeFilter = (filterKey) => {
 };
 
 const resetForm = () => {
-  // Crear fechas por defecto
+
   const fechaRetiro = new Date();
   const fechaDevolucion = new Date();
   fechaDevolucion.setDate(fechaDevolucion.getDate() + 1);
@@ -462,7 +460,7 @@ const resetForm = () => {
   formValid.value = true;
   debouncedSubmit();
 };
-// Métodos de validación
+
 const validateDates = () => {
   dateErrors.value = {
     fechaRetiro: '',
@@ -472,7 +470,7 @@ const validateDates = () => {
   };
   formValid.value = true;
 
-  // Validar fecha de retiro
+
   if (formData.fechaRetiro) {
     const fechaRetiro = new Date(formData.fechaRetiro);
     const today = new Date();
@@ -484,7 +482,7 @@ const validateDates = () => {
     }
   }
 
-  // Validar fecha de devolución
+
   if (formData.fechaRetiro && formData.fechaDevolucion) {
     const fechaRetiro = new Date(formData.fechaRetiro);
     const fechaDevolucion = new Date(formData.fechaDevolucion);
@@ -520,7 +518,7 @@ const validateForm = () => {
   validateDates();
   validateTimes();
 
-  // Ya no requerimos sucursal específica
+  // ya no requerimos sucursal especifica
   if (!formData.fechaRetiro || !formData.horaRetiro) {
     error.value = 'Debe especificar fecha y hora de retiro';
     return false;
@@ -582,14 +580,13 @@ const debouncedSubmit = debounce(() => {
 }, 300);
 
 
-// Lifecycle hooks
 onMounted(async () => {
   await Promise.all([
     loadSucursales(),
     metadataStore.loadMetadata()
   ]);
 
-  // Realizar búsqueda inicial
+
   handleSubmit();
 });
 </script>
@@ -604,7 +601,6 @@ onMounted(async () => {
   color: white !important;
 }
 
-/* Estilos para los inputs dentro de la card */
 .search-card :deep(.v-label) {
   color: rgba(255, 255, 255, 0.8) !important;
 }
@@ -622,19 +618,16 @@ onMounted(async () => {
   background: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* Estilo para los textos de label */
 .text-subtitle-2 {
   color: rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Estilo para el botón */
 .v-btn {
   text-transform: none;
   background-color: white !important;
   color: #002349 !important;
 }
 
-/* Estilo para el slider de precio */
 .search-card :deep(.v-slider-track__fill) {
   background-color: white !important;
 }
@@ -643,18 +636,15 @@ onMounted(async () => {
   border-color: white !important;
 }
 
-/* Estilo para los campos de texto del rango de precios */
 .search-card :deep(.v-text-field input) {
   color: white !important;
 }
 
-/* Estilo para la alerta de error */
 .v-alert {
   background-color: rgba(244, 67, 54, 0.9) !important;
   color: white !important;
 }
 
-/* Ajuste para los selectores */
 .search-card :deep(.v-select__selection) {
   color: white !important;
 }
@@ -663,22 +653,18 @@ onMounted(async () => {
   color: white !important;
 }
 
-/* Estilo para los iconos */
 .search-card :deep(.v-icon) {
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
-/* Estilo para el texto de los items en los dropdowns */
 .search-card :deep(.v-list-item) {
   color: #002349 !important;
 }
 
-/* Estilo para el texto de los items en los dropdowns */
 .search-card :deep(.v-list-item) {
   color: #002349 !important;
 }
 
-/* Estilos para la sección de filtros activos */
 .search-card .text-subtitle-2 {
   color: rgba(255, 255, 255, 0.9) !important;
 }
@@ -702,7 +688,6 @@ onMounted(async () => {
   opacity: 1;
 }
 
-/* Animaciones para los filtros */
 .v-slide-y-transition-enter-active,
 .v-slide-y-transition-leave-active {
   transition: all 0.3s ease;

@@ -6,7 +6,7 @@ import {useMantenimientoService} from "@/services/MantenimientoService.js";
 export const useVehicleStore = defineStore('vehicle', {
   state: () => ({
     vehicles: [],
-    filteredVehicles: [], // Se llenará con todos los vehículos al cargar
+    filteredVehicles: [],
     loading: false,
     error: null,
     filters: {
@@ -18,7 +18,7 @@ export const useVehicleStore = defineStore('vehicle', {
       precioMaximo: 250000,
       ordenarPor: null,
       disponibilidad: 'TODOS',
-      fechas: {  // Agregar fechas por defecto
+      fechas: {
         inicio: new Date().toISOString(),
         fin: new Date(Date.now() + 86400000).toISOString() // mañana
       }
@@ -33,26 +33,7 @@ export const useVehicleStore = defineStore('vehicle', {
   }),
 
   actions: {
-    applySorting() {
-      if (!this.filters.ordenarPor) return;
-
-      this.filteredVehicles.sort((a, b) => {
-        switch (this.filters.ordenarPor.valor) {
-          case 'PRECIO_ASC':
-            return a.precioArriendo - b.precioArriendo;
-          case 'PRECIO_DESC':
-            return b.precioArriendo - a.precioArriendo;
-          case 'MARCA_ASC':
-            return a.marca.localeCompare(b.marca);
-          case 'MARCA_DESC':
-            return b.marca.localeCompare(a.marca);
-          default:
-            return 0;
-        }
-      });
-    },
     async getVehicleById(id) {
-      // Si no hay vehículos cargados, cargarlos primero
       if (this.vehicles.length === 0) {
         await this.fetchVehicles();
       }
@@ -72,7 +53,6 @@ export const useVehicleStore = defineStore('vehicle', {
           throw new Error('Datos de vehículos inválidos');
         }
 
-        // Procesar los vehículos
         this.vehicles = data.map(vehiculo => ({
           ...vehiculo,
           sucursal: vehiculo.sucursal ? {
@@ -82,7 +62,6 @@ export const useVehicleStore = defineStore('vehicle', {
           } : null
         }));
 
-        // Inicializar filteredVehicles con todos los vehículos disponibles
         this.filteredVehicles = this.vehicles.filter(vehiculo =>
           vehiculo.estado !== 'EN_MANTENCION' &&
           vehiculo.estado !== 'EN_REPARACION'
@@ -116,7 +95,7 @@ export const useVehicleStore = defineStore('vehicle', {
           fin: filters.fechas.fin
         } : null
       };
-      this.applyFilters(); // Asegúrate de que esta línea esté presente
+      this.applyFilters();
     },
 
     applyFilters() {
@@ -160,7 +139,7 @@ export const useVehicleStore = defineStore('vehicle', {
             if (!disponible) return false;
           }
         } else {
-          // Si es TODOS, aún así excluimos los que están en mantención o reparación
+          // Si es TODOS, aun asi excluimos los que están en mantencion o reparacion
           if (['EN_MANTENCION', 'EN_REPARACION'].includes(vehiculo.estado)) {
             return false;
           }
@@ -178,7 +157,7 @@ export const useVehicleStore = defineStore('vehicle', {
           return false;
         }
 
-        // Filtro por tipo de transmisión
+        // Filtro por tipo de transmision
         if (this.filters.transmision) {
           const transmision = vehiculo.acriss.charAt(2);
           if (transmision !== this.filters.transmision) {
@@ -186,7 +165,7 @@ export const useVehicleStore = defineStore('vehicle', {
           }
         }
 
-        // Filtro por tipo de vehículo
+        // Filtro por tipo de vehiculo
         if (this.filters.tipoVehiculo) {
           const tipoVehiculo = vehiculo.acriss.charAt(0);
           if (tipoVehiculo !== this.filters.tipoVehiculo) {
@@ -222,7 +201,6 @@ export const useVehicleStore = defineStore('vehicle', {
               const reservaInicio = new Date(reserva.fechaInicio);
               const reservaFin = new Date(reserva.fechaFin);
 
-              // Verificar solapamiento
               return (fechaInicio < reservaFin && reservaInicio < fechaFin);
             });
 
@@ -305,17 +283,9 @@ export const useVehicleStore = defineStore('vehicle', {
         vehiculo.estado !== 'EN_REPARACION'
       );
     },
-
-    resetPriceFilter() {
-      const metadataStore = useMetadataStore();
-      this.filters.precioMinimo = metadataStore.precioMinimo;
-      this.filters.precioMaximo = metadataStore.precioMaximo;
-      this.applyFilters();
-    },
     async createVehicle(vehicleData) {
       this.loading = true;
       try {
-        // Crear el vehículo primero
         const vehiculoDTO = {
           marca: vehicleData.marca,
           modelo: vehicleData.modelo,

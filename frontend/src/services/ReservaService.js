@@ -10,7 +10,7 @@ export const useReservaService = () => {
         usuarioId: reserva.usuarioId,
         vehiculoId: reserva.vehiculoId,
         sucursalId: reserva.sucursalId,
-        sucursalDevolucionId: reserva.sucursalDevolucionId // Cambiar aquí
+        sucursalDevolucionId: reserva.sucursalDevolucionId
       };
 
       console.log('Enviando datos al servidor:', requestData);
@@ -54,8 +54,6 @@ export const useReservaService = () => {
   };
 
   const extenderReserva = async (reservaId, fechaFin) => {
-    // PUT /api/reserva/extender
-    // @RequestBody Map<String, Object> nuevaFechaJsonMap
     try {
       const {data} = await axiosInstance.put('/api/reserva/extender', {
         reservaId,

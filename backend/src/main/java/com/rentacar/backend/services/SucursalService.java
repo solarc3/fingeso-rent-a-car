@@ -35,12 +35,6 @@ public class SucursalService {
         this.reservaRepository = reservaRepository;
     }
 
-    /*
-    List<SucursalEntity> obtenerVehiculo(VehiculoEntity vehiculo) {
-        return sucursalRepository.findByVehiculo(vehiculo);
-    }
-    */
-
     public SucursalEntity crearSucursal(String nombre, String direccion, String telefono, String email) {
         SucursalEntity sucursal = new SucursalEntity();
         sucursal.setNombre(nombre);
@@ -61,12 +55,6 @@ public class SucursalService {
     public List<SucursalEntity> obtenerSucursales(){
         return sucursalRepository.findAll();
     }
-
-    /*public SucursalEntity obtenerSucursalPorNombre(String nombre) {
-        Optional<SucursalEntity> sucursal = sucursalRepository.findByNombre(nombre);
-        return sucursal.orElseThrow();
-    }
-    */
 
     public SucursalEntity agregarVehiculo(Long vehiculoID, Long sucursalID) {
         SucursalEntity sucursal = sucursalRepository.findById(sucursalID).orElseThrow(()-> new RuntimeException(

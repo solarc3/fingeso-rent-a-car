@@ -5,7 +5,6 @@
         Login
       </v-card-title>
       <v-card-text>
-        <!-- Alerta de error -->
         <v-alert
           v-if="error"
           type="error"

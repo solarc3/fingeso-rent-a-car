@@ -1,6 +1,5 @@
 <template>
   <v-container fluid>
-    <!-- Loading state -->
     <div
       v-if="loading"
       class="d-flex justify-center pa-4"
@@ -11,7 +10,6 @@
       />
     </div>
 
-    <!-- Sin reservas -->
     <v-card
       v-else-if="!reservas.length"
       class="text-center pa-4"
@@ -64,7 +62,6 @@
             :class="['reservation-card', `border-${getStatusColor(reserva.estado)}`]"
             elevation="2"
           >
-            <!-- Header -->
             <v-card-item>
               <template #prepend>
                 <v-icon
@@ -165,8 +162,6 @@ const reservas = computed(() => reservationStore.reservations);
 const activeTab = ref('all');
 const processingPayment = ref(null);
 
-// Computed
-
 const reservasFiltradas = computed(() => {
   let resultado = [...reservas.value];
   switch (activeTab.value) {
@@ -183,7 +178,6 @@ const reservasFiltradas = computed(() => {
   }
 });
 
-// Métodos de utilidad
 const formatDate = (date) => {
   return new Date(date).toLocaleString('es-CL', {
     day: '2-digit',
@@ -235,7 +229,6 @@ const procesarPago = async (reserva) => {
   }
 };
 
-// Lifecycle hooks
 onMounted(async () => {
   if (authStore.user?.id) {
     await reservationStore.fetchUserReservations(authStore.user.id);

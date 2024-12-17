@@ -29,7 +29,7 @@ const emit = defineEmits(['update:modelValue', 'validation']);
 const displayValue = ref('');
 const errorMessages = ref([]);
 
-// Validar dígito verificador
+// validar digito verificador
 const calculateDv = (rutNumber) => {
   let sum = 0;
   let multiplier = 2;
@@ -45,19 +45,19 @@ const calculateDv = (rutNumber) => {
   return String(dv);
 };
 
-// Formatear RUT (XXXXXXXX-X)
+// formatear RUT (XXXXXXXX-X)
 const formatRut = (value) => {
   if (!value) return '';
 
-  // Eliminar todo excepto nums y K
+  // eliminar todo excepto nums y K
   let cleaned = value.replace(/[^0-9kK]/g, '').toUpperCase();
 
-  // Limitar a 9 caracteres (8 dígitos + 1 verificador)
+  // limitar a 9 caracteres (8 digitos + 1 verificador)
   if (cleaned.length > 9) {
     cleaned = cleaned.slice(0, 9);
   }
 
-  // Si hay más de 1 caracter, separar el dígito verificador
+  // si hay mas de 1 caracter, separar el digito verificador
   if (cleaned.length > 1) {
     const body = cleaned.slice(0, -1);
     const dv = cleaned.slice(-1);

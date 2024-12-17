@@ -31,7 +31,6 @@
 
     <v-main>
       <router-view />
-      <!-- app-footer --->
     </v-main>
     <v-snackbar
       v-model="showSnackbar"

@@ -96,54 +96,10 @@ public class VehiculoService {
             .matches();
     }
 
-    /**
-     * Permite obtener todos los vehículos en la base de datos.
-     *
-     * @return Lista de todos los vehículos
-     */
-    public List<VehiculoEntity> obtenerVehiculos() {
-        return vehiculoRepository.findAllWithSucursales();
-    }
-
     public VehiculoEntity obtenerVehiculoPorId(Long id) {
         Optional<VehiculoEntity> vehiculo = vehiculoRepository.findById(id);
         if (vehiculo.isEmpty()) throw new NoSuchElementException("Vehiculo no encontrado");
         return vehiculo.get();
-    }
-
-    /**
-     * Permite obtener un vehículo con una patente determinada.
-     *
-     * @param patente Patente del vehículo a buscar
-     * @return Vehículo con la patente buscada, si existe.
-     */
-    public Optional<VehiculoEntity> obtenerVehiculoPorPatente(String patente) {
-        return vehiculoRepository.findByPatente(patente);
-    }
-
-    /**
-     * Permite obtener todos los vehículos de una marca determinada.
-     *
-     * @param marca Marca de los vehículos
-     * @return Lista de vehículos de esa marca
-     */
-    public List<VehiculoEntity> obtenerVehiculosPorMarca(String marca) {
-        return vehiculoRepository.findByMarca(marca);
-    }
-
-    /**
-     * Permite obtener todos los vehículos en base a uno o más caracteres del código ACRISS
-     * Deben haber '_' para representar que no importa ese caracter en particular
-     * (Por ejemplo, acriss = "__ME" buscaría todos los vehículos eléctricos con transmisión manual)
-     *
-     * @param acriss Código ACRISS
-     * @return Lista de vehículos con código ACRISS acorde a lo pedido
-     */
-    public List<VehiculoEntity> obtenerVehiculosPorAcriss(String acriss) {
-        if (!validarAcriss(acriss)) {
-            throw new IllegalArgumentException("Código ACRISS no válido");
-        }
-        return vehiculoRepository.findByAcrissLike(acriss.toUpperCase());
     }
 
     /**
@@ -159,33 +115,6 @@ public class VehiculoService {
     }
 
     /**
-     * Permite obtener todos los vehículso cuyo precio esté dentro de un rango dado
-     *
-     * @param min Precio mínimo de arriendo
-     * @param max Precio máximo de arriendo
-     * @return Lista de vehículos con precio de arriendo entre min y max
-     */
-    public List<VehiculoEntity> obtenerVehiculosConPrecioEntre(BigDecimal min, BigDecimal max) {
-        if (min.compareTo(BigDecimal.ZERO) < 0 || max.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Precio inválido");
-        }
-
-        return vehiculoRepository.findByPrecioArriendoBetween(min, max);
-    }
-
-    /**
-     * Permite obtener todos los vehículos que se encuentren en cierto estado
-     *
-     * @param estado Estado de los vehículos
-     * @return Lista de vehículos en ese estado
-     */
-    public List<VehiculoEntity> obtenerVehiculosPorEstado(String estado) {
-        List<VehiculoEntity> v = vehiculoRepository.findByEstado(VehiculoEntity.EstadoVehiculo.valueOf(estado));
-        if (v.isEmpty()) throw new RuntimeException("No se encontraron vehiculos en ese estado");
-        return v;
-    }
-
-    /**
      * Permite actualizar el estado de un vehículo dado su ID
      *
      * @param vehiculoId ID del vehículo a actualizar
@@ -197,31 +126,6 @@ public class VehiculoService {
             .orElseThrow();
         vehiculo.setEstado(VehiculoEntity.EstadoVehiculo.valueOf(estado));
         return vehiculoRepository.save(vehiculo);
-    }
-
-    /**
-     * Permite actualizar el estado de un vehículo dado su ID y validar que no tenga reservas activas
-     *
-     * @param id          ID del vehículo a actualizar
-     * @param nuevoEstado Estado nuevo del vehículo
-     */
-    public void actualizarEstado(Long id, VehiculoEntity.EstadoVehiculo nuevoEstado) {
-        VehiculoEntity vehiculo = vehiculoRepository.findById(id)
-            .orElseThrow();
-
-        // Validar que no tenga reservas activas
-        if (tieneReservasActivas(vehiculo)) {
-            throw new RuntimeException("No se puede cambiar el estado - tiene reservas activas");
-        }
-
-        vehiculo.setEstado(nuevoEstado);
-        vehiculoRepository.save(vehiculo);
-    }
-
-    private boolean tieneReservasActivas(VehiculoEntity vehiculo) {
-        return !reservaRepository
-            .findByVehiculoAndEstado(vehiculo, ReservaEntity.EstadoReserva.EN_PROGRESO)
-            .isEmpty();
     }
 
     /**
@@ -277,39 +181,6 @@ public class VehiculoService {
         tipos.put("M", "Manual");
         tipos.put("A", "Automática");
         return tipos;
-    }
-
-    // Método adicional para obtener el historial de fallas de un vehículo
-    public List<FallaVehiculoEntity> obtenerHistorialFallas(Long vehiculoId) {
-        VehiculoEntity vehiculo = vehiculoRepository.findById(vehiculoId)
-            .orElseThrow(() -> new RuntimeException("Vehículo no encontrado"));
-        return fallaRepository.findByVehiculoOrderByFechaReporteDesc(vehiculo);
-    }
-
-    @Transactional
-    public VehiculoEntity resolverFalla(Long fallaId, String solucion, Long tecnicoId) {
-        FallaVehiculoEntity falla = fallaRepository.findById(fallaId)
-            .orElseThrow(() -> new RuntimeException("Falla no encontrada"));
-
-        VehiculoEntity vehiculo = falla.getVehiculo();
-        UsuarioEntity tecnico = usuarioRepository.findById(tecnicoId)
-            .orElseThrow(() -> new RuntimeException("Técnico no encontrado"));
-
-        // Registrar solución en el historial
-        HistorialVehiculoEntity historial = new HistorialVehiculoEntity();
-        historial.setVehiculo(vehiculo);
-        historial.setFecha(LocalDateTime.now());
-        historial.setTipoEvento("RESOLUCION_FALLA");
-        historial.setDescripcion("Falla resuelta: " + solucion);
-        historial.setEstadoAnterior(vehiculo.getEstado()
-                                        .toString());
-        historial.setEstadoNuevo(VehiculoEntity.EstadoVehiculo.DISPONIBLE.toString());
-        historial.setRegistradoPor(tecnico);
-        historialRepository.save(historial);
-
-        // Actualizar estado del vehículo
-        vehiculo.setEstado(VehiculoEntity.EstadoVehiculo.DISPONIBLE);
-        return vehiculoRepository.save(vehiculo);
     }
 
     @Transactional

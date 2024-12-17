@@ -18,7 +18,7 @@ const routes = [
       },
       {
         path: 'payment',
-        name: 'payment', // Agregar el nombre de la ruta
+        name: 'payment', //  nombre de la ruta
         component: () => import('@/pages/Payment.vue'),
         props: route => ({
           vehiculoId: Number(route.query.vehiculoId),
@@ -89,7 +89,6 @@ const router = createRouter({
   routes
 })
 
-// Guard de navegación
 router.beforeEach((to, from, next) => {
   const authStore = useAuthStore()
 

@@ -21,7 +21,6 @@ public class MantenimientoController {
     @PostMapping("/programar")
     public ResponseEntity<?> programarMantenimiento(@RequestBody Map<String, Object> datos) {
         try {
-            // Validar que todos los campos requeridos estén presentes
             if (!datos.containsKey("vehiculoId") ||
                 !datos.containsKey("fechaProgramada") ||
                 !datos.containsKey("tipoMantenimiento")) {

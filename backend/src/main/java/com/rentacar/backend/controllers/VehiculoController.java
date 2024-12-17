@@ -46,7 +46,6 @@ public class VehiculoController {
                 throw new IllegalArgumentException("Formato de sucursal inválido");
             }
 
-            // Crear vehículo
             VehiculoEntity nuevoVehiculo = vehiculoService.crearVehiculo(
                 (String) vehiculoData.get("marca"),
                 (String) vehiculoData.get("modelo"),
@@ -74,7 +73,6 @@ public class VehiculoController {
     public ResponseEntity<List<VehiculoEntity>> obtenerVehiculos() {
         List<VehiculoEntity> vehiculos = vehiculoRepository.findAllWithSucursales();
 
-        // Forzar la inicialización de la relación con sucursal
         vehiculos.forEach(v -> {
             if (v.getSucursal() != null) {
                 v.getSucursal()
@@ -94,7 +92,7 @@ public class VehiculoController {
             SucursalEntity sucursal = sucursalService.obtenerSucursalPorId(id);
             List<VehiculoEntity> vSucursal = vehiculoService.obtenerVehiculosPorSucursal(sucursal);
 
-            // Filtrar vehiculos disponibles
+            // filtrar vehiculos disponibles
             List<VehiculoEntity> vSucursalDisp = vSucursal.stream()
                 .filter(v -> v.getEstado() == VehiculoEntity.EstadoVehiculo.DISPONIBLE)
                 .toList();
@@ -119,7 +117,7 @@ public class VehiculoController {
         }
     }
 
-    // actualizar precio y estado, los dos unicos atributos variables en el tiempo (?
+    // actualizar precio y estado, los dos unicos atributos variables en el tiempo
     @PutMapping("/actualizar")
     public ResponseEntity<?> actualizarVehiculo(@RequestBody VehiculoEntity vehiculo) {
         try {
