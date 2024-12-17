@@ -9,16 +9,19 @@ import java.util.List;
 
 @Repository
 public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
-
     Optional<UsuarioEntity> findByRut(String rut);
 
     List<UsuarioEntity> findByEstaEnListaNegra(boolean estaEnListaNegra);
 
-    List<UsuarioEntity> findByValoraciones(ValoracionEntity valoraciones);
+    List<UsuarioEntity> findByValoracionesContaining(ValoracionEntity valoracion);
 
-    List<UsuarioEntity> findByReservas(ReservaEntity reservas);
+    List<UsuarioEntity> findByValoracionesIn(List<ValoracionEntity> valoraciones);
+
+    List<UsuarioEntity> findByReservasContaining(ReservaEntity reserva);
+
+    List<UsuarioEntity> findByReservasIn(List<ReservaEntity> reservas);
 
     List<UsuarioEntity> findBySucursal(SucursalEntity sucursal);
 
-
+    List<UsuarioEntity> findByRol(UsuarioEntity.RolUsuario rol);
 }

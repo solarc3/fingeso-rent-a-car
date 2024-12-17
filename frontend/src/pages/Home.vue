@@ -3,52 +3,121 @@
     fluid
     style="background-color: white;"
   >
-    <Buscador />
+    <Buscador
+      :fechas-actuales="fechasSeleccionadas"
+      @submit="handleSearch"
+    />
     <v-container
       width="100%"
       min-width="100%"
     >
-      <div class="text-center">
-        <v-pagination
-          v-model="currentPage"
-          :length="numberOfPages"
-          :total-visible="7"
+      <div
+        v-if="loading"
+        class="d-flex justify-center"
+      >
+        <v-progress-circular
+          indeterminate
+          color="primary"
         />
       </div>
-      <v-row style="padding: 10px">
-        <v-col
-          v-for="n in displayedItems"
-          :key="n"
-          cols="12"
-          sm="6"
-          md="2"
-          lg="3"
-          style="padding: 10px"
+
+      <div v-else>
+        <div class="text-center">
+          <v-pagination
+            v-model="currentPage"
+            :length="numberOfPages"
+            :total-visible="7"
+          />
+        </div>
+
+        <v-row style="padding: 10px">
+          <v-col
+            v-for="vehiculo in paginatedVehiculos"
+            :key="vehiculo.id"
+            cols="12"
+            sm="6"
+            md="4"
+            lg="3"
+          >
+            <VehiculoCard
+              :vehiculo="vehiculo"
+              :fechas-seleccionadas="fechasSeleccionadas"
+              @seleccionar="seleccionarVehiculo"
+            />
+          </v-col>
+        </v-row>
+
+        <v-alert
+          v-if="!paginatedVehiculos.length"
+          type="warning"
+          class="mt-4"
         >
-          <VehiculoCard />
-        </v-col>
-      </v-row>
+          No se encontraron vehículos con los criterios seleccionados
+        </v-alert>
+      </div>
     </v-container>
   </v-container>
 </template>
-
 <script setup>
-import {ref, computed} from 'vue';
+import {ref, computed, onMounted} from 'vue';
+import {useRouter} from 'vue-router';
+import {useVehicleStore} from '@/stores/vehicle';
 import Buscador from "@/components/Buscador.vue";
 import VehiculoCard from "@/components/vehicles/VehiculoCard.vue";
 
-//paginacion
-const itemsPerPage = 12;
-const totalItems = 48;
+const router = useRouter();
+const vehicleStore = useVehicleStore();
+
 const currentPage = ref(1);
+const itemsPerPage = 12;
+
+const loading = computed(() => vehicleStore.loading);
 
 const numberOfPages = computed(() => {
-  return Math.ceil(totalItems / itemsPerPage);
+  return Math.ceil(vehiculos.value.length / itemsPerPage);
 });
 
-const displayedItems = computed(() => {
+const paginatedVehiculos = computed(() => {
   const start = (currentPage.value - 1) * itemsPerPage;
-  const end = Math.min(start + itemsPerPage, totalItems);
-  return end - start;
+  const end = start + itemsPerPage;
+  return vehiculos.value.slice(start, end);
 });
+
+const fechasSeleccionadas = ref({
+  inicio: null,
+  fin: null
+});
+
+const handleSearch = (searchData) => {
+  fechasSeleccionadas.value = {
+    inicio: searchData.fechas.inicio,
+    fin: searchData.fechas.fin
+  };
+  vehicleStore.setFilters(searchData);
+  currentPage.value = 1;
+};
+const seleccionarVehiculo = (vehiculo) => {
+  router.push({
+    path: '/payment',
+    query: {
+      vehiculoId: vehiculo.id,
+      sucursal: vehiculo.sucursal?.id,
+      precioArriendo: vehiculo.precioArriendo
+    }
+  });
+};
+
+onMounted(async () => {
+  await vehicleStore.fetchVehicles();
+});
+const vehiculos = computed(() => {
+  return vehicleStore.getFilteredVehicles;
+});
+
 </script>
+
+<style scoped>
+.v-alert {
+  margin-bottom: 16px;
+}
+</style>

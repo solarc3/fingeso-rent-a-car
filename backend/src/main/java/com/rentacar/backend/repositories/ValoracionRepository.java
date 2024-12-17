@@ -12,14 +12,10 @@ import java.util.List;
 @Repository
 public interface ValoracionRepository extends JpaRepository<ValoracionEntity, Long> {
 
-    //Esto se me hace algo sus, pero lo dejare a criterio
+    // esto se me hace algo sus, pero lo dejare a criterio
     Optional<ValoracionEntity> findById(Long id);
 
-    List<ValoracionEntity> findByPuntuacion(Integer puntuacion);
-
-    //un findByComentario no tiene sentido
-
-    List<ValoracionEntity> findByUsuario(UsuarioEntity usuarioEntity);
+    // un findByComentario no tiene sentido
 
     List<ValoracionEntity> findByVehiculo(VehiculoEntity vehiculoEntity);
 }

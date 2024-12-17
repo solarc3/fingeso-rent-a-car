@@ -1,18 +1,20 @@
 package com.rentacar.backend.entities;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.List;
 
 @Entity
 @Table(name = "sucursales")
+@Getter
+@Setter
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+
 public class SucursalEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,15 +31,15 @@ public class SucursalEntity {
     @Column(nullable = false)
     private String email;
 
-    @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER)
-    @JsonManagedReference(value = "sucursal-usuario")
+    @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JsonIgnoreProperties({"sucursal", "valoraciones", "reservas"})
     private List<UsuarioEntity> empleados;
 
-    @OneToMany(mappedBy = "sucursal",fetch = FetchType.EAGER)
-    @JsonManagedReference(value = "sucursal-vehiculo")
+    @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER)
+    @JsonIgnoreProperties({"sucursal", "valoraciones", "reservas"})
     private List<VehiculoEntity> vehiculos;
 
-    @OneToMany(mappedBy = "sucursal",fetch = FetchType.EAGER)
-    @JsonManagedReference(value = "sucursal-reserva")
+    @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER)
+    @JsonIgnoreProperties({"sucursal", "usuario", "vehiculo"})
     private List<ReservaEntity> reservas;
 }
