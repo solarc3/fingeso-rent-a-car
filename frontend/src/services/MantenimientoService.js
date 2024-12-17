@@ -12,7 +12,8 @@ export const useMantenimientoService = () => {
   };
   const reportarFalla = async (fallaData) => {
     try {
-      const response = await axiosInstance.post(`/api/mantenimiento/fallas/reportar`, {
+      console.log('Enviando datos de falla:', fallaData);
+      const response = await axiosInstance.post('/api/vehiculo/falla', {
         vehiculoId: fallaData.vehiculoId,
         tipo: fallaData.tipo,
         severidad: fallaData.severidad,
@@ -20,10 +21,11 @@ export const useMantenimientoService = () => {
         reportadoPorId: fallaData.reportadoPorId
       });
 
+      console.log('Respuesta del servidor:', response.data);
       return response.data;
     } catch (error) {
-      console.error('Error reportando falla:', error);
-      throw new Error(error.response?.data || 'Error al reportar falla');
+      console.error('Error en reportarFalla:', error);
+      throw new Error(error.response?.data || 'Error al reportar la falla');
     }
   };
   const obtenerMantenimientos = async (vehiculoId) => {

@@ -1,6 +1,6 @@
 <template>
   <v-container fluid>
-    <!-- Header con título y botón de agregar -->
+    <!-- Header -->
     <v-row class="mb-4 header-row">
       <v-col
         cols="12"
@@ -20,10 +20,26 @@
       </v-col>
     </v-row>
 
-    <!-- Filtros con altura fija -->
+    <!-- Filtros mejorados -->
     <v-card class="mb-4 filter-section">
       <v-card-text>
         <v-row>
+          <!-- Búsqueda general -->
+          <v-col
+            cols="12"
+            md="3"
+          >
+            <v-text-field
+              v-model="filters.search"
+              label="Buscar por patente/marca/modelo"
+              prepend-inner-icon="mdi-magnify"
+              clearable
+              hide-details
+              class="fixed-height-input"
+            />
+          </v-col>
+
+          <!-- Filtro de sucursal -->
           <v-col
             cols="12"
             md="3"
@@ -33,13 +49,16 @@
               :items="sucursales"
               item-title="title"
               item-value="value"
-              label="Filtrar por Sucursal"
+              label="Sucursal"
               :loading="sucursalLoading"
               :error-messages="sucursalError"
               clearable
+              hide-details
               class="fixed-height-input"
             />
           </v-col>
+
+          <!-- Filtro de estado -->
           <v-col
             cols="12"
             md="3"
@@ -47,28 +66,114 @@
             <v-select
               v-model="filters.estado"
               :items="estadosVehiculo"
-              label="Filtrar por Estado"
+              label="Estado"
               clearable
+              hide-details
               class="fixed-height-input"
-            />
+            >
+              <template #selection="{ item }">
+                <v-chip
+                  :color="getStatusColor(item.raw)"
+                  size="small"
+                  class="mr-2"
+                >
+                  {{ getStatusText(item.raw) }}
+                </v-chip>
+              </template>
+              <template #item="{ item, props }">
+                <v-list-item v-bind="props">
+                  <template #prepend>
+                    <v-chip
+                      :color="getStatusColor(item.raw)"
+                      size="small"
+                      class="mr-2"
+                    >
+                      {{ getStatusText(item.raw) }}
+                    </v-chip>
+                  </template>
+                </v-list-item>
+              </template>
+            </v-select>
           </v-col>
+
+          <!-- Ordenamiento -->
           <v-col
             cols="12"
             md="3"
           >
-            <v-text-field
-              v-model="filters.search"
-              label="Buscar"
-              prepend-inner-icon="mdi-magnify"
+            <v-select
+              v-model="filters.ordenarPor"
+              :items="opcionesOrdenamiento"
+              item-title="title"
+              item-value="value"
+              label="Ordenar por"
               clearable
+              hide-details
               class="fixed-height-input"
             />
+          </v-col>
+        </v-row>
+
+        <!-- Segunda fila para rango de precios -->
+        <v-row class="mt-4">
+          <v-col
+            cols="12"
+            md="6"
+          >
+            <v-range-slider
+              v-model="filters.rangoPrecio"
+              :min="precioMinimo"
+              :max="precioMaximo"
+              :step="5000"
+              label="Rango de Precio"
+              thumb-label="always"
+              hide-details
+            >
+              <template #prepend>
+                <v-text-field
+                  v-model="filters.rangoPrecio[0]"
+                  type="number"
+                  prefix="$"
+                  hide-details
+                  density="compact"
+                  style="width: 100px"
+                />
+              </template>
+              <template #append>
+                <v-text-field
+                  v-model="filters.rangoPrecio[1]"
+                  type="number"
+                  prefix="$"
+                  hide-details
+                  density="compact"
+                  style="width: 100px"
+                />
+              </template>
+            </v-range-slider>
+          </v-col>
+
+          <!-- Filtros activos -->
+          <v-col
+            cols="12"
+            md="6"
+            class="d-flex align-center justify-end"
+          >
+            <v-btn
+              v-if="hasActiveFilters"
+              color="error"
+              variant="text"
+              size="small"
+              prepend-icon="mdi-filter-off"
+              @click="clearFilters"
+            >
+              Limpiar filtros
+            </v-btn>
           </v-col>
         </v-row>
       </v-card-text>
     </v-card>
 
-    <!-- Tabla con altura fija -->
+    <!-- Tabla de vehículos -->
     <v-card class="main-table-card">
       <v-data-table
         :headers="headers"
@@ -79,46 +184,81 @@
         height="calc(100vh - 300px)"
         fixed-header
       >
+        <!-- Formato de precio -->
+        <template #item.precioArriendo="{ item }">
+          ${{ formatPrice(item.precioArriendo) }}
+        </template>
+
         <!-- Estado del vehículo -->
-        <template #[`item.estado`]="{ item }">
+        <template #item.estado="{ item }">
           <v-chip
             :color="getStatusColor(item.estado)"
-            :text="getStatusText(item.estado)"
             size="small"
-          />
+          >
+            {{ getStatusText(item.estado) }}
+          </v-chip>
         </template>
 
         <!-- Acciones -->
-        <template #[`item.actions`]="{ item }">
-          <v-btn
-            icon="mdi-information"
-            size="small"
-            class="mr-2"
-            color="info"
-            @click="openDetailsDialog(item)"
-          />
-          <v-btn
+        <template #item.actions="{ item }">
+          <v-tooltip text="Ver detalles">
+            <template #activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-information"
+                size="small"
+                color="info"
+                class="mr-2"
+                @click="openDetailsDialog(item)"
+              />
+            </template>
+          </v-tooltip>
+
+          <v-tooltip
             v-if="canEdit(item)"
-            icon="mdi-pencil"
-            size="small"
-            class="mr-2"
-            @click="openVehicleDialog(item)"
-          />
-          <v-btn
+            text="Editar"
+          >
+            <template #activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-pencil"
+                size="small"
+                class="mr-2"
+                @click="openVehicleDialog(item)"
+              />
+            </template>
+          </v-tooltip>
+
+          <v-tooltip
             v-if="canReport(item)"
-            icon="mdi-alert"
-            size="small"
-            color="warning"
-            class="mr-2"
-            @click="openReportDialog(item)"
-          />
-          <v-btn
+            text="Reportar falla"
+          >
+            <template #activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-alert"
+                size="small"
+                color="warning"
+                class="mr-2"
+                @click="openReportDialog(item)"
+              />
+            </template>
+          </v-tooltip>
+
+          <v-tooltip
             v-if="canDelete(item)"
-            icon="mdi-delete"
-            size="small"
-            color="error"
-            @click="confirmDelete(item)"
-          />
+            text="Eliminar"
+          >
+            <template #activator="{ props }">
+              <v-btn
+                v-bind="props"
+                icon="mdi-delete"
+                size="small"
+                color="error"
+                @click="confirmDelete(item)"
+              />
+            </template>
+          </v-tooltip>
         </template>
       </v-data-table>
     </v-card>
@@ -139,7 +279,7 @@
             v-model="formValid"
           >
             <v-row>
-              <!-- Campos existentes -->
+              <!-- Campos básicos -->
               <v-col
                 cols="12"
                 md="6"
@@ -148,8 +288,10 @@
                   v-model="vehicleData.marca"
                   label="Marca"
                   :rules="rules.required"
+                  hide-details="auto"
                 />
               </v-col>
+
               <v-col
                 cols="12"
                 md="6"
@@ -158,8 +300,10 @@
                   v-model="vehicleData.modelo"
                   label="Modelo"
                   :rules="rules.required"
+                  hide-details="auto"
                 />
               </v-col>
+
               <v-col
                 cols="12"
                 md="6"
@@ -169,10 +313,12 @@
                   label="Patente"
                   :rules="[...rules.required, rules.patente]"
                   :disabled="isEditing"
+                  hide-details="auto"
+                  maxlength="6"
+                  @input="e => vehicleData.patente = e.target.value.toUpperCase()"
                 />
               </v-col>
 
-              <!-- Nuevos campos -->
               <v-col
                 cols="12"
                 md="6"
@@ -182,34 +328,7 @@
                   label="Año"
                   type="number"
                   :rules="[...rules.required, rules.anio]"
-                />
-              </v-col>
-
-              <v-col
-                cols="12"
-                md="6"
-              >
-                <v-select
-                  v-model="vehicleData.tipoVehiculo"
-                  :items="metadataStore.tiposVehiculo"
-                  label="Tipo de Vehículo"
-                  item-title="texto"
-                  item-value="valor"
-                  :rules="rules.required"
-                />
-              </v-col>
-
-              <v-col
-                cols="12"
-                md="6"
-              >
-                <v-select
-                  v-model="vehicleData.transmision"
-                  :items="metadataStore.tiposTransmision"
-                  label="Transmisión"
-                  item-title="texto"
-                  item-value="valor"
-                  :rules="rules.required"
+                  hide-details="auto"
                 />
               </v-col>
 
@@ -223,6 +342,7 @@
                   type="number"
                   prefix="$"
                   :rules="[...rules.required, rules.precio]"
+                  hide-details="auto"
                 />
               </v-col>
 
@@ -239,6 +359,7 @@
                   :rules="rules.required"
                   :loading="sucursalLoading"
                   :error-messages="sucursalError"
+                  hide-details="auto"
                 />
               </v-col>
 
@@ -251,42 +372,80 @@
                   :items="estadosVehiculo"
                   label="Estado"
                   :rules="rules.required"
-                />
+                  hide-details="auto"
+                >
+                  <template #selection="{ item }">
+                    <v-chip
+                      :color="getStatusColor(item.raw)"
+                      size="small"
+                      class="mr-2"
+                    >
+                      {{ getStatusText(item.raw) }}
+                    </v-chip>
+                  </template>
+                  <template #item="{ item, props }">
+                    <v-list-item v-bind="props">
+                      <template #prepend>
+                        <v-chip
+                          :color="getStatusColor(item.raw)"
+                          size="small"
+                          class="mr-2"
+                        >
+                          {{ getStatusText(item.raw) }}
+                        </v-chip>
+                      </template>
+                    </v-list-item>
+                  </template>
+                </v-select>
               </v-col>
 
-              <!-- Sección de fallas (aparece si el estado es EN_MANTENCION o EN_REPARACION) -->
+              <!-- Sección de fallas (solo si el estado es EN_MANTENCION o EN_REPARACION) -->
               <v-col
                 v-if="tieneFallas"
                 cols="12"
               >
-                <v-card outlined>
-                  <v-card-title class="text-subtitle-1">
+                <v-card
+                  variant="outlined"
+                  class="pa-4"
+                >
+                  <v-card-title class="text-subtitle-1 px-0">
                     Detalles de la Falla
                   </v-card-title>
-                  <v-card-text>
+                  <v-card-text class="px-0">
                     <v-row>
-                      <v-col cols="12">
+                      <v-col
+                        cols="12"
+                        md="6"
+                      >
                         <v-select
                           v-model="vehicleData.falla.tipo"
                           :items="tiposFalla"
                           label="Tipo de Falla"
                           :rules="rules.required"
+                          hide-details="auto"
                         />
                       </v-col>
-                      <v-col cols="12">
+
+                      <v-col
+                        cols="12"
+                        md="6"
+                      >
                         <v-select
                           v-model="vehicleData.falla.severidad"
                           :items="nivelesSeveridad"
                           label="Severidad"
                           :rules="rules.required"
+                          hide-details="auto"
                         />
                       </v-col>
+
                       <v-col cols="12">
                         <v-textarea
                           v-model="vehicleData.falla.descripcion"
                           label="Descripción de la Falla"
                           :rules="rules.required"
                           rows="3"
+                          hide-details="auto"
                         />
                       </v-col>
                     </v-row>
@@ -296,12 +455,12 @@
             </v-row>
           </v-form>
         </v-card-text>
-        <!-- Botones -->
+
         <v-card-actions>
           <v-spacer />
           <v-btn
-            color="grey"
-            text
+            color="grey-darken-1"
+            variant="text"
             @click="closeVehicleDialog"
           >
             Cancelar
@@ -552,11 +711,9 @@
   </v-snackbar>
 </template>
 <script setup>
-import {watch} from 'vue';
-import {ref, computed, onMounted} from 'vue';
+import {ref, computed, onMounted, watch} from 'vue';
 import {useVehicleStore} from '@/stores/vehicle';
 import {useAuthStore} from '@/stores/auth';
-import {useMetadataStore} from '@/stores/metadata';
 import {useSucursalService} from '@/services/SucursalService';
 import VehicleHistory from '@/components/vehicles/VehicleHistory.vue';
 import MaintenanceSchedule from '@/components/vehicles/MaintenceSchedule.vue';
@@ -565,7 +722,6 @@ import FallasListas from "@/components/vehicles/FallasListas.vue";
 // Stores
 const vehicleStore = useVehicleStore();
 const authStore = useAuthStore();
-const metadataStore = useMetadataStore();
 
 // Estado
 const loading = ref(false);
@@ -579,12 +735,16 @@ const activeTab = ref('info');
 const isEditing = ref(false);
 const selectedVehicle = ref(null);
 
+// Constantes
+const precioMinimo = 50000;
+const precioMaximo = 500000;
+
 // Estado para sucursales
 const sucursales = ref([]);
 const sucursalLoading = ref(false);
 const sucursalError = ref(null);
 
-// Dialogs
+// Diálogos
 const dialogs = ref({
   vehicle: false,
   report: false,
@@ -592,12 +752,20 @@ const dialogs = ref({
   details: false
 });
 
-// Datos de formularios
-const reportData = ref({
-  descripcion: '',
-  tipoFalla: '',
-  severidad: ''
-});
+// Opciones y configuración
+const estadosVehiculo = [
+  'DISPONIBLE',
+  'NO_DISPONIBLE',
+  'EN_MANTENCION',
+  'EN_REPARACION'
+];
+
+const opcionesOrdenamiento = [
+  {title: 'Precio: Menor a Mayor', value: 'PRECIO_ASC'},
+  {title: 'Precio: Mayor a Menor', value: 'PRECIO_DESC'},
+  {title: 'Marca A-Z', value: 'MARCA_ASC'},
+  {title: 'Marca Z-A', value: 'MARCA_DESC'}
+];
 
 const tiposFalla = [
   'MECANICA',
@@ -614,21 +782,32 @@ const nivelesSeveridad = [
   'CRITICA'
 ];
 
-const estadosVehiculo = [
-  'DISPONIBLE',
-  'NO_DISPONIBLE',
-  'EN_MANTENCION',
-  'EN_REPARACION'
+// Headers para la tabla
+const headers = [
+  {title: 'Patente', key: 'patente', sortable: true},
+  {title: 'Marca', key: 'marca', sortable: true},
+  {title: 'Modelo', key: 'modelo', sortable: true},
+  {title: 'Año', key: 'anio', sortable: true},
+  {title: 'Precio', key: 'precioArriendo', sortable: true},
+  {title: 'Estado', key: 'estado', sortable: true},
+  {title: 'Acciones', key: 'actions', sortable: false}
 ];
 
-// Vehicle Data
+// Filtros
+const filters = ref({
+  search: '',
+  sucursal: null,
+  estado: null,
+  rangoPrecio: [precioMinimo, precioMaximo],
+  ordenarPor: null
+});
+
+// Datos de formularios
 const vehicleData = ref({
   marca: '',
   modelo: '',
   patente: '',
   anio: new Date().getFullYear(),
-  tipoVehiculo: '',
-  transmision: '',
   precioArriendo: '',
   sucursalId: null,
   estado: 'DISPONIBLE',
@@ -637,6 +816,12 @@ const vehicleData = ref({
     severidad: '',
     descripcion: ''
   }
+});
+
+const reportData = ref({
+  descripcion: '',
+  tipoFalla: '',
+  severidad: ''
 });
 
 // Reglas de validación
@@ -649,148 +834,14 @@ const rules = {
     return v >= 2000 && v <= currentYear + 1 || 'Año inválido';
   }
 };
-
-// Filtros
-const filters = ref({
-  sucursal: null,
-  estado: null,
-  search: ''
+const hasActiveFilters = computed(() => {
+  return filters.value.search ||
+    filters.value.sucursal ||
+    filters.value.estado ||
+    filters.value.ordenarPor ||
+    filters.value.rangoPrecio[0] !== precioMinimo ||
+    filters.value.rangoPrecio[1] !== precioMaximo;
 });
-
-// Headers para la tabla
-const headers = [
-  {title: 'Patente', key: 'patente'},
-  {title: 'Marca', key: 'marca'},
-  {title: 'Modelo', key: 'modelo'},
-  {title: 'Precio', key: 'precioArriendo'},
-  {title: 'Estado', key: 'estado'},
-  {title: 'Acciones', key: 'actions', sortable: false}
-];
-
-// Snackbar
-const snackbar = ref({
-  show: false,
-  text: '',
-  color: 'success'
-});
-
-// Computed Properties
-const tieneFallas = computed(() => {
-  return ['EN_MANTENCION', 'EN_REPARACION'].includes(vehicleData.value.estado);
-});
-
-const filteredVehicles = computed(() => {
-  return vehicleStore.vehicles.filter(vehicle => {
-    const vehicleSucursalId = typeof vehicle.sucursal === 'number'
-        ? vehicle.sucursal
-        : vehicle.sucursal?.id;
-
-    if (filters.value.sucursal && vehicleSucursalId !== filters.value.sucursal) return false;
-    if (filters.value.estado && vehicle.estado !== filters.value.estado) return false;
-    if (filters.value.search) {
-      const search = filters.value.search.toLowerCase();
-      return vehicle.patente.toLowerCase().includes(search) ||
-          vehicle.marca.toLowerCase().includes(search) ||
-          vehicle.modelo.toLowerCase().includes(search);
-    }
-    return true;
-  });
-});
-
-// Methods
-const refreshHistory = () => {
-  historyRefreshTrigger.value = !historyRefreshTrigger.value;
-};
-
-const loadSucursales = async () => {
-  sucursalLoading.value = true;
-  sucursalError.value = null;
-  try {
-    const sucursalService = useSucursalService();
-    const data = await sucursalService.listarSucursales();
-
-    sucursales.value = data.map(s => ({
-      title: s.nombre,
-      value: s.id,
-      direccion: s.direccion
-    }));
-  } catch (error) {
-    console.error('Error cargando sucursales:', error);
-    sucursalError.value = 'Error al cargar las sucursales';
-  } finally {
-    sucursalLoading.value = false;
-  }
-};
-
-const loadData = async () => {
-  loading.value = true;
-  try {
-    await vehicleStore.fetchVehicles();
-  } finally {
-    loading.value = false;
-  }
-};
-
-const openVehicleDialog = (vehicle = null) => {
-  if (vehicle) {
-    isEditing.value = true;
-    selectedVehicle.value = vehicle;
-
-    const sucursalId = typeof vehicle.sucursal === 'number'
-        ? vehicle.sucursal
-        : vehicle.sucursal?.id || null;
-
-    // Corregir el mapeo de los datos
-    vehicleData.value = {
-      id: vehicle.id,
-      marca: vehicle.marca,
-      modelo: vehicle.modelo,
-      patente: vehicle.patente,
-      anio: vehicle.anio,
-      tipoVehiculo: typeof vehicle.tipoVehiculo === 'object'
-          ? vehicle.tipoVehiculo.valor
-          : vehicle.tipoVehiculo,
-      transmision: typeof vehicle.transmision === 'object'
-          ? vehicle.transmision.valor
-          : vehicle.transmision,
-      precioArriendo: vehicle.precioArriendo,
-      estado: vehicle.estado,
-      sucursalId: sucursalId,
-      falla: {
-        tipo: '',
-        severidad: '',
-        descripcion: ''
-      }
-    };
-  } else {
-    // Crear nuevo vehículo
-    isEditing.value = false;
-    selectedVehicle.value = null;
-    vehicleData.value = {
-      marca: '',
-      modelo: '',
-      patente: '',
-      anio: new Date().getFullYear(),
-      tipoVehiculo: '',
-      transmision: '',
-      precioArriendo: '',
-      sucursalId: null,
-      estado: 'DISPONIBLE',
-      falla: {
-        tipo: '',
-        severidad: '',
-        descripcion: ''
-      }
-    };
-  }
-  dialogs.value.vehicle = true;
-};
-
-const closeVehicleDialog = () => {
-  dialogs.value.vehicle = false;
-  vehicleForm.value?.reset();
-};
-
 const openDetailsDialog = (vehicle) => {
   selectedVehicle.value = vehicle;
   activeTab.value = 'info';
@@ -819,7 +870,6 @@ const closeReportDialog = () => {
   selectedVehicle.value = null;
 };
 
-
 const confirmDelete = (vehicle) => {
   selectedVehicle.value = vehicle;
   dialogs.value.delete = true;
@@ -844,52 +894,6 @@ const deleteVehicle = async () => {
       text: error.message || 'Error al eliminar el vehículo'
     };
     dialogs.value.delete = false;
-  } finally {
-    saving.value = false;
-  }
-};
-
-const saveVehicle = async () => {
-  if (!vehicleForm.value?.validate()) return;
-
-  const vehiculoData = {
-    marca: vehicleData.value.marca,
-    modelo: vehicleData.value.modelo,
-    patente: vehicleData.value.patente,
-    anio: Number(vehicleData.value.anio),
-    tipoVehiculo: vehicleData.value.tipoVehiculo,
-    transmision: vehicleData.value.transmision,
-    precioArriendo: Number(vehicleData.value.precioArriendo),
-    sucursal: Number(vehicleData.value.sucursalId),
-    estado: vehicleData.value.estado || 'DISPONIBLE'
-  };
-
-  saving.value = true;
-  try {
-    if (isEditing.value) {
-      vehiculoData.id = selectedVehicle.value.id;
-      await vehicleStore.updateVehicle(vehiculoData);
-      snackbar.value = {
-        show: true,
-        color: 'success',
-        text: 'Vehículo actualizado correctamente'
-      };
-    } else {
-      await vehicleStore.createVehicle(vehiculoData);
-      snackbar.value = {
-        show: true,
-        color: 'success',
-        text: 'Vehículo creado correctamente'
-      };
-    }
-    closeVehicleDialog();
-    await loadData();
-  } catch (error) {
-    snackbar.value = {
-      show: true,
-      color: 'error',
-      text: `Error: ${error.message}`
-    };
   } finally {
     saving.value = false;
   }
@@ -929,7 +933,79 @@ const handleReportarFalla = async () => {
   }
 };
 
-// Helpers
+const refreshHistory = () => {
+  historyRefreshTrigger.value = !historyRefreshTrigger.value;
+};
+
+// Estado del snackbar que faltaba
+const snackbar = ref({
+  show: false,
+  text: '',
+  color: 'success'
+});
+const filteredVehicles = computed(() => {
+  return vehicleStore.vehicles.filter(vehicle => {
+    // Búsqueda general
+    if (filters.value.search) {
+      const search = filters.value.search.toLowerCase();
+      const searchFields = [
+        vehicle.patente,
+        vehicle.marca,
+        vehicle.modelo
+      ].map(field => field.toLowerCase());
+
+      if (!searchFields.some(field => field.includes(search))) {
+        return false;
+      }
+    }
+
+    // Filtro por sucursal
+    if (filters.value.sucursal &&
+      vehicle.sucursal?.id !== filters.value.sucursal) {
+      return false;
+    }
+
+    // Filtro por estado
+    if (filters.value.estado &&
+      vehicle.estado !== filters.value.estado) {
+      return false;
+    }
+
+    // Filtro por rango de precio
+    const precio = Number(vehicle.precioArriendo);
+    if (precio < filters.value.rangoPrecio[0] ||
+      precio > filters.value.rangoPrecio[1]) {
+      return false;
+    }
+
+    return true;
+  }).sort((a, b) => {
+    if (!filters.value.ordenarPor) return 0;
+
+    switch (filters.value.ordenarPor) {
+      case 'PRECIO_ASC':
+        return a.precioArriendo - b.precioArriendo;
+      case 'PRECIO_DESC':
+        return b.precioArriendo - a.precioArriendo;
+      case 'MARCA_ASC':
+        return a.marca.localeCompare(b.marca);
+      case 'MARCA_DESC':
+        return b.marca.localeCompare(a.marca);
+      default:
+        return 0;
+    }
+  });
+});
+
+const tieneFallas = computed(() => {
+  return ['EN_MANTENCION', 'EN_REPARACION'].includes(vehicleData.value.estado);
+});
+
+// Métodos
+const formatPrice = (price) => {
+  return new Intl.NumberFormat('es-CL').format(price);
+};
+
 const getStatusColor = (status) => {
   const colors = {
     'DISPONIBLE': 'success',
@@ -944,37 +1020,169 @@ const getStatusText = (status) => {
   return status.replace('_', ' ');
 };
 
+const clearFilters = () => {
+  filters.value = {
+    search: '',
+    sucursal: null,
+    estado: null,
+    rangoPrecio: [precioMinimo, precioMaximo],
+    ordenarPor: null
+  };
+};
+// Métodos CRUD
+const loadData = async () => {
+  loading.value = true;
+  try {
+    await vehicleStore.fetchVehicles();
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loadSucursales = async () => {
+  sucursalLoading.value = true;
+  sucursalError.value = null;
+  try {
+    const sucursalService = useSucursalService();
+    const data = await sucursalService.listarSucursales();
+    sucursales.value = data.map(s => ({
+      title: s.nombre,
+      value: s.id,
+      direccion: s.direccion
+    }));
+  } catch (error) {
+    console.error('Error cargando sucursales:', error);
+    sucursalError.value = 'Error al cargar las sucursales';
+  } finally {
+    sucursalLoading.value = false;
+  }
+};
+
+// Métodos de diálogos
+const openVehicleDialog = (vehicle = null) => {
+  if (vehicle) {
+    isEditing.value = true;
+    selectedVehicle.value = vehicle;
+    const sucursalId = typeof vehicle.sucursal === 'number'
+      ? vehicle.sucursal
+      : vehicle.sucursal?.id;
+
+    vehicleData.value = {
+      id: vehicle.id,
+      marca: vehicle.marca,
+      modelo: vehicle.modelo,
+      patente: vehicle.patente,
+      anio: vehicle.anio,
+      precioArriendo: vehicle.precioArriendo,
+      estado: vehicle.estado,
+      sucursalId: sucursalId,
+      falla: {
+        tipo: '',
+        severidad: '',
+        descripcion: ''
+      }
+    };
+  } else {
+    isEditing.value = false;
+    selectedVehicle.value = null;
+    vehicleData.value = {
+      marca: '',
+      modelo: '',
+      patente: '',
+      anio: new Date().getFullYear(),
+      precioArriendo: '',
+      sucursalId: null,
+      estado: 'DISPONIBLE',
+      falla: {
+        tipo: '',
+        severidad: '',
+        descripcion: ''
+      }
+    };
+  }
+  dialogs.value.vehicle = true;
+};
+
+const closeVehicleDialog = () => {
+  dialogs.value.vehicle = false;
+  vehicleForm.value?.reset();
+};
+
+const saveVehicle = async () => {
+  if (!vehicleForm.value?.validate()) return;
+
+  saving.value = true;
+  try {
+    const vehiculoData = {
+      marca: vehicleData.value.marca,
+      modelo: vehicleData.value.modelo,
+      patente: vehicleData.value.patente,
+      anio: Number(vehicleData.value.anio),
+      precioArriendo: Number(vehicleData.value.precioArriendo),
+      sucursal: Number(vehicleData.value.sucursalId),
+      estado: vehicleData.value.estado
+    };
+
+    let savedVehicle;
+    if (isEditing.value) {
+      vehiculoData.id = selectedVehicle.value.id;
+      savedVehicle = await vehicleStore.updateVehicle(vehiculoData);
+    } else {
+      savedVehicle = await vehicleStore.createVehicle(vehiculoData);
+    }
+
+    // Si el vehículo está en mantenimiento o reparación, reportar la falla
+    if ((vehiculoData.estado === 'EN_MANTENCION' || vehiculoData.estado === 'EN_REPARACION')
+      && vehicleData.value.falla) {
+      await vehicleStore.reportarFalla({
+        vehiculoId: savedVehicle.id,
+        tipo: vehicleData.value.falla.tipo,
+        severidad: vehicleData.value.falla.severidad,
+        descripcion: vehicleData.value.falla.descripcion,
+        reportadoPorId: authStore.user.id
+      });
+    }
+
+    showSnackbar(
+      isEditing.value ? 'Vehículo actualizado correctamente' : 'Vehículo creado correctamente',
+      'success'
+    );
+    closeVehicleDialog();
+    await loadData();
+  } catch (error) {
+    showSnackbar(error.message, 'error');
+  } finally {
+    saving.value = false;
+  }
+};
+const showSnackbar = (text, color) => {
+  snackbar.value = {
+    show: true,
+    text,
+    color
+  };
+};
+// Permisos y validaciones
 const canEdit = () => {
   return authStore.isAdmin;
 };
 
 const canReport = (vehicle) => {
   return vehicle.estado === 'DISPONIBLE' &&
-      (authStore.isAdmin || authStore.isWorker);
+    (authStore.isAdmin || authStore.isWorker);
 };
 
 const canDelete = (vehicle) => {
   return authStore.isAdmin && vehicle.estado === 'DISPONIBLE';
 };
 
-
-// Watchers
-watch(() => vehicleData.value.sucursalId, (newVal, oldVal) => {
-  console.log('Sucursal ID changed:', {
-    from: oldVal,
-    to: newVal,
-    type: typeof newVal
-  });
-});
-
-// Lifecycle Hooks
+// Lifecycle
 onMounted(async () => {
   try {
     loading.value = true;
     await Promise.all([
       loadData(),
-      loadSucursales(),
-      metadataStore.loadMetadata() // Cargar metadata al montar el componente
+      loadSucursales()
     ]);
   } catch (error) {
     console.error('Error durante la inicialización:', error);
@@ -989,7 +1197,12 @@ onMounted(async () => {
 }
 
 .filter-section {
-  height: 100px;
+  background: linear-gradient(to right, #1a237e, #0d47a1);
+  color: white;
+}
+
+.fixed-height-input {
+  margin-bottom: 0;
 }
 
 .main-table-card {
@@ -1001,9 +1214,9 @@ onMounted(async () => {
   height: 100%;
 }
 
-/* Estilos de la tabla */
 :deep(.v-data-table-header th) {
   height: 48px !important;
+  background-color: #f5f5f5;
 }
 
 :deep(.v-data-table-row td) {
@@ -1011,45 +1224,53 @@ onMounted(async () => {
   padding: 0 16px !important;
 }
 
-/* Chip de estado */
 :deep(.v-chip) {
-  width: 120px;
+  min-width: 120px;
   justify-content: center;
 }
 
-/* Botones de acción */
 :deep(.v-btn--icon) {
   width: 36px !important;
   height: 36px !important;
 }
 
-/* Estilos del diálogo */
+/* Estilos para los inputs en la sección de filtros */
+.filter-section :deep(.v-field__input) {
+  color: white !important;
+}
+
+.filter-section :deep(.v-field__outline) {
+  --v-field-border-opacity: 0.7;
+}
+
+.filter-section :deep(.v-label) {
+  color: rgba(255, 255, 255, 0.9) !important;
+}
+
+/* Estilos para los diálogos */
 :deep(.v-dialog) {
-  position: relative;
-  z-index: 1000;
+  border-radius: 8px;
+  box-shadow: 0 4px 25px 0 rgba(0, 0, 0, 0.1);
 }
 
-:deep(.v-card) {
-  position: relative;
-  z-index: 1001;
-  background-color: white;
+:deep(.v-card-title) {
+  font-size: 1.25rem;
+  font-weight: 600;
 }
 
-:deep(.v-text-field),
-:deep(.v-select),
-:deep(.v-textarea) {
-  margin-bottom: 16px;
+/* Estilos para el slider de precio */
+.filter-section :deep(.v-slider-track__fill) {
+  background-color: white !important;
+}
+
+.filter-section :deep(.v-slider-thumb__surface) {
+  border-color: white !important;
 }
 
 /* Responsive */
-@media (max-width: 600px) {
-  .header-row {
-    height: 56px;
-  }
-
+@media (max-width: 960px) {
   .filter-section {
     height: auto;
-    min-height: 200px;
   }
 
   .main-table-card {
@@ -1057,28 +1278,14 @@ onMounted(async () => {
   }
 }
 
-:deep(.v-snackbar__content) {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+/* Animaciones */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
 }
 
-.v-window {
-  margin-top: 20px;
-}
-
-.v-list-item {
-  display: flex;
-  justify-content: space-between;
-  padding: 12px 16px;
-}
-
-.v-list-item-title {
-  font-weight: bold;
-  color: rgba(0, 0, 0, 0.6);
-}
-
-.v-window-item {
-  padding: 20px;
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
 }
 </style>

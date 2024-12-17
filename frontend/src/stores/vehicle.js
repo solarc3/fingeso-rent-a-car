@@ -1,13 +1,12 @@
 import {defineStore} from 'pinia';
 import {useVehiculoService} from '@/services/VehiculoService';
 import {useMetadataStore} from "@/stores/metadata.js";
-import axiosInstance from "@/services/axiosConfig.js";
 import {useMantenimientoService} from "@/services/MantenimientoService.js";
 
 export const useVehicleStore = defineStore('vehicle', {
   state: () => ({
     vehicles: [],
-    filteredVehicles: [],
+    filteredVehicles: [], // Se llenará con todos los vehículos al cargar
     loading: false,
     error: null,
     filters: {
@@ -17,7 +16,12 @@ export const useVehicleStore = defineStore('vehicle', {
       transmision: null,
       precioMinimo: 50000,
       precioMaximo: 250000,
-      ordenarPor: null
+      ordenarPor: null,
+      disponibilidad: 'TODOS',
+      fechas: {  // Agregar fechas por defecto
+        inicio: new Date().toISOString(),
+        fin: new Date(Date.now() + 86400000).toISOString() // mañana
+      }
     }, estadosMap: {
       'DISPONIBLE': 'Disponible',
       'NO_DISPONIBLE': 'No Disponible',
@@ -28,7 +32,6 @@ export const useVehicleStore = defineStore('vehicle', {
   }),
 
   actions: {
-    // Añadir método de ordenamiento
     applySorting() {
       if (!this.filters.ordenarPor) return;
 
@@ -68,18 +71,21 @@ export const useVehicleStore = defineStore('vehicle', {
           throw new Error('Datos de vehículos inválidos');
         }
 
-        // Procesar los vehículos asegurándonos de que la información de la sucursal esté completa
-        this.vehicles = data.map(vehiculo => {
-          return {
-            ...vehiculo,
-            // Asegurarnos de que la sucursal tenga la estructura correcta
-            sucursal: vehiculo.sucursal ? {
-              id: vehiculo.sucursal.id,
-              nombre: vehiculo.sucursal.nombre,
-              direccion: vehiculo.sucursal.direccion
-            } : null
-          };
-        });
+        // Procesar los vehículos
+        this.vehicles = data.map(vehiculo => ({
+          ...vehiculo,
+          sucursal: vehiculo.sucursal ? {
+            id: vehiculo.sucursal.id,
+            nombre: vehiculo.sucursal.nombre,
+            direccion: vehiculo.sucursal.direccion
+          } : null
+        }));
+
+        // Inicializar filteredVehicles con todos los vehículos disponibles
+        this.filteredVehicles = this.vehicles.filter(vehiculo =>
+          vehiculo.estado !== 'EN_MANTENCION' &&
+          vehiculo.estado !== 'EN_REPARACION'
+        );
 
         console.log('Vehículos procesados:', this.vehicles);
         return this.vehicles;
@@ -95,38 +101,44 @@ export const useVehicleStore = defineStore('vehicle', {
     setFilters(filters) {
       console.log('Setting filters:', filters);
       this.filters = {
+        ...this.filters,
         marca: filters.marca,
         sucursal: filters.sucursal,
         tipoVehiculo: filters.tipoVehiculo,
         transmision: filters.transmision,
         precioMinimo: filters.precioMinimo,
         precioMaximo: filters.precioMaximo,
-        ordenarPor: filters.ordenarPor
+        ordenarPor: filters.ordenarPor,
+        disponibilidad: filters.disponibilidad,
+        fechas: filters.fechas ? {
+          inicio: filters.fechas.inicio,
+          fin: filters.fechas.fin
+        } : null
       };
-      this.applyFilters();
+      this.applyFilters(); // Asegúrate de que esta línea esté presente
     },
 
     applyFilters() {
       console.log('Applying filters with:', this.filters);
+
       this.filteredVehicles = this.vehicles.filter(vehiculo => {
-        // Filtro por marca
-        if (this.filters.marca) {
-          if (vehiculo.marca.toLowerCase() !== this.filters.marca.toLowerCase()) {
-            return false;
-          }
+        // Excluir vehículos en mantención o reparación por defecto
+        if (vehiculo.estado === 'EN_MANTENCION' || vehiculo.estado === 'EN_REPARACION') {
+          return false;
         }
 
-        // Filtro por sucursal
-        if (this.filters.sucursal) {
-          const vehiculoSucursalId = vehiculo.sucursal?.id;
-          if (!vehiculoSucursalId || vehiculoSucursalId !== this.filters.sucursal.id) {
-            return false;
-          }
+        // Si hay filtros específicos, aplicarlos
+        if (this.filters.marca &&
+          vehiculo.marca.toLowerCase() !== this.filters.marca.toLowerCase()) {
+          return false;
         }
 
-        // Filtro por transmisión
+        if (this.filters.sucursal &&
+          (!vehiculo.sucursal || vehiculo.sucursal.id !== this.filters.sucursal.id)) {
+          return false;
+        }
+
         if (this.filters.transmision) {
-          // El tercer carácter del código ACRISS indica la transmisión
           const transmision = vehiculo.acriss.charAt(2);
           if (transmision !== this.filters.transmision) {
             return false;
@@ -139,6 +151,19 @@ export const useVehicleStore = defineStore('vehicle', {
           return false;
         }
 
+        // Verificar disponibilidad solo si hay fechas especificadas
+        if (this.filters.fechas) {
+          const disponible = this.isVehicleAvailableInDateRange(
+            vehiculo,
+            this.filters.fechas.inicio,
+            this.filters.fechas.fin
+          );
+
+          if (this.filters.disponibilidad === 'DISPONIBLES' && !disponible) {
+            return false;
+          }
+        }
+
         return true;
       });
 
@@ -149,14 +174,30 @@ export const useVehicleStore = defineStore('vehicle', {
 
       console.log('Filtered vehicles:', this.filteredVehicles);
     },
-
     updateFilter(filterName, value) {
       this.filters[filterName] = value;
       this.applyFilters();
     },
+    isVehicleAvailableInDateRange(vehicle, startDate, endDate) {
+      if (!vehicle.reservas || !Array.isArray(vehicle.reservas)) return true;
 
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      return !vehicle.reservas.some(reserva => {
+        const reservaStart = new Date(reserva.fechaInicio);
+        const reservaEnd = new Date(reserva.fechaFin);
+        return (start < reservaEnd && reservaStart < end);
+      });
+    },
     clearFilters() {
       const metadataStore = useMetadataStore();
+
+      // Crear fechas por defecto
+      const fechaRetiro = new Date();
+      const fechaDevolucion = new Date();
+      fechaDevolucion.setDate(fechaDevolucion.getDate() + 1); // Mañana
+
       this.filters = {
         marca: null,
         sucursal: null,
@@ -164,9 +205,18 @@ export const useVehicleStore = defineStore('vehicle', {
         transmision: null,
         precioMinimo: metadataStore.precioMinimo,
         precioMaximo: metadataStore.precioMaximo,
-        ordenarPor: null
+        ordenarPor: null,
+        disponibilidad: 'TODOS',
+        fechas: {
+          inicio: fechaRetiro.toISOString(),
+          fin: fechaDevolucion.toISOString()
+        }
       };
-      this.filteredVehicles = [...this.vehicles];
+
+      this.filteredVehicles = this.vehicles.filter(vehiculo =>
+        vehiculo.estado !== 'EN_MANTENCION' &&
+        vehiculo.estado !== 'EN_REPARACION'
+      );
     },
 
     resetPriceFilter() {
@@ -178,6 +228,7 @@ export const useVehicleStore = defineStore('vehicle', {
     async createVehicle(vehicleData) {
       this.loading = true;
       try {
+        // Crear el vehículo primero
         const vehiculoDTO = {
           marca: vehicleData.marca,
           modelo: vehicleData.modelo,
@@ -190,8 +241,20 @@ export const useVehicleStore = defineStore('vehicle', {
           sucursal: Number(vehicleData.sucursal)
         };
 
-        console.log('Enviando datos:', vehiculoDTO);
         const newVehicle = await useVehiculoService().crearVehiculo(vehiculoDTO);
+
+        // Si el estado es EN_MANTENCION o EN_REPARACION y hay datos de falla, reportar la falla
+        if ((vehicleData.estado === 'EN_MANTENCION' || vehicleData.estado === 'EN_REPARACION')
+          && vehicleData.falla) {
+          await this.reportarFalla({
+            vehiculoId: newVehicle.id,
+            tipo: vehicleData.falla.tipo,
+            severidad: vehicleData.falla.severidad,
+            descripcion: vehicleData.falla.descripcion,
+            reportadoPorId: vehicleData.reportadoPorId || vehicleData.userId // ID del usuario que crea
+          });
+        }
+
         this.vehicles.push(newVehicle);
         return newVehicle;
       } catch (error) {
@@ -215,6 +278,18 @@ export const useVehicleStore = defineStore('vehicle', {
           estado: vehicleData.estado,
           sucursal: Number(vehicleData.sucursalId)
         });
+
+        // Si el estado cambió a EN_MANTENCION o EN_REPARACION y hay datos de falla
+        if ((vehicleData.estado === 'EN_MANTENCION' || vehicleData.estado === 'EN_REPARACION')
+          && vehicleData.falla) {
+          await this.reportarFalla({
+            vehiculoId: vehicleData.id,
+            tipo: vehicleData.falla.tipo,
+            severidad: vehicleData.falla.severidad,
+            descripcion: vehicleData.falla.descripcion,
+            reportadoPorId: vehicleData.reportadoPorId || vehicleData.userId
+          });
+        }
 
         // Actualizar el vehículo en la lista local
         const index = this.vehicles.findIndex(v => v.id === vehicleData.id);
@@ -281,75 +356,6 @@ export const useVehicleStore = defineStore('vehicle', {
         this.loading = false;
       }
     },
-    async reportVehicleIssue(reportData) {
-      this.loading = true;
-      try {
-        const response = await axiosInstance.post(
-          `/api/vehiculo/${reportData.vehiculoId}/falla`,
-          {
-            tipo: reportData.tipoFalla,
-            severidad: reportData.severidad,
-            descripcion: reportData.descripcion,
-            reportadoPorId: this.authStore.user.id
-          }
-        );
-
-        // Actualizar el vehículo en la lista local
-        const index = this.vehicles.findIndex(v => v.id === reportData.vehiculoId);
-        if (index !== -1) {
-          this.vehicles[index] = response.data;
-        }
-
-        return response.data;
-      } catch (error) {
-        console.error('Error reporting vehicle issue:', error);
-        throw error;
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    // Obtener vehículos por sucursal
-    async fetchVehiclesBySucursal(sucursalId) {
-      this.loading = true;
-      try {
-        const vehiculoService = useVehiculoService();
-        return await vehiculoService.obtenerVehiculosDisponiblesEnSucursal(sucursalId);
-      } catch (error) {
-        console.error('Error fetching vehicles by sucursal:', error);
-        throw error;
-      } finally {
-        this.loading = false;
-      }
-    },
-
-    // Validar datos de vehículo
-    validateVehicleData(vehicleData) {
-      const errors = [];
-
-      if (!vehicleData.marca) {
-        errors.push('La marca es requerida');
-      }
-
-      if (!vehicleData.modelo) {
-        errors.push('El modelo es requerido');
-      }
-
-      if (!vehicleData.patente) {
-        errors.push('La patente es requerida');
-      } else if (!/^[A-Z]{4}\d{2}$/.test(vehicleData.patente)) {
-        errors.push('Formato de patente inválido (XXXX99)');
-      }
-
-      if (!vehicleData.precioArriendo || vehicleData.precioArriendo <= 0) {
-        errors.push('El precio de arriendo debe ser mayor a 0');
-      }
-
-      return {
-        isValid: errors.length === 0,
-        errors
-      };
-    }
   },
   getters: {
     // Obtener vehículos disponibles
@@ -371,6 +377,20 @@ export const useVehicleStore = defineStore('vehicle', {
         v.estado === 'EN_MANTENCION' || v.estado === 'EN_REPARACION'
       );
     },
+    getFilteredVehicles: (state) => {
+      return state.filteredVehicles;
+    }, isVehicleAvailable: (state) => (vehiculo, fechaInicio, fechaFin) => {
+      if (!vehiculo.reservas || !Array.isArray(vehiculo.reservas)) return true;
+
+      const inicio = new Date(fechaInicio);
+      const fin = new Date(fechaFin);
+
+      return !vehiculo.reservas.some(reserva => {
+        const reservaInicio = new Date(reserva.fechaInicio);
+        const reservaFin = new Date(reserva.fechaFin);
+        return (inicio < reservaFin && reservaInicio < fin);
+      });
+    },
 
     getVehiclesByState: (state) => (estado) => {
       return state.vehicles.filter((v) => v.estado === estado);
@@ -386,4 +406,5 @@ export const useVehicleStore = defineStore('vehicle', {
       return colors[estado] || 'grey'
     }
   },
+
 });

@@ -138,17 +138,44 @@ public class VehiculoController {
     @PostMapping("/{id}/falla")
     public ResponseEntity<?> reportarFalla(@PathVariable Long id, @RequestBody FallaVehiculoEntity falla) {
         try {
-            VehiculoEntity vehiculo = vehiculoService.reportarFalla(
-                id,
-                falla.getTipo(),
-                falla.getSeveridad(),
-                falla.getDescripcion(),
-                falla.getReportadoPorId()
-                                                                   );
+            VehiculoEntity vehiculo = vehiculoService.reportarFalla(id, falla);
             return ResponseEntity.ok(vehiculo);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/falla")
+    public ResponseEntity<?> reportarFalla(@RequestBody Map<String, Object> fallaData) {
+        try {
+            if (!fallaData.containsKey("vehiculoId") ||
+                !fallaData.containsKey("tipo") ||
+                !fallaData.containsKey("severidad") ||
+                !fallaData.containsKey("descripcion") ||
+                !fallaData.containsKey("reportadoPorId")) {
+                return ResponseEntity.badRequest()
+                    .body("Faltan campos requeridos");
+            }
+
+            Long vehiculoId = Long.parseLong(fallaData.get("vehiculoId")
+                                                 .toString());
+
+            FallaVehiculoEntity falla = new FallaVehiculoEntity();
+            falla.setTipo(fallaData.get("tipo")
+                              .toString());
+            falla.setSeveridad(fallaData.get("severidad")
+                                   .toString());
+            falla.setDescripcion(fallaData.get("descripcion")
+                                     .toString());
+            falla.setReportadoPorId(Long.parseLong(fallaData.get("reportadoPorId")
+                                                       .toString()));
+
+            VehiculoEntity vehiculo = vehiculoService.reportarFalla(vehiculoId, falla);
+            return ResponseEntity.ok(vehiculo);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest()
+                .body("Error: " + e.getMessage());
         }
     }
 }

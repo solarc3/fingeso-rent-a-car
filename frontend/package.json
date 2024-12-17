@@ -17,6 +17,7 @@
     "dayjs": "^1.11.13",
     "jspdf": "^2.5.2",
     "jspdf-autotable": "^3.8.4",
+    "lodash": "^4.17.21",
     "roboto-fontface": "*",
     "vue": "^3.4.31",
     "vuetify": "^3.6.14",
