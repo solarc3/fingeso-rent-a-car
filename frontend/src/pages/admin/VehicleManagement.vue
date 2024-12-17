@@ -1,6 +1,5 @@
 <template>
   <v-container fluid>
-    <!-- Header -->
     <v-row class="mb-4 header-row">
       <v-col
         cols="12"
@@ -20,11 +19,9 @@
       </v-col>
     </v-row>
 
-    <!-- Filtros mejorados -->
     <v-card class="mb-4 filter-section">
       <v-card-text>
         <v-row>
-          <!-- Búsqueda general -->
           <v-col
             cols="12"
             md="3"
@@ -39,7 +36,6 @@
             />
           </v-col>
 
-          <!-- Filtro de sucursal -->
           <v-col
             cols="12"
             md="3"
@@ -58,7 +54,6 @@
             />
           </v-col>
 
-          <!-- Filtro de estado -->
           <v-col
             cols="12"
             md="3"
@@ -96,7 +91,6 @@
             </v-select>
           </v-col>
 
-          <!-- Ordenamiento -->
           <v-col
             cols="12"
             md="3"
@@ -114,7 +108,6 @@
           </v-col>
         </v-row>
 
-        <!-- Segunda fila para rango de precios -->
         <v-row class="mt-4">
           <v-col
             cols="12"
@@ -152,7 +145,6 @@
             </v-range-slider>
           </v-col>
 
-          <!-- Filtros activos -->
           <v-col
             cols="12"
             md="6"
@@ -173,7 +165,6 @@
       </v-card-text>
     </v-card>
 
-    <!-- Tabla de vehículos -->
     <v-card class="main-table-card">
       <v-data-table
         :headers="headers"
@@ -184,12 +175,10 @@
         height="calc(100vh - 300px)"
         fixed-header
       >
-        <!-- Formato de precio -->
         <template #item.precioArriendo="{ item }">
           ${{ formatPrice(item.precioArriendo) }}
         </template>
 
-        <!-- Estado del vehículo -->
         <template #item.estado="{ item }">
           <v-chip
             :color="getStatusColor(item.estado)"
@@ -199,7 +188,6 @@
           </v-chip>
         </template>
 
-        <!-- Acciones -->
         <template #item.actions="{ item }">
           <v-tooltip text="Ver detalles">
             <template #activator="{ props }">
@@ -263,7 +251,6 @@
       </v-data-table>
     </v-card>
 
-    <!-- Diálogo para crear/editar vehículo -->
     <v-dialog
       v-model="dialogs.vehicle"
       max-width="600"
@@ -279,7 +266,6 @@
             v-model="formValid"
           >
             <v-row>
-              <!-- Campos básicos -->
               <v-col
                 cols="12"
                 md="6"
@@ -399,7 +385,7 @@
                 </v-select>
               </v-col>
 
-              <!-- Sección de fallas (solo si el estado es EN_MANTENCION o EN_REPARACION) -->
+              <!-- fallas (solo si el estado es EN_MANTENCION o EN_REPARACION) -->
               <v-col
                 v-if="tieneFallas"
                 cols="12"
@@ -477,7 +463,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Diálogo para reportar fallas -->
     <v-dialog
       v-model="dialogs.report"
       max-width="600"
@@ -533,7 +518,6 @@
       </v-card>
     </v-dialog>
 
-    <!-- Diálogo de confirmación para eliminar -->
     <v-dialog
       v-model="dialogs.delete"
       max-width="400"
@@ -595,7 +579,6 @@
           </v-tabs>
 
           <v-window v-model="activeTab">
-            <!-- Tab de Información -->
             <v-window-item value="info">
               <v-card flat>
                 <v-card-text>
@@ -664,7 +647,6 @@
               </v-card>
             </v-window-item>
 
-            <!-- Tab de Historial -->
             <v-window-item value="history">
               <VehicleHistory
                 :vehiculo-id="selectedVehicle.id"
@@ -672,7 +654,6 @@
               />
             </v-window-item>
 
-            <!-- Tab de Mantenimiento -->
             <v-window-item value="maintenance">
               <MaintenanceSchedule
                 :vehiculo-id="selectedVehicle.id"
@@ -744,7 +725,6 @@ const sucursales = ref([]);
 const sucursalLoading = ref(false);
 const sucursalError = ref(null);
 
-// Diálogos
 const dialogs = ref({
   vehicle: false,
   report: false,
@@ -752,7 +732,7 @@ const dialogs = ref({
   details: false
 });
 
-// Opciones y configuración
+// Opciones
 const estadosVehiculo = [
   'DISPONIBLE',
   'NO_DISPONIBLE',
@@ -824,7 +804,7 @@ const reportData = ref({
   severidad: ''
 });
 
-// Reglas de validación
+// validación
 const rules = {
   required: [v => !!v || 'Este campo es requerido'],
   patente: v => /^[A-Z]{4}\d{2}$/.test(v) || 'Formato inválido (XXXX99)',
@@ -945,7 +925,6 @@ const snackbar = ref({
 });
 const filteredVehicles = computed(() => {
   return vehicleStore.vehicles.filter(vehicle => {
-    // Búsqueda general
     if (filters.value.search) {
       const search = filters.value.search.toLowerCase();
       const searchFields = [
@@ -1001,7 +980,7 @@ const tieneFallas = computed(() => {
   return ['EN_MANTENCION', 'EN_REPARACION'].includes(vehicleData.value.estado);
 });
 
-// Métodos
+// metodos
 const formatPrice = (price) => {
   return new Intl.NumberFormat('es-CL').format(price);
 };
@@ -1029,7 +1008,7 @@ const clearFilters = () => {
     ordenarPor: null
   };
 };
-// Métodos CRUD
+
 const loadData = async () => {
   loading.value = true;
   try {
@@ -1058,7 +1037,7 @@ const loadSucursales = async () => {
   }
 };
 
-// Métodos de diálogos
+
 const openVehicleDialog = (vehicle = null) => {
   if (vehicle) {
     isEditing.value = true;
@@ -1131,7 +1110,7 @@ const saveVehicle = async () => {
       savedVehicle = await vehicleStore.createVehicle(vehiculoData);
     }
 
-    // Si el vehículo está en mantenimiento o reparación, reportar la falla
+    // Si el vehiculo esta en mantenimiento o reparacion, reportar la falla
     if ((vehiculoData.estado === 'EN_MANTENCION' || vehiculoData.estado === 'EN_REPARACION')
       && vehicleData.value.falla) {
       await vehicleStore.reportarFalla({
@@ -1176,7 +1155,6 @@ const canDelete = (vehicle) => {
   return authStore.isAdmin && vehicle.estado === 'DISPONIBLE';
 };
 
-// Lifecycle
 onMounted(async () => {
   try {
     loading.value = true;
@@ -1234,7 +1212,6 @@ onMounted(async () => {
   height: 36px !important;
 }
 
-/* Estilos para los inputs en la sección de filtros */
 .filter-section :deep(.v-field__input) {
   color: white !important;
 }
@@ -1247,7 +1224,6 @@ onMounted(async () => {
   color: rgba(255, 255, 255, 0.9) !important;
 }
 
-/* Estilos para los diálogos */
 :deep(.v-dialog) {
   border-radius: 8px;
   box-shadow: 0 4px 25px 0 rgba(0, 0, 0, 0.1);
@@ -1258,7 +1234,6 @@ onMounted(async () => {
   font-weight: 600;
 }
 
-/* Estilos para el slider de precio */
 .filter-section :deep(.v-slider-track__fill) {
   background-color: white !important;
 }
@@ -1267,7 +1242,6 @@ onMounted(async () => {
   border-color: white !important;
 }
 
-/* Responsive */
 @media (max-width: 960px) {
   .filter-section {
     height: auto;
@@ -1278,7 +1252,6 @@ onMounted(async () => {
   }
 }
 
-/* Animaciones */
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.3s ease;
