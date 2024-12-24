@@ -98,6 +98,7 @@
                           label="Fecha de inicio"
                           type="date"
                           :min="minDate"
+                          :max="maxDate"
                           :rules="dateRules"
                           @update:model-value="calcularTotal"
                         />
@@ -108,6 +109,7 @@
                           label="Fecha de término"
                           type="date"
                           :min="selectedDates.start || minDate"
+                          :max="maxDate"
                           :rules="dateRules"
                           @update:model-value="calcularTotal"
                         />
@@ -145,6 +147,7 @@
                 </v-card>
               </v-col>
             </v-row>
+
             <v-col cols="12">
               <v-card
                 flat
@@ -183,6 +186,7 @@
                 </v-card-text>
               </v-card>
             </v-col>
+
             <!-- Total y costos -->
             <v-card
               v-if="mostrarTotal"
@@ -251,7 +255,7 @@
 
 <script setup>
 import {ref, computed, onMounted} from 'vue';
-import {useRouter} from 'vue-router';
+import {useRouter, useRoute} from 'vue-router';
 import {useSucursalService} from '@/services/SucursalService';
 import {useVehicleStore} from '@/stores/vehicle';
 import {useReservationStore} from '@/stores/reservation';
@@ -279,6 +283,7 @@ const reservationStore = useReservationStore();
 const authStore = useAuthStore();
 const vehicleStore = useVehicleStore();
 const router = useRouter();
+const route = useRoute();
 
 // Estado
 const loading = ref(true);
@@ -287,9 +292,21 @@ const vehiculo = ref(null);
 const sucursal = ref(null);
 const locations = ref([]);
 
+const minDate = computed(() => {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return today.toISOString().split('T')[0];
+});
+
+const maxDate = computed(() => {
+  const max = new Date();
+  max.setDate(max.getDate() + 30);
+  return max.toISOString().split('T')[0];
+});
+
 const selectedDates = ref({
-  start: '',
-  end: ''
+  start: route.query.fechaInicio?.toString() || '',
+  end: route.query.fechaFin?.toString() || ''
 });
 
 const reservation = ref({
@@ -308,11 +325,6 @@ const snackbar = ref({
   color: 'success'
 });
 
-const minDate = computed(() => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
-});
-
 const diasArriendo = computed(() => {
   if (!selectedDates.value.start || !selectedDates.value.end) return 0;
   const inicio = new Date(selectedDates.value.start);
@@ -329,7 +341,11 @@ const mostrarTotal = computed(() => {
 });
 
 const isFormValid = computed(() => {
-  return selectedDates.value.start && selectedDates.value.end && diasArriendo.value > 0 && reservation.value.sucursalRetorno;
+  return selectedDates.value.start &&
+    selectedDates.value.end &&
+    diasArriendo.value > 0 &&
+    diasArriendo.value <= 30 &&
+    reservation.value.sucursalRetorno;
 });
 
 const dateRules = [
@@ -337,7 +353,21 @@ const dateRules = [
   v => {
     const date = new Date(v);
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
     return date >= today || 'La fecha debe ser futura';
+  },
+  v => {
+    const date = new Date(v);
+    const maxAllowed = new Date();
+    maxAllowed.setDate(maxAllowed.getDate() + 30);
+    return date <= maxAllowed || 'La fecha no puede exceder 30 días desde hoy';
+  },
+  v => {
+    if (!selectedDates.value.start || !selectedDates.value.end) return true;
+    const start = new Date(selectedDates.value.start);
+    const end = new Date(selectedDates.value.end);
+    const diffDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    return diffDays <= 30 || 'El período máximo de arriendo es de 30 días';
   }
 ];
 
@@ -359,7 +389,6 @@ const fetchLocations = async () => {
   try {
     const sucursalService = useSucursalService();
     const sucursales = await sucursalService.listarSucursales();
-    // Asegúrate de que cada sucursal tenga las propiedades necesarias
     locations.value = sucursales.map(sucursal => ({
       id: sucursal.id,
       nombre: sucursal.nombre,
@@ -373,6 +402,30 @@ const fetchLocations = async () => {
       text: 'Error al cargar las sucursales: ' + (error.message || 'Error desconocido')
     };
   }
+};
+
+const reservasExistentes = computed(() => {
+  if (!vehiculo.value?.reservas || !Array.isArray(vehiculo.value.reservas)) {
+    return [];
+  }
+
+  const ahora = new Date();
+  return vehiculo.value.reservas
+    .filter(reserva =>
+      ['CONFIRMADA', 'EN_PROGRESO'].includes(reserva.estado) &&
+      new Date(reserva.fechaFin) > ahora
+    )
+    .sort((a, b) => new Date(a.fechaInicio) - new Date(b.fechaInicio));
+});
+
+const formatDate = (date) => {
+  return new Date(date).toLocaleDateString('es-CL', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit'
+  });
 };
 
 onMounted(async () => {
@@ -399,7 +452,6 @@ onMounted(async () => {
     }
 
     locations.value = sucursalData;
-
     await fetchLocations();
 
   } catch (error) {
@@ -415,90 +467,109 @@ onMounted(async () => {
   }
 });
 
-const confirmarReserva = async () =>
-  {
-    if (!authStore.isAuthenticated) {
-      snackbar.value = {
-        show: true,
-        color: 'warning',
-        text: 'Debe iniciar sesión para realizar una reserva'
-      };
-      return;
-    }
-
-    if (!selectedDates.value.start ||
-      !selectedDates.value.end ||
-      !reservation.value.sucursalRetorno?.id ||
-      !props.vehiculoId ||
-      !props.sucursalId ||
-      !authStore.user.id) {
-      snackbar.value = {
-        show: true,
-        color: 'error',
-        text: 'Por favor complete todos los campos requeridos'
-      };
-      return;
-    }
-
-    procesando.value = true;
-    try {
-      const reservaData = {
-        fechaInicio: dayjs(selectedDates.value.start).format('YYYY-MM-DDTHH:mm:ss'),
-        fechaFin: dayjs(selectedDates.value.end).format('YYYY-MM-DDTHH:mm:ss'),
-        costo: totalArriendo.value,
-        usuarioId: authStore.user.id,
-        vehiculoId: Number(props.vehiculoId),
-        sucursalId: Number(props.sucursalId),
-        sucursalDevolucionId: Number(reservation.value.sucursalRetorno.id)
-      };
-
-      console.log('Datos de la reserva a enviar:', reservaData);
-
-      await reservationStore.createReservation(reservaData);
-
-      snackbar.value = {
-        show: true,
-        color: 'success',
-        text: 'Reserva confirmada exitosamente'
-      };
-
-      setTimeout(() => {
-        router.push('/mis-reservas');
-      }, 1500);
-    } catch (error) {
-      console.error('Error completo:', error);
-      snackbar.value = {
-        show: true,
-        color: 'error',
-        text: 'Error al procesar la reserva: ' + error.message
-      };
-    } finally {
-      procesando.value = false;
-    }
-  }
-;
-const reservasExistentes = computed(() => {
-  if (!vehiculo.value?.reservas || !Array.isArray(vehiculo.value.reservas)) {
-    return [];
+const confirmarReserva = async () => {
+  if (!authStore.isAuthenticated) {
+    snackbar.value = {
+      show: true,
+      color: 'warning',
+      text: 'Debe iniciar sesión para realizar una reserva'
+    };
+    return;
   }
 
-  const ahora = new Date();
-  return vehiculo.value.reservas
-    .filter(reserva =>
-      ['CONFIRMADA', 'EN_PROGRESO'].includes(reserva.estado) &&
-      new Date(reserva.fechaFin) > ahora
-    )
-    .sort((a, b) => new Date(a.fechaInicio) - new Date(b.fechaInicio));
-});
+  if (!selectedDates.value.start ||
+    !selectedDates.value.end ||
+    !reservation.value.sucursalRetorno?.id ||
+    !props.vehiculoId ||
+    !props.sucursalId ||
+    !authStore.user.id) {
+    snackbar.value = {
+      show: true,
+      color: 'error',
+      text: 'Por favor complete todos los campos requeridos'
+    };
+    return;
+  }
 
+  procesando.value = true;
+  try {
+    const reservaData = {
+      fechaInicio: dayjs(selectedDates.value.start).format('YYYY-MM-DDTHH:mm:ss'),
+      fechaFin: dayjs(selectedDates.value.end).format('YYYY-MM-DDTHH:mm:ss'),
+      costo: totalArriendo.value,
+      usuarioId: authStore.user.id,
+      vehiculoId: Number(props.vehiculoId),
+      sucursalId: Number(props.sucursalId),
+      sucursalDevolucionId: Number(reservation.value.sucursalRetorno.id)
+    };
 
-const formatDate = (date) => {
-  return new Date(date).toLocaleDateString('es-CL', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit'
-  });
+    console.log('Datos de la reserva a enviar:', reservaData);
+
+    await reservationStore.createReservation(reservaData);
+
+    snackbar.value = {
+      show: true,
+      color: 'success',
+      text: 'Reserva confirmada exitosamente'
+    };
+
+    setTimeout(() => {
+      router.push('/mis-reservas');
+    }, 1500);
+  } catch (error) {
+    console.error('Error completo:', error);
+    snackbar.value = {
+      show: true,
+      color: 'error',
+      text: 'Error al procesar la reserva: ' + error.message
+    };
+  } finally {
+    procesando.value = false;
+  }
 };
 </script>
+
+<style scoped>
+.v-card {
+  transition: transform 0.3s ease;
+}
+
+.v-card:hover {
+  transform: translateY(-2px);
+}
+
+.text-subtitle-1 {
+  color: rgba(0, 0, 0, 0.7);
+}
+
+.v-list-item {
+  min-height: 40px;
+}
+
+.v-icon {
+  margin-right: 8px;
+}
+
+.v-btn {
+  text-transform: none;
+}
+
+.v-card-actions {
+  padding: 16px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 600px) {
+  .v-card-title {
+    font-size: 1.25rem;
+  }
+
+  .text-h6 {
+    font-size: 1rem;
+  }
+
+  .v-card-text {
+    padding: 12px;
+  }
+}
+</style>

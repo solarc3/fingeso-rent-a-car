@@ -5,6 +5,7 @@
   >
     <Buscador
       :fechas-actuales="fechasSeleccionadas"
+      :vehiculos="vehiculos"
       @submit="handleSearch"
     />
     <v-container
@@ -59,18 +60,22 @@
   </v-container>
 </template>
 <script setup>
-import {ref, computed, onMounted} from 'vue';
+import {ref, computed, onMounted, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import {useVehicleStore} from '@/stores/vehicle';
 import Buscador from "@/components/Buscador.vue";
 import VehiculoCard from "@/components/vehicles/VehiculoCard.vue";
+import {useSearchStore} from "@/stores/search.js";
+import {useMetadataStore} from "@/stores/metadata.js";
 
 const router = useRouter();
 const vehicleStore = useVehicleStore();
+const searchStore = useSearchStore();
+const metadataStore = useMetadataStore();
 
 const currentPage = ref(1);
 const itemsPerPage = 12;
-
+const vehiculos = computed(() => vehicleStore.getFilteredVehicles);
 const loading = computed(() => vehicleStore.loading);
 
 const numberOfPages = computed(() => {
@@ -89,12 +94,18 @@ const fechasSeleccionadas = ref({
 });
 
 const handleSearch = (searchData) => {
-  fechasSeleccionadas.value = {
-    inicio: searchData.fechas.inicio,
-    fin: searchData.fechas.fin
-  };
-  vehicleStore.setFilters(searchData);
-  currentPage.value = 1;
+  try {
+    fechasSeleccionadas.value = {
+      inicio: searchData.fechas.inicio,
+      fin: searchData.fechas.fin
+    };
+    currentPage.value = 1;
+    // La actualización de los vehículos filtrados se manejará automáticamente
+    // a través del watcher en vehicleStore
+  } catch (error) {
+    searchStore.setGlobalError('Error al aplicar filtros');
+    console.error('Error applying filters:', error);
+  }
 };
 const seleccionarVehiculo = (vehiculo) => {
   router.push({
@@ -106,13 +117,59 @@ const seleccionarVehiculo = (vehiculo) => {
     }
   });
 };
-
+watch(
+  () => searchStore.globalError,
+  (error) => {
+    if (error) {
+      // Manejar el error global aquí
+      console.error('Global error:', error);
+    }
+  }
+);
+watch(
+  () => vehicleStore.vehicles,
+  (newVehicles) => {
+    if (newVehicles.length > 0) {
+      console.log('Vehicles updated, applying filters');
+      handleSearch({
+        ...searchStore.filters,
+        precioMinimo: searchStore.filters.rangoPrecio[0],
+        precioMaximo: searchStore.filters.rangoPrecio[1]
+      });
+    }
+  },
+  {immediate: true}
+);
 onMounted(async () => {
-  await vehicleStore.fetchVehicles();
+  try {
+    searchStore.setGlobalLoadingState(true);
+
+    // Cargar datos iniciales
+    await Promise.all([
+      metadataStore.loadMetadata(),
+      searchStore.loadSucursales(),
+      vehicleStore.fetchVehicles()
+    ]);
+
+    // Inicializar filtros y configurar watchers
+    searchStore.initializeFilters();
+    searchStore.initializeFechas();
+    vehicleStore.setupFilterWatchers(); // Agregar esta línea
+
+    // Aplicar filtros iniciales
+    handleSearch({
+      ...searchStore.filters,
+      precioMinimo: searchStore.filters.rangoPrecio[0],
+      precioMaximo: searchStore.filters.rangoPrecio[1]
+    });
+  } catch (error) {
+    searchStore.setGlobalError('Error al cargar datos iniciales');
+    console.error('Error in onMounted:', error);
+  } finally {
+    searchStore.setGlobalLoadingState(false);
+  }
 });
-const vehiculos = computed(() => {
-  return vehicleStore.getFilteredVehicles;
-});
+
 
 </script>
 

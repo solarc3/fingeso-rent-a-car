@@ -24,7 +24,7 @@
             md="3"
           >
             <v-select
-              v-model="formData.marca"
+              v-model="filters.marca"
               :items="metadataStore.marcasDisponibles"
               label="Marca"
               item-title="nombre"
@@ -41,7 +41,7 @@
             md="3"
           >
             <v-select
-              v-model="formData.tipoVehiculo"
+              v-model="filters.tipoVehiculo"
               :items="metadataStore.tiposVehiculo"
               label="Tipo de Vehículo"
               item-title="texto"
@@ -58,7 +58,7 @@
             md="3"
           >
             <v-select
-              v-model="formData.transmision"
+              v-model="filters.transmision"
               :items="metadataStore.tiposTransmision"
               label="Transmisión"
               item-title="texto"
@@ -75,7 +75,7 @@
             md="3"
           >
             <v-select
-              v-model="formData.estado"
+              v-model="filters.estado"
               :items="estadosVehiculo"
               label="Mostrar"
               item-title="text"
@@ -95,10 +95,10 @@
           >
             <label class="text-subtitle-2 font-weight-bold mb-2">Sucursal de retiro</label>
             <v-select
-              v-model="formData.sucursal"
+              v-model="filters.sucursal"
               :items="sucursales"
-              :loading="loading"
-              :error-messages="error"
+              :loading="searchStore.loading"
+              :error-messages="searchStore.error"
               outlined
               dense
               required
@@ -114,27 +114,15 @@
             md="4"
           >
             <label class="text-subtitle-2 font-weight-bold mb-2">Fecha de retiro</label>
-            <div class="d-flex">
-              <v-text-field
-                v-model="formData.fechaRetiro"
-                type="date"
-                :error-messages="dateErrors.fechaRetiro"
-                :min="minDate"
-                outlined
-                dense
-                class="mr-2 flex-grow-1"
-                :rules="[v => !!v || 'Fecha de retiro requerida']"
-              />
-              <v-select
-                v-model="formData.horaRetiro"
-                :items="horasDisponibles"
-                :error-messages="dateErrors.horaRetiro"
-                outlined
-                dense
-                style="max-width: 120px"
-                :rules="[v => !!v || 'Hora requerida']"
-              />
-            </div>
+            <v-text-field
+              v-model="filters.fechas.inicio"
+              type="date"
+              :error-messages="dateErrors.fechaRetiro"
+              :min="minDate"
+              outlined
+              dense
+              :rules="[v => !!v || 'Fecha de retiro requerida']"
+            />
           </v-col>
 
           <v-col
@@ -142,26 +130,15 @@
             md="4"
           >
             <label class="text-subtitle-2 font-weight-bold mb-2">Fecha de devolución</label>
-            <div class="d-flex">
-              <v-text-field
-                v-model="formData.fechaDevolucion"
-                type="date"
-                outlined
-                :error-messages="dateErrors.fechaDevolucion"
-                :min="minDevolutionDate"
-                dense
-                class="mr-2 flex-grow-1"
-                :rules="[v => !!v || 'Fecha de devolución requerida']"
-              />
-              <v-select
-                v-model="formData.horaDevolucion"
-                :items="horasDisponibles"
-                outlined
-                dense
-                style="max-width: 120px"
-                :rules="[v => !!v || 'Hora requerida']"
-              />
-            </div>
+            <v-text-field
+              v-model="filters.fechas.fin"
+              type="date"
+              outlined
+              :error-messages="dateErrors.fechaDevolucion"
+              :min="minDevolutionDate"
+              dense
+              :rules="[v => !!v || 'Fecha de devolución requerida']"
+            />
           </v-col>
         </v-row>
 
@@ -172,9 +149,9 @@
             md="6"
           >
             <v-range-slider
-              v-model="formData.rangoPrecio"
+              v-model="sliderRange"
               :min="metadataStore.precioMinimo"
-              :max="metadataStore.precioMaximo"
+              :max="maxPrice"
               :step="5000"
               label="Rango de Precio"
               thumb-label="always"
@@ -182,7 +159,7 @@
             >
               <template #prepend>
                 <v-text-field
-                  v-model="formData.rangoPrecio[0]"
+                  v-model="precioMinimo"
                   type="number"
                   prefix="$"
                   hide-details
@@ -192,7 +169,7 @@
               </template>
               <template #append>
                 <v-text-field
-                  v-model="formData.rangoPrecio[1]"
+                  v-model="precioMaximo"
                   type="number"
                   prefix="$"
                   hide-details
@@ -208,7 +185,7 @@
             md="3"
           >
             <v-select
-              v-model="formData.ordenarPor"
+              v-model="filters.ordenarPor"
               :items="metadataStore.opcionesOrdenamiento"
               label="Ordenar por"
               item-title="texto"
@@ -290,312 +267,182 @@
 </template>
 
 <script setup>
-import {ref, reactive, onMounted, watch, computed} from 'vue';
+import {ref, onMounted, computed, watch} from 'vue';
+import {useSearchStore} from '@/stores/search';
 import {useMetadataStore} from '@/stores/metadata';
-import {useSucursalService} from '@/services/SucursalService';
+import {storeToRefs} from 'pinia';
 import {debounce} from 'lodash';
 
 const emit = defineEmits(['submit']);
+const props = defineProps({
+  vehiculos: {
+    type: Array,
+    default: () => []
+  }
+});
 
+const searchStore = useSearchStore();
 const metadataStore = useMetadataStore();
-
-// estado
-const loading = ref(false);
-const error = ref(null);
-const sucursales = ref([]);
-const formValid = ref(true);
-const dateErrors = ref({
-  fechaRetiro: '',
-  fechaDevolucion: '',
-  horaRetiro: '',
-  horaDevolucion: ''
-});
-
-// datos del formulario
-const formData = reactive({
-  marca: null,
-  sucursal: null,
-  tipoVehiculo: null,
-  transmision: null,
-  estado: 'TODOS',
-  fechaRetiro: new Date().toISOString().split('T')[0], // Fecha actual
-  horaRetiro: '09:00',
-  fechaDevolucion: (() => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  })(),
-  horaDevolucion: '09:00',
-  rangoPrecio: [metadataStore.precioMinimo, metadataStore.precioMaximo],
-  ordenarPor: null
-});
-
-// horas
-const horasDisponibles = [
-  '08:30', '09:00', '09:30', '10:00', '10:30',
-  '11:00', '11:30', '12:00', '12:30', '13:00',
-  '13:30', '14:00', '14:30', '15:00', '15:30',
-  '16:00', '16:30', '17:00', '17:30'
-];
-
 const estadosVehiculo = [
   {text: 'Todos', value: 'TODOS'},
   {text: 'Solo Disponibles', value: 'DISPONIBLES'}
 ];
 
-const minDate = computed(() => {
-  const today = new Date();
-  return today.toISOString().split('T')[0];
-});
+// Extraer todos los refs necesarios del store
+const {
+  filters,
+  dateErrors,
+  hasActiveFilters,
+  activeFilters,
+  sucursales,
+  minDate,      // Agregar esta línea
+  minDevolutionDate // Y esta línea
+} = storeToRefs(searchStore);
 
-const minDevolutionDate = computed(() => {
-  return formData.fechaRetiro || minDate.value;
-});
-const activeFilters = computed(() => {
-  const filters = [];
-
-  if (formData.marca) {
-    const marca = metadataStore.marcasDisponibles.find(m => m.valor === formData.marca);
-    filters.push({label: `Marca: ${marca?.nombre}`, key: 'marca'});
-  }
-  if (formData.tipoVehiculo) {
-    const tipo = metadataStore.tiposVehiculo.find(t => t.valor === formData.tipoVehiculo);
-    filters.push({label: `Tipo: ${tipo?.texto}`, key: 'tipoVehiculo'});
-  }
-  if (formData.transmision) {
-    const trans = metadataStore.tiposTransmision.find(t => t.valor === formData.transmision);
-    filters.push({label: `Transmisión: ${trans?.texto}`, key: 'transmision'});
-  }
-  if (formData.estado && formData.estado !== 'TODOS') {
-    const estado = estadosVehiculo.find(e => e.value === formData.estado);
-    filters.push({label: `Estado: ${estado?.text}`, key: 'estado'});
-  }
-  if (formData.sucursal) {
-    filters.push({label: `Sucursal: ${formData.sucursal.nombre}`, key: 'sucursal'});
-  }
-  if (formData.ordenarPor) {
-    const orden = metadataStore.opcionesOrdenamiento.find(o => o.valor === formData.ordenarPor);
-    filters.push({label: `Ordenar por: ${orden?.texto}`, key: 'ordenarPor'});
-  }
-
-  return filters;
-});
-watch(() => formData.marca, () => debouncedSubmit());
-watch(() => formData.tipoVehiculo, () => debouncedSubmit());
-watch(() => formData.transmision, () => debouncedSubmit());
-watch(() => formData.estado, () => debouncedSubmit());
-watch(() => formData.sucursal, () => debouncedSubmit());
-watch(() => formData.ordenarPor, () => debouncedSubmit());
-watch(() => formData.rangoPrecio, () => debouncedSubmit(), {deep: true});
-const hasActiveFilters = computed(() => activeFilters.value.length > 0);
-
-watch(() => formData.fechaRetiro, (newDate) => {
-  validateDates();
-  debouncedSubmit();
-});
-
-watch(() => formData.fechaDevolucion, (newDate) => {
-  validateDates();
-  debouncedSubmit();
-});
-
-watch(() => formData.horaRetiro, (newTime) => {
-  validateTimes();
-  debouncedSubmit();
-});
-
-watch(() => formData.horaDevolucion, (newTime) => {
-  validateTimes();
-  debouncedSubmit();
-});
-
-watch(() => formData.fechaRetiro, (newDate) => {
-  validateDates();
-});
-
-watch(() => formData.fechaDevolucion, (newDate) => {
-  validateDates();
-});
+const loading = ref(false);
+const error = ref(null);
 
 
-watch(() => formData.horaDevolucion, (newTime) => {
-  validateTimes();
-});
-const removeFilter = (filterKey) => {
-  if (filterKey === 'rangoPrecio') {
-    formData.rangoPrecio = [metadataStore.precioMinimo, metadataStore.precioMaximo];
-  } else {
-    formData[filterKey] = null;
-  }
-  debouncedSubmit();
-};
-
-const resetForm = () => {
-
-  const fechaRetiro = new Date();
-  const fechaDevolucion = new Date();
-  fechaDevolucion.setDate(fechaDevolucion.getDate() + 1);
-
-  Object.assign(formData, {
-    marca: null,
-    sucursal: null,
-    tipoVehiculo: null,
-    transmision: null,
-    estado: 'TODOS',
-    fechaRetiro: fechaRetiro.toISOString().split('T')[0],
-    horaRetiro: '09:00',
-    fechaDevolucion: fechaDevolucion.toISOString().split('T')[0],
-    horaDevolucion: '09:00',
-    rangoPrecio: [metadataStore.precioMinimo, metadataStore.precioMaximo],
-    ordenarPor: null
-  });
-
-  error.value = null;
-  dateErrors.value = {
-    fechaRetiro: '',
-    fechaDevolucion: '',
-    horaRetiro: '',
-    horaDevolucion: ''
-  };
-  formValid.value = true;
-  debouncedSubmit();
-};
-
-const validateDates = () => {
-  dateErrors.value = {
-    fechaRetiro: '',
-    fechaDevolucion: '',
-    horaRetiro: '',
-    horaDevolucion: ''
-  };
-  formValid.value = true;
-
-
-  if (formData.fechaRetiro) {
-    const fechaRetiro = new Date(formData.fechaRetiro);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (fechaRetiro < today) {
-      dateErrors.value.fechaRetiro = 'La fecha de retiro no puede ser anterior a hoy';
-      formValid.value = false;
+const sliderRange = computed({
+  get() {
+    if (!filters.value.rangoPrecio) {
+      return [metadataStore.precioMinimo, metadataStore.precioMaximo];
+    }
+    return filters.value.rangoPrecio;
+  },
+  set(value) {
+    if (Array.isArray(value) && value.length === 2) {
+      filters.value.rangoPrecio = value;
     }
   }
-
-
-  if (formData.fechaRetiro && formData.fechaDevolucion) {
-    const fechaRetiro = new Date(formData.fechaRetiro);
-    const fechaDevolucion = new Date(formData.fechaDevolucion);
-
-    if (fechaDevolucion < fechaRetiro) {
-      dateErrors.value.fechaDevolucion = 'La fecha de devolución debe ser posterior a la fecha de retiro';
-      formValid.value = false;
-    }
+});
+const maxPrice = computed(() => {
+  if (props.vehiculos?.length > 0) {
+    const maxVehiclePrice = Math.max(...props.vehiculos.map(v => Number(v.precioArriendo)));
+    return Math.max(maxVehiclePrice, metadataStore.precioMaximo);
   }
-};
-
-const validateTimes = () => {
-  if (formData.fechaRetiro && formData.fechaDevolucion &&
-    formData.horaRetiro && formData.horaDevolucion &&
-    formData.fechaRetiro === formData.fechaDevolucion) {
-
-    const horaRetiro = formData.horaRetiro.split(':').map(Number);
-    const horaDevolucion = formData.horaDevolucion.split(':').map(Number);
-
-    const minutosRetiro = horaRetiro[0] * 60 + horaRetiro[1];
-    const minutosDevolucion = horaDevolucion[0] * 60 + horaDevolucion[1];
-
-    if (minutosDevolucion <= minutosRetiro) {
-      dateErrors.value.horaDevolucion = 'La hora de devolución debe ser posterior a la hora de retiro';
-      formValid.value = false;
-    } else {
-      dateErrors.value.horaDevolucion = '';
-    }
-  }
-};
-
-const validateForm = () => {
-  validateDates();
-  validateTimes();
-
-  // ya no requerimos sucursal especifica
-  if (!formData.fechaRetiro || !formData.horaRetiro) {
-    error.value = 'Debe especificar fecha y hora de retiro';
-    return false;
-  }
-
-  if (!formData.fechaDevolucion || !formData.horaDevolucion) {
-    error.value = 'Debe especificar fecha y hora de devolución';
-    return false;
-  }
-
-  return formValid.value;
-};
+  return metadataStore.precioMaximo;
+});
 
 const handleSubmit = () => {
-  error.value = null;
+  if (!validateForm()) return;
 
-  if (!validateForm()) {
-    return;
-  }
-
-  const searchData = {
-    marca: formData.marca,
-    sucursal: formData.sucursal, // Puede ser null
-    tipoVehiculo: formData.tipoVehiculo,
-    transmision: formData.transmision,
-    disponibilidad: formData.estado || 'TODOS',
-    fechas: {
-      inicio: formData.fechaRetiro
-        ? `${formData.fechaRetiro}T${formData.horaRetiro}:00`
-        : null,
-      fin: formData.fechaDevolucion
-        ? `${formData.fechaDevolucion}T${formData.horaDevolucion}:00`
-        : null
-    },
-    precioMinimo: Number(formData.rangoPrecio[0]),
-    precioMaximo: Number(formData.rangoPrecio[1]),
-    ordenarPor: formData.ordenarPor
-  };
-
-  emit('submit', searchData);
-  console.log('Submitting search:', searchData);
-};
-// Métodos
-const loadSucursales = async () => {
-  loading.value = true;
-  error.value = null;
   try {
-    const sucursalService = useSucursalService();
-    sucursales.value = await sucursalService.listarSucursales();
-  } catch (err) {
-    error.value = 'Error al cargar sucursales';
-    console.error('Error loading sucursales:', err);
-  } finally {
-    loading.value = false;
+    const searchData = {
+      marca: filters.value.marca,
+      tipoVehiculo: filters.value.tipoVehiculo,
+      transmision: filters.value.transmision,
+      sucursal: filters.value.sucursal,
+      estado: filters.value.estado || 'TODOS',
+      fechas: {
+        inicio: filters.value.fechas.inicio,
+        fin: filters.value.fechas.fin
+      },
+      precioMinimo: sliderRange.value[0],
+      precioMaximo: sliderRange.value[1],
+      ordenarPor: filters.value.ordenarPor
+    };
+
+    searchStore.updateAllFilters(searchData);
+    emit('submit', searchData);
+  } catch (error) {
+    console.error('Error en handleSubmit:', error);
+    searchStore.setGlobalError('Error al procesar la búsqueda');
   }
 };
+const validateForm = () => {
+  if (!filters.value.fechas.inicio || !filters.value.fechas.fin) {
+    return false;
+  }
+  return searchStore.validateDates();
+};
+
+
 const debouncedSubmit = debounce(() => {
   handleSubmit();
 }, 300);
 
 
-onMounted(async () => {
-  await Promise.all([
-    loadSucursales(),
-    metadataStore.loadMetadata()
-  ]);
+const removeFilter = (filterKey) => {
+  searchStore.removeFilter(filterKey);
+  debouncedSubmit();
+};
 
+const resetForm = () => {
+  searchStore.resetFilters();
+  debouncedSubmit();
+};
 
-  handleSubmit();
+// Agregar computed properties para los campos individuales del slider
+const precioMinimo = computed({
+  get() {
+    return sliderRange.value[0];
+  },
+  set(value) {
+    sliderRange.value = [Number(value), sliderRange.value[1]];
+  }
 });
+
+const precioMaximo = computed({
+  get() {
+    return sliderRange.value[1];
+  },
+  set(value) {
+    sliderRange.value = [sliderRange.value[0], Number(value)];
+  }
+});
+const setupWatchers = () => {
+  // Remover los watchers individuales anteriores
+
+  // Usar un solo watcher para todos los cambios
+  watch(
+    () => ({
+      marca: filters.value.marca,
+      tipoVehiculo: filters.value.tipoVehiculo,
+      transmision: filters.value.transmision,
+      estado: filters.value.estado,
+      sucursal: filters.value.sucursal,
+      ordenarPor: filters.value.ordenarPor,
+      fechas: filters.value.fechas,
+      rangoPrecio: sliderRange.value
+    }),
+    (newValues) => {
+      // Validar fechas si cambiaron
+      if (newValues.fechas) {
+        searchStore.validateDates();
+      }
+
+      // Emitir los cambios
+      emit('submit', {
+        ...newValues,
+        precioMinimo: newValues.rangoPrecio[0],
+        precioMaximo: newValues.rangoPrecio[1]
+      });
+    },
+    {deep: true}
+  );
+};
+onMounted(async () => {
+  try {
+    searchStore.setGlobalLoadingState(true);
+    await Promise.all([
+      searchStore.loadSucursales(),
+      metadataStore.loadMetadata()
+    ]);
+
+    searchStore.initializeFilters();
+    searchStore.initializeFechas();
+    setupWatchers();
+    handleSubmit();
+  } catch (error) {
+    searchStore.setGlobalError('Error al cargar datos iniciales');
+  } finally {
+    searchStore.setGlobalLoadingState(false);
+  }
+});
+
 </script>
-
 <style scoped>
-.v-text-field >>> .v-input__slot {
-  min-height: 40px !important;
-}
-
 .search-card {
   background: linear-gradient(to right, #002349, #1E88E5) !important;
   color: white !important;

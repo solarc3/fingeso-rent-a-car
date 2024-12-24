@@ -2,12 +2,15 @@ package com.rentacar.backend.controllers;
 
 import com.rentacar.backend.entities.*;
 import com.rentacar.backend.services.MantenimientoService;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/mantenimiento")
@@ -19,89 +22,75 @@ public class MantenimientoController {
     }
 
     @PostMapping("/programar")
-    public ResponseEntity<?> programarMantenimiento(@RequestBody Map<String, Object> datos) {
+    public ResponseEntity<MantenimientoEntity> programarMantenimiento(@RequestBody ProgramarMantenimientoDTO request) {
         try {
-            if (!datos.containsKey("vehiculoId") ||
-                !datos.containsKey("fechaProgramada") ||
-                !datos.containsKey("tipoMantenimiento")) {
-                return ResponseEntity.badRequest()
-                    .body("Faltan campos requeridos");
-            }
-
-            Long vehiculoId = Long.parseLong(datos.get("vehiculoId")
-                                                 .toString());
-            LocalDateTime fechaProgramada = LocalDateTime.parse(
-                datos.get("fechaProgramada")
-                    .toString()
-                                                               );
-            String tipoMantenimiento = datos.get("tipoMantenimiento")
-                .toString();
-            String descripcion = datos.getOrDefault("descripcion", "")
-                .toString();
-            Double costoEstimado = datos.containsKey("costoEstimado") ?
-                                   Double.parseDouble(datos.get("costoEstimado")
-                                                          .toString()) : 0.0;
-            Long tecnicoId = datos.containsKey("tecnicoId") ?
-                             Long.parseLong(datos.get("tecnicoId")
-                                                .toString()) : null;
-
             MantenimientoEntity mantenimiento = mantenimientoService.programarMantenimiento(
-                vehiculoId,
-                fechaProgramada,
-                tipoMantenimiento,
-                descripcion,
-                costoEstimado,
-                tecnicoId
+                request.getVehiculoId(),
+                request.getFechaProgramada(),
+                request.getTipoMantenimiento(),
+                request.getDescripcion(),
+                request.getCostoEstimado(),
+                request.getTecnicoId()
                                                                                            );
-
             return ResponseEntity.ok(mantenimiento);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body("Error: " + e.getMessage());
+                .body(null);
         }
     }
 
     @GetMapping("/mantenimientos/{vehiculoId}")
-    public ResponseEntity<?> obtenerMantenimientos(@PathVariable Long vehiculoId) {
+    public ResponseEntity<List<MantenimientoEntity>> obtenerMantenimientos(@PathVariable Long vehiculoId) {
         try {
             List<MantenimientoEntity> mantenimientos =
                 mantenimientoService.obtenerMantenimientosVehiculo(vehiculoId);
             return ResponseEntity.ok(mantenimientos);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(e.getMessage());
+                .body(null);
         }
     }
 
     @PutMapping("/{id}/estado")
-    public ResponseEntity<?> actualizarEstado(
+    public ResponseEntity<MantenimientoEntity> actualizarEstado(
         @PathVariable Long id,
-        @RequestBody Map<String, String> estadoMap
-                                             ) {
+        @RequestBody ActualizarEstadoDTO request) {
         try {
-            String nuevoEstado = estadoMap.get("estado");
-            if (nuevoEstado == null) {
-                return ResponseEntity.badRequest()
-                    .body("El estado es requerido");
-            }
-
             MantenimientoEntity mantenimiento =
-                mantenimientoService.actualizarEstadoMantenimiento(id, nuevoEstado);
+                mantenimientoService.actualizarEstadoMantenimiento(id, request.getEstado());
             return ResponseEntity.ok(mantenimiento);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(e.getMessage());
+                .body(null);
         }
     }
 
     @GetMapping("/historial/{vehiculoId}")
-    public ResponseEntity<?> obtenerHistorialVehiculo(@PathVariable Long vehiculoId) {
+    public ResponseEntity<List<HistorialVehiculoEntity>> obtenerHistorialVehiculo(@PathVariable Long vehiculoId) {
         try {
-            List<HistorialVehiculoEntity> historial = mantenimientoService.obtenerHistorialVehiculo(vehiculoId);
+            List<HistorialVehiculoEntity> historial =
+                mantenimientoService.obtenerHistorialVehiculo(vehiculoId);
             return ResponseEntity.ok(historial);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(e.getMessage());
+                .body(null);
         }
     }
+}
+
+@Data
+@NoArgsConstructor
+class ProgramarMantenimientoDTO {
+    private Long vehiculoId;
+    private LocalDateTime fechaProgramada;
+    private String tipoMantenimiento;
+    private String descripcion;
+    private Double costoEstimado;
+    private Long tecnicoId;
+}
+
+@Data
+@NoArgsConstructor
+class ActualizarEstadoDTO {
+    private String estado;
 }

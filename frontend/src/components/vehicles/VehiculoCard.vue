@@ -204,7 +204,9 @@ const seleccionarVehiculo = () => {
     query: {
       vehiculoId: props.vehiculo.id,
       sucursal: props.vehiculo.sucursal?.id,
-      precioArriendo: props.vehiculo.precioArriendo
+      precioArriendo: props.vehiculo.precioArriendo,
+      fechaInicio: props.fechasSeleccionadas.inicio,
+      fechaFin: props.fechasSeleccionadas.fin
     }
   });
 };

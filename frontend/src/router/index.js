@@ -60,7 +60,7 @@ const routes = [
         children: [
           {
             path: 'reservas',
-            //component: () => import('@/pages/worker/ReservationManagement.vue')
+            component: () => import('@/pages/admin/VehicleManagement.vue')
           }
         ]
       },

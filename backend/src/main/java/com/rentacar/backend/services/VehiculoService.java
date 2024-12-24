@@ -228,4 +228,12 @@ public class VehiculoService {
         return vehiculo;
     }
 
+    public List<VehiculoEntity> obtenerTodos() {
+        return vehiculoRepository.findAll();
+    }
+
+    public VehiculoEntity actualizarVehiculo(VehiculoEntity vehiculo) {
+        return vehiculoRepository.save(vehiculo);
+    }
+
 }
