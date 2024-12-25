@@ -3,13 +3,13 @@ import axiosInstance from './axiosConfig';
 export const useUsuarioService = () => {
   const crearUsuario = async (usuario) => {
     try {
-      const { data } = await axiosInstance.post('/api/usuario/crear', {
+      const {data} = await axiosInstance.post('/api/usuario/crear', {
         rut: usuario.rut,
         nombre: usuario.nombre,
         apellido: usuario.apellido,
         password: usuario.password,
         rol: usuario.rol,
-        sucursalId: usuario.sucursalId, // opcional
+        sucursalId: usuario.sucursalId
       });
       return data;
     } catch (error) {
@@ -27,7 +27,7 @@ export const useUsuarioService = () => {
 
   const obtenerTrabajadores = async () => {
     try {
-      const { data } = await axiosInstance.get('/api/usuario/trabajadores');
+      const {data} = await axiosInstance.get('/api/usuario/trabajadores');
       return data;
     } catch (error) {
       throw new Error(error.response?.data || 'Error al obtener trabajadores');
@@ -36,7 +36,7 @@ export const useUsuarioService = () => {
 
   const obtenerAdministradores = async () => {
     try {
-      const { data } = await axiosInstance.get('/api/usuario/administradores');
+      const {data} = await axiosInstance.get('/api/usuario/administradores');
       return data;
     } catch (error) {
       throw new Error(error.response?.data || 'Error al obtener administradores');
@@ -45,7 +45,7 @@ export const useUsuarioService = () => {
 
   const obtenerArrendatarios = async () => {
     try {
-      const { data } = await axiosInstance.get('/api/usuario/arrendatarios');
+      const {data} = await axiosInstance.get('/api/usuario/arrendatarios');
       return data;
     } catch (error) {
       throw new Error(error.response?.data || 'Error al obtener arrendatarios');
@@ -54,8 +54,8 @@ export const useUsuarioService = () => {
 
   const eliminarUsuario = async (id) => {
     try {
-      const { data } = await axiosInstance.delete('/api/usuario/eliminar', {
-        params: { id },
+      const {data} = await axiosInstance.delete('/api/usuario/eliminar', {
+        params: {id}
       });
       return data;
     } catch (error) {
@@ -65,11 +65,8 @@ export const useUsuarioService = () => {
 
   const actualizarUsuario = async (id, usuario) => {
     try {
-      const { data } = await axiosInstance.put('/api/usuario/actualizar', {
-        id,
-        rol: usuario.rol,
-        esta_en_lista_negra: usuario.esta_en_lista_negra,
-        estado: usuario.estado,
+      const {data} = await axiosInstance.put('/api/usuario/actualizar', usuario, {
+        params: {id}
       });
       return data;
     } catch (error) {
@@ -79,10 +76,10 @@ export const useUsuarioService = () => {
 
   const login = async (rut, password, rol) => {
     try {
-      const { data } = await axiosInstance.post('/api/usuario/login', {
+      const {data} = await axiosInstance.post('/api/usuario/login', {
         rut,
         password,
-        rol,
+        rol
       });
       return data;
     } catch (error) {
@@ -107,6 +104,6 @@ export const useUsuarioService = () => {
     obtenerAdministradores,
     obtenerArrendatarios,
     eliminarUsuario,
-    actualizarUsuario,
+    actualizarUsuario
   };
 };

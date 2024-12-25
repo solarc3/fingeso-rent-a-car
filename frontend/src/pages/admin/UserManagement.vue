@@ -1,10 +1,19 @@
 <template>
   <v-container fluid>
     <v-row class="mb-4 header-row">
-      <v-col cols="12" class="d-flex align-center">
-        <h2 class="text-h4">Gestión de Usuarios</h2>
+      <v-col
+        cols="12"
+        class="d-flex align-center"
+      >
+        <h2 class="text-h4">
+          Gestión de Usuarios
+        </h2>
         <v-spacer />
-        <v-btn color="primary" prepend-icon="mdi-plus" @click="openCreateUserDialog">
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-plus"
+          @click="openCreateUserDialog"
+        >
           Crear Usuario
         </v-btn>
       </v-col>
@@ -13,7 +22,10 @@
     <v-card class="mb-4 filter-section">
       <v-card-text>
         <v-row>
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-text-field
               v-model="filters.search"
               label="Buscar por nombre/RUT"
@@ -24,7 +36,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-select
               v-model="filters.rol"
               :items="roles"
@@ -35,7 +50,10 @@
             />
           </v-col>
 
-          <v-col cols="12" md="4">
+          <v-col
+            cols="12"
+            md="4"
+          >
             <v-select
               v-model="filters.estado"
               :items="estados"
@@ -45,7 +63,11 @@
               class="fixed-height-input"
             >
               <template #selection="{ item }">
-                <v-chip :color="getStatusColor(item.raw)" size="small" class="mr-2">
+                <v-chip
+                  :color="getStatusColor(item.raw)"
+                  size="small"
+                  class="mr-2"
+                >
                   {{ item.raw }}
                 </v-chip>
               </template>
@@ -70,13 +92,19 @@
         </template>
 
         <template #item.rol="{ item }">
-          <v-chip :color="getRolColor(item.rol)" size="small">
+          <v-chip
+            :color="getRolColor(item.rol)"
+            size="small"
+          >
             {{ item.rol }}
           </v-chip>
         </template>
 
         <template #item.estado="{ item }">
-          <v-chip :color="getStatusColor(item.estado)" size="small">
+          <v-chip
+            :color="getStatusColor(item.estado)"
+            size="small"
+          >
             {{ item.esta_en_lista_negra ? 'Lista Negra' : item.estado }}
           </v-chip>
         </template>
@@ -109,14 +137,21 @@
       </v-data-table>
     </v-card>
 
-    <CreateUserDialog v-model="dialogs.create" @user-created="fetchUsers" />
-    <EditUserDialog 
-      v-model="dialogs.edit" 
-      :user="selectedUser" 
-      @user-updated="fetchUsers" 
+    <CreateUserDialog
+      v-model="dialogs.create"
+      @user-created="fetchUsers"
     />
 
-    <v-dialog v-model="dialogs.delete" max-width="400">
+    <EditUserDialog
+      v-model="dialogs.edit"
+      :user="selectedUser"
+      @user-updated="fetchUsers"
+    />
+
+    <v-dialog
+      v-model="dialogs.delete"
+      max-width="400"
+    >
       <v-card>
         <v-card-title>Confirmar Eliminación</v-card-title>
         <v-card-text>
@@ -125,20 +160,36 @@
         </v-card-text>
         <v-card-actions>
           <v-spacer />
-          <v-btn color="grey" text @click="dialogs.delete = false">
+          <v-btn
+            color="grey"
+            text
+            @click="dialogs.delete = false"
+          >
             Cancelar
           </v-btn>
-          <v-btn color="error" :loading="loading" @click="deleteUser">
+          <v-btn
+            color="error"
+            :loading="loading"
+            @click="deleteUser"
+          >
             Eliminar
           </v-btn>
         </v-card-actions>
       </v-card>
     </v-dialog>
 
-    <v-snackbar v-model="snackbar.show" :color="snackbar.color" :timeout="6000">
+    <v-snackbar
+      v-model="snackbar.show"
+      :color="snackbar.color"
+      :timeout="6000"
+    >
       {{ snackbar.text }}
       <template #actions>
-        <v-btn color="white" variant="text" @click="snackbar.show = false">
+        <v-btn
+          color="white"
+          variant="text"
+          @click="snackbar.show = false"
+        >
           Cerrar
         </v-btn>
       </template>
@@ -147,8 +198,8 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
-import { useUserStore } from '@/stores/user';
+import {ref, computed, onMounted} from 'vue';
+import {useUserStore} from '@/stores/user';
 import CreateUserDialog from '@/components/admin/CreateUserDialog.vue';
 import EditUserDialog from '@/components/admin/EditUserDialog.vue';
 
@@ -157,11 +208,11 @@ const loading = ref(false);
 const selectedUser = ref(null);
 
 const headers = [
-  { title: 'Nombre', key: 'nombre', sortable: true },
-  { title: 'RUT', key: 'rut', sortable: true },
-  { title: 'Rol', key: 'rol', sortable: true },
-  { title: 'Estado', key: 'estado', sortable: true },
-  { title: 'Acciones', key: 'actions', sortable: false },
+  {title: 'Nombre', key: 'nombre', sortable: true},
+  {title: 'RUT', key: 'rut', sortable: true},
+  {title: 'Rol', key: 'rol', sortable: true},
+  {title: 'Estado', key: 'estado', sortable: true},
+  {title: 'Acciones', key: 'actions', sortable: false},
 ];
 
 const roles = ['ADMINISTRADOR', 'TRABAJADOR', 'ARRENDATARIO'];
@@ -193,9 +244,9 @@ const filteredUsers = computed(() => {
         user.nombre,
         user.apellido,
         user.rut,
-      ].map(field => field.toLowerCase());
+      ].map(field => field?.toLowerCase());
 
-      if (!searchFields.some(field => field.includes(search))) {
+      if (!searchFields.some(field => field?.includes(search))) {
         return false;
       }
     }
