@@ -41,7 +41,7 @@ const routes = [
         children: [
           {
             path: 'usuarios',
-            //component: () => import('@/pages/admin/UserManagement.vue')
+            component: () => import('@/pages/admin/UserManagement.vue')
           },
           {
             path: 'vehiculos',
