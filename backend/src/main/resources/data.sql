@@ -88,7 +88,7 @@ VALUES
 ('PEUGEOT', 'EXPERT', 'MVAR', 'UUVW37', 2023, 145000.00, 3, true, 'DISPONIBLE');
 -- Usuarios
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('21284189-7', 'Ignacio', 'Solar', 'admin123', false, 1, 'ADMINISTRADOR');
+VALUES ('21284189-7', 'Ignacio', 'Solar', 'admin123', false,  1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('21461391-3', 'Felipe', 'toilet', 'admin123', false, 1, 'ADMINISTRADOR');
@@ -97,28 +97,28 @@ INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucu
 VALUES ('14353454-5', 'Diego', 'Gomez', 'worker123', false, 1, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('00000000-0', 'Felipe', 'Cubillos', 'client123', true, 1, 'ARRENDATARIO');
+VALUES ('00000000-0', 'Felipe', 'Cubillos', 'client123', true,  1, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('15789456-0', 'Ana', 'Martinez', 'worker123', false, 2, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('16852147-2', 'Carlos', 'Rodriguez', 'client123', false, 2, 'ARRENDATARIO');
+VALUES ('16852147-2', 'Carlos', 'Rodriguez', 'client123', false,  2, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('17963258-6', 'Maria', 'López', 'worker123', false, 3, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('18741852-6', 'Juan', 'Pérez', 'client123', true, 3, 'ARRENDATARIO');
+VALUES ('18741852-6', 'Juan', 'Pérez', 'client123', true,  3, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('19852963-K', 'Patricia', 'González', 'worker123', false, 4, 'TRABAJADOR');
+VALUES ('19852963-K', 'Patricia', 'González', 'worker123', false,  4, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('20147258-K', 'Roberto', 'Sánchez', 'client123', false, 4, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('21369852-4', 'Carmen', 'Muñoz', 'worker123', false, 5, 'TRABAJADOR');
+VALUES ('21369852-4', 'Carmen', 'Muñoz', 'worker123', false,  5, 'TRABAJADOR');
 
 -- Reservas
 INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)

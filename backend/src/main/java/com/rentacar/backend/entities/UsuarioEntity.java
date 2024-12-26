@@ -39,6 +39,9 @@ public class UsuarioEntity {
 
     private boolean estaEnListaNegra;
 
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private boolean softDelete;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RolUsuario rol;

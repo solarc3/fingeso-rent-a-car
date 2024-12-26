@@ -13,6 +13,8 @@ public interface UsuarioRepository extends JpaRepository<UsuarioEntity, Long> {
 
     List<UsuarioEntity> findByEstaEnListaNegra(boolean estaEnListaNegra);
 
+    List<UsuarioEntity> findBysoftDelete(boolean softDelete);
+
     List<UsuarioEntity> findByValoracionesContaining(ValoracionEntity valoracion);
 
     List<UsuarioEntity> findByValoracionesIn(List<ValoracionEntity> valoraciones);

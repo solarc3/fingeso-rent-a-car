@@ -15,3 +15,5 @@ public class UsuarioDTO {
     private String rol;
     private Long sucursalId;
 }
+
+

@@ -92,14 +92,17 @@ public class UsuarioService {
 
     // Eliminar usuario por id
     public void eliminarUsuario(Long id) {
-        Optional<UsuarioEntity> usuario = usuarioRepository.findById(id);
+        Optional<UsuarioEntity> usuarioOptional = usuarioRepository.findById(id);
 
-        if (usuario.isEmpty()) {
+        if (usuarioOptional.isEmpty()) {
             throw new RuntimeException("Usuario no encontrado con ID: " + id);
         }
 
+        UsuarioEntity usuario = usuarioOptional.get();
+
+
         // Check if user has active reservations
-        List<ReservaEntity> reservasActivas = reservaRepository.findByUsuario(usuario.get())
+        List<ReservaEntity> reservasActivas = reservaRepository.findByUsuario(usuario)
                 .stream()
                 .filter(r -> r.getEstado() == ReservaEntity.EstadoReserva.EN_PROGRESO ||
                         r.getEstado() == ReservaEntity.EstadoReserva.CONFIRMADA)
@@ -110,7 +113,9 @@ public class UsuarioService {
         }
 
         try {
-            usuarioRepository.deleteById(id);
+            usuario.setSoftDelete(true);
+            usuarioRepository.save(usuario);
+
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar el usuario: " + e.getMessage());
         }
@@ -128,6 +133,10 @@ public class UsuarioService {
         return usuarioRepository.findByRol(UsuarioEntity.RolUsuario.ARRENDATARIO);
     }
 
+    public List<UsuarioEntity> obtenerUsuariosActivos() {
+        return usuarioRepository.findBysoftDelete(false);
+    }
+
 
     public Optional<UsuarioEntity> validarCredenciales(String rut, String password, String rol) {
         Optional<UsuarioEntity> usuario = usuarioRepository.findByRut(rut);
@@ -136,7 +145,7 @@ public class UsuarioService {
         if (usuario.isPresent() && usuario.get()
             .getPassword()
             .equals(password) && usuario.get()
-                                     .getRol() == rolUsuario) {
+                                     .getRol() == rolUsuario && !usuario.get().isSoftDelete()) {
             return usuario;
         }
 

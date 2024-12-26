@@ -17,7 +17,7 @@ export const useUserStore = defineStore('user', {
         const trabajadores = await usuarioService.obtenerTrabajadores();
         const administradores = await usuarioService.obtenerAdministradores();
         const arrendatarios = await usuarioService.obtenerArrendatarios();
-        this.users = [...trabajadores, ...administradores, ...arrendatarios];
+        this.users = [...trabajadores, ...administradores, ...arrendatarios].filter(user => !user.softDelete);
       } catch (error) {
         this.error = error.message || 'Error al cargar usuarios';
       } finally {

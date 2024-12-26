@@ -1,6 +1,7 @@
 package com.rentacar.backend.controllers;
 
 import com.rentacar.backend.dto.UsuarioDTO;
+import com.rentacar.backend.dto.UsuarioLoginDTO;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
 import com.rentacar.backend.services.SucursalService;
@@ -122,11 +123,11 @@ public class UsuarioController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody Map<String, String> credentials) {
+    public ResponseEntity<?> login(@RequestBody UsuarioLoginDTO credentials) {
         try {
-            String rut = credentials.get("rut");
-            String password = credentials.get("password");
-            String rol = credentials.get("rol");
+            String rut = credentials.getRut();
+            String password = credentials.getPassword();
+            String rol = credentials.getRol();
 
             if (rut == null || password == null || rol == null) {
                 return ResponseEntity.badRequest()
