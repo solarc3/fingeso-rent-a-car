@@ -6,6 +6,7 @@ export const useUserStore = defineStore('user', {
     users: [],
     loading: false,
     error: null,
+    lastDeletedUser: null
   }),
 
   actions: {
@@ -43,12 +44,16 @@ export const useUserStore = defineStore('user', {
       try {
         const usuarioService = useUsuarioService();
         const updatedUser = await usuarioService.actualizarUsuario(id, updatedData);
+
+        // Update local state
         const index = this.users.findIndex(user => user.id === id);
         if (index !== -1) {
-          this.users.splice(index, 1, updatedUser);
+          this.users[index] = updatedUser;
         }
+
+        return updatedUser;
       } catch (error) {
-        this.error = error.message || 'Error al actualizar usuario';
+        this.error = error.message;
         throw error;
       } finally {
         this.loading = false;
@@ -57,17 +62,26 @@ export const useUserStore = defineStore('user', {
 
     async deleteUser(id) {
       this.loading = true;
+      this.error = null;
+
       try {
         const usuarioService = useUsuarioService();
         await usuarioService.eliminarUsuario(id);
+
+        // Store the deleted user temporarily in case we need to revert
+        this.lastDeletedUser = this.users.find(user => user.id === id);
+
+        // Remove user from local state
         this.users = this.users.filter(user => user.id !== id);
+
+        return true;
       } catch (error) {
-        this.error = error.message || 'Error al eliminar usuario';
+        this.error = error.message;
         throw error;
       } finally {
         this.loading = false;
       }
-    },
+    }
   },
 
   getters: {

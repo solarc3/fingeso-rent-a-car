@@ -1,38 +1,63 @@
 <template>
-  <v-dialog :model-value="modelValue" @update:modelValue="updateDialog" max-width="500px">
+  <v-dialog
+    :model-value="modelValue"
+    max-width="500px"
+    @update:model-value="updateDialog"
+  >
     <v-card>
       <v-card-title>
         <span class="text-h5">Editar Usuario</span>
       </v-card-title>
       <v-card-text>
-        <v-form ref="form" v-model="valid">
-          <v-text-field v-model="user.nombre" label="Nombre" :rules="[rules.required]" required></v-text-field>
-          <v-text-field v-model="user.apellido" label="Apellido" :rules="[rules.required]" required></v-text-field>
+        <v-form
+          ref="form"
+          v-model="valid"
+        >
+          <v-text-field
+            v-model="user.nombre"
+            label="Nombre"
+            :rules="[rules.required]"
+            required
+          />
+
+          <v-text-field
+            v-model="user.apellido"
+            label="Apellido"
+            :rules="[rules.required]"
+            required
+          />
+
           <v-select
             v-model="user.rol"
             :items="roles"
             label="Rol"
             :rules="[rules.required]"
             required
-          ></v-select>
+          />
+
           <v-checkbox
-            v-model="user.esta_en_lista_negra"
-            label="Está en lista negra"
-          ></v-checkbox>
-          <v-select
-            v-if="!user.esta_en_lista_negra"
-            v-model="user.estado"
-            :items="estados"
-            label="Estado"
-            :rules="[rules.required]"
-            required
-          ></v-select>
+            v-model="user.estaEnListaNegra"
+            label="Agregar a lista negra"
+            :hint="user.estaEnListaNegra ? 'Usuario en lista negra' : 'Usuario activo'"
+            persistent-hint
+          />
         </v-form>
       </v-card-text>
       <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn text @click="close">Cancelar</v-btn>
-        <v-btn color="primary" @click="submit" :disabled="!valid">Guardar</v-btn>
+        <v-spacer />
+        <v-btn
+          text
+          @click="close"
+        >
+          Cancelar
+        </v-btn>
+        <v-btn
+          color="primary"
+          :disabled="!valid"
+          @click="submit"
+        >
+          Guardar
+        </v-btn>
       </v-card-actions>
     </v-card>
   </v-dialog>
@@ -59,11 +84,10 @@ export default {
     const editableUser = ref({ ...props.user });
     const valid = ref(false);
     const rules = {
-      required: value => !!value || 'Requerido',
+      required: v => !!v || 'Este campo es requerido',
     };
 
     const roles = ['ADMINISTRADOR', 'TRABAJADOR', 'ARRENDATARIO'];
-    const estados = ['ACTIVO', 'INACTIVO'];
 
     watch(
       () => props.user,
@@ -75,7 +99,12 @@ export default {
     const submit = async () => {
       if (valid.value) {
         try {
-          await userStore.updateUser(editableUser.value.id, editableUser.value);
+          await userStore.updateUser(editableUser.value.id, {
+            nombre: editableUser.value.nombre,
+            apellido: editableUser.value.apellido,
+            rol: editableUser.value.rol,
+            estaEnListaNegra: editableUser.value.estaEnListaNegra
+          });
           emit('user-updated');
           close();
         } catch (error) {
@@ -95,7 +124,6 @@ export default {
     return {
       user: editableUser,
       roles,
-      estados,
       valid,
       rules,
       submit,

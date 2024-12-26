@@ -91,6 +91,9 @@ INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucu
 VALUES ('21284189-7', 'Ignacio', 'Solar', 'admin123', false, 1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
+VALUES ('21461391-3', 'Felipe', 'toilet', 'admin123', false, 1, 'ADMINISTRADOR');
+
+INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('14353454-5', 'Diego', 'Gomez', 'worker123', false, 1, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)

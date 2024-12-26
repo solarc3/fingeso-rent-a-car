@@ -1,6 +1,8 @@
 package com.rentacar.backend.services;
 
+import com.rentacar.backend.dto.UsuarioDTO;
 import com.rentacar.backend.entities.*;
+import com.rentacar.backend.repositories.ReservaRepository;
 import com.rentacar.backend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -8,15 +10,18 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
+    private final ReservaRepository reservaRepository;
 
     @Autowired
-    public UsuarioService(UsuarioRepository usuarioRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, ReservaRepository reservaRepository) {
         this.usuarioRepository = usuarioRepository;
+        this.reservaRepository = reservaRepository;
     }
 
     public UsuarioEntity obtenerUsuarioPorId(Long id) {
@@ -59,23 +64,55 @@ public class UsuarioService {
     }
 
     // Actualizar usuario que ya existe, por id
-    public UsuarioEntity actualizarUsuario(Long id, UsuarioEntity usuarioActualizado) {
+    public UsuarioEntity actualizarUsuario(Long id, UsuarioDTO usuarioDTO) {
         Optional<UsuarioEntity> usuarioExistente = usuarioRepository.findById(id);
-        if (usuarioExistente.isPresent()) {
-            usuarioActualizado.setId(id);
-            return usuarioRepository.save(usuarioActualizado);
-        } else {
+
+        if (usuarioExistente.isEmpty()) {
             throw new RuntimeException("Usuario no encontrado con ID: " + id);
         }
+
+        UsuarioEntity usuario = usuarioExistente.get();
+        // Update only non-null fields
+        if (usuarioDTO.getNombre() != null) {
+            usuario.setNombre(usuarioDTO.getNombre());
+        }
+        if (usuarioDTO.getApellido() != null) {
+            usuario.setApellido(usuarioDTO.getApellido());
+        }
+        if (usuarioDTO.getPassword() != null) {
+            usuario.setPassword(usuarioDTO.getPassword());
+        }
+        if (usuarioDTO.getRol() != null) {
+            usuario.setRol(UsuarioEntity.RolUsuario.valueOf(usuarioDTO.getRol()));
+        }
+        usuario.setEstaEnListaNegra(usuarioDTO.isEstaEnListaNegra());
+
+        return usuarioRepository.save(usuario);
     }
 
     // Eliminar usuario por id
     public void eliminarUsuario(Long id) {
-        Optional<UsuarioEntity> usuarioExistente = usuarioRepository.findById(id);
-        if (usuarioExistente.isPresent()) {
-            usuarioRepository.deleteById(id);
-        } else {
+        Optional<UsuarioEntity> usuario = usuarioRepository.findById(id);
+
+        if (usuario.isEmpty()) {
             throw new RuntimeException("Usuario no encontrado con ID: " + id);
+        }
+
+        // Check if user has active reservations
+        List<ReservaEntity> reservasActivas = reservaRepository.findByUsuario(usuario.get())
+                .stream()
+                .filter(r -> r.getEstado() == ReservaEntity.EstadoReserva.EN_PROGRESO ||
+                        r.getEstado() == ReservaEntity.EstadoReserva.CONFIRMADA)
+                .toList();
+
+        if (!reservasActivas.isEmpty()) {
+            throw new RuntimeException("No se puede eliminar un usuario con reservas activas");
+        }
+
+        try {
+            usuarioRepository.deleteById(id);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al eliminar el usuario: " + e.getMessage());
         }
     }
     

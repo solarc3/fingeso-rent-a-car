@@ -54,20 +54,33 @@ export const useUsuarioService = () => {
 
   const eliminarUsuario = async (id) => {
     try {
-      const {data} = await axiosInstance.delete('/api/usuario/eliminar', {
-        params: {id}
+      const response = await axiosInstance.delete(`/api/usuario/eliminar`, {
+        params: { id }
       });
-      return data;
+
+      if (response.status === 200) {
+        return response.data;
+      }
+
+      throw new Error(response.data?.error || 'Error al eliminar usuario');
     } catch (error) {
-      throw new Error(error.response?.data || 'Error al eliminar usuario');
+      if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      }
+      throw new Error('Error al eliminar usuario');
     }
   };
 
-  const actualizarUsuario = async (id, usuario) => {
+  const actualizarUsuario = async (id, userData) => {
     try {
-      const {data} = await axiosInstance.put('/api/usuario/actualizar', usuario, {
-        params: {id}
-      });
+      const usuarioDTO = {
+        nombre: userData.nombre,
+        apellido: userData.apellido,
+        rol: userData.rol,
+        estaEnListaNegra: userData.estaEnListaNegra
+      };
+
+      const { data } = await axiosInstance.put(`/api/usuario/actualizar?id=${id}`, usuarioDTO);
       return data;
     } catch (error) {
       throw new Error(error.response?.data || 'Error al actualizar usuario');

@@ -56,7 +56,11 @@
           >
             <v-select
               v-model="filters.estado"
-              :items="estados"
+              :items="[
+                { text: 'Todos', value: 'TODOS' },
+                { text: 'Activos', value: 'ACTIVO' },
+                { text: 'Lista Negra', value: 'LISTA_NEGRA' }
+              ]"
               label="Estado"
               clearable
               hide-details
@@ -64,11 +68,11 @@
             >
               <template #selection="{ item }">
                 <v-chip
-                  :color="getStatusColor(item.raw)"
+                  :color="item.raw.value === 'LISTA_NEGRA' ? 'error' : 'success'"
                   size="small"
                   class="mr-2"
                 >
-                  {{ item.raw }}
+                  {{ item.raw.text }}
                 </v-chip>
               </template>
             </v-select>
@@ -102,10 +106,10 @@
 
         <template #item.estado="{ item }">
           <v-chip
-            :color="getStatusColor(item.estado)"
+            :color="item.estaEnListaNegra ? 'error' : 'success'"
             size="small"
           >
-            {{ item.esta_en_lista_negra ? 'Lista Negra' : item.estado }}
+            {{ item.estaEnListaNegra ? 'Lista Negra' : 'Activo' }}
           </v-chip>
         </template>
 
@@ -195,6 +199,38 @@
       </template>
     </v-snackbar>
   </v-container>
+
+  <!-- Delete confirmation dialog -->
+  <v-dialog
+    v-model="dialogs.delete"
+    max-width="400"
+  >
+    <v-card>
+      <v-card-title>Confirmar Eliminación</v-card-title>
+      <v-card-text>
+        ¿Está seguro que desea eliminar al usuario
+        {{ selectedUser?.nombre }} {{ selectedUser?.apellido }}?
+        Esta acción no se puede deshacer.
+      </v-card-text>
+      <v-card-actions>
+        <v-spacer />
+        <v-btn
+          color="grey"
+          text
+          @click="dialogs.delete = false"
+        >
+          Cancelar
+        </v-btn>
+        <v-btn
+          color="error"
+          :loading="saving"
+          @click="deleteUser"
+        >
+          Eliminar
+        </v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
 <script setup>
@@ -202,6 +238,7 @@ import {ref, computed, onMounted} from 'vue';
 import {useUserStore} from '@/stores/user';
 import CreateUserDialog from '@/components/admin/CreateUserDialog.vue';
 import EditUserDialog from '@/components/admin/EditUserDialog.vue';
+import saving from "lodash/seq.js";
 
 const userStore = useUserStore();
 const loading = ref(false);
@@ -256,10 +293,10 @@ const filteredUsers = computed(() => {
     }
 
     if (filters.value.estado) {
-      if (filters.value.estado === 'LISTA_NEGRA' && !user.esta_en_lista_negra) {
-        return false;
-      } else if (filters.value.estado !== 'LISTA_NEGRA' && user.estado !== filters.value.estado) {
-        return false;
+      if (filters.value.estado === 'LISTA_NEGRA') {
+        if (!user.estaEnListaNegra) return false;
+      } else if (filters.value.estado === 'ACTIVO') {
+        if (user.estaEnListaNegra) return false;
       }
     }
 
@@ -300,21 +337,26 @@ const confirmDelete = (user) => {
 };
 
 const deleteUser = async () => {
+  saving.value = true;
   try {
     await userStore.deleteUser(selectedUser.value.id);
+
     dialogs.value.delete = false;
+    selectedUser.value = null;
+
     snackbar.value = {
       show: true,
       color: 'success',
-      text: 'Usuario eliminado correctamente',
+      text: 'Usuario eliminado correctamente'
     };
-    await fetchUsers();
   } catch (error) {
     snackbar.value = {
       show: true,
       color: 'error',
-      text: error.message || 'Error al eliminar usuario',
+      text: error.message || 'Error al eliminar usuario'
     };
+  } finally {
+    saving.value = false;
   }
 };
 

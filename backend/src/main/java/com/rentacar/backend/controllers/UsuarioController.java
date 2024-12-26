@@ -1,5 +1,6 @@
 package com.rentacar.backend.controllers;
 
+import com.rentacar.backend.dto.UsuarioDTO;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
 import com.rentacar.backend.services.SucursalService;
@@ -9,6 +10,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -98,22 +100,24 @@ public class UsuarioController {
         try {
             usuarioService.eliminarUsuario(id);
             return ResponseEntity.ok()
-                .body("Usuario eliminado correctamente");
+                    .body(new HashMap<String, String>() {{
+                        put("mensaje", "Usuario eliminado correctamente");
+                    }});
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(e.getMessage());
+                    .body(new HashMap<String, String>() {{
+                        put("error", e.getMessage());
+                    }});
         }
     }
 
     @PutMapping("/actualizar")
-    public ResponseEntity<?> actualizarUsuario(@RequestBody UsuarioEntity usuario, Long id) {
+    public ResponseEntity<?> actualizarUsuario(@RequestParam Long id, @RequestBody UsuarioDTO usuarioDTO) {
         try {
-            usuarioService.actualizarUsuario(id, usuario);
-            return ResponseEntity.ok()
-                .body("Usuario actualizado correctamente");
+            UsuarioEntity usuarioActualizado = usuarioService.actualizarUsuario(id, usuarioDTO);
+            return ResponseEntity.ok(usuarioActualizado);
         } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
