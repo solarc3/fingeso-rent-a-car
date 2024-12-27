@@ -13,7 +13,7 @@ public class UsuarioDTO {
     private String apellido;
     private String password;
     private boolean estaEnListaNegra;
-    private String rol;
+    private UsuarioEntity.RolUsuario rol;
     private Long sucursalId;
 }
 

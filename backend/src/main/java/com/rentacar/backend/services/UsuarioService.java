@@ -53,15 +53,6 @@ public class UsuarioService {
         usuario.setEstaEnListaNegra(false);
         usuario.setRol(rol);
 
-        // Asignar sucursal si es necesario
-        if (rol == UsuarioEntity.RolUsuario.TRABAJADOR ||
-            rol == UsuarioEntity.RolUsuario.ADMINISTRADOR) {
-            if (sucursal == null) {
-                throw new RuntimeException("Los trabajadores y administradores deben tener una sucursal asignada");
-            }
-            usuario.setSucursal(sucursal);
-        }
-
         return usuarioRepository.save(usuario);
     }
 

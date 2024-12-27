@@ -2,6 +2,7 @@ package com.rentacar.backend.controllers;
 
 import com.rentacar.backend.dto.UsuarioDTO;
 import com.rentacar.backend.dto.UsuarioLoginDTO;
+import com.rentacar.backend.dto.UsuarioRegistroDTO;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
 import com.rentacar.backend.services.SucursalService;
@@ -10,7 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import org.modelmapper.ModelMapper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -20,12 +21,12 @@ import java.util.Optional;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-    private final SucursalService sucursalService;
+    private final ModelMapper mapper;
 
     @Autowired
-    public UsuarioController(UsuarioService usuarioService, SucursalService sucursalService) {
+    public UsuarioController(UsuarioService usuarioService, ModelMapper mapper) {
         this.usuarioService = usuarioService;
-        this.sucursalService = sucursalService;
+        this.mapper = mapper;
     }
     @PutMapping("/{id}/sucursal")
     public ResponseEntity<?> asignarSucursal(@PathVariable Long id, @RequestParam Long sucursalId) {
@@ -38,13 +39,13 @@ public class UsuarioController {
     }
 
     @PostMapping("/crear")
-    public ResponseEntity<?> crearUsuario(@RequestBody Map<String, Object> usuario) {
+    public ResponseEntity<?> crearUsuario(@RequestBody UsuarioRegistroDTO usuario) {
         try {
-            String rut = (String) usuario.get("rut");
-            String nombre = (String) usuario.get("nombre");
-            String apellido = (String) usuario.get("apellido");
-            String password = (String) usuario.get("password");
-            UsuarioEntity.RolUsuario rol = UsuarioEntity.RolUsuario.valueOf((String) usuario.get("rol"));
+            String rut = usuario.getRut();
+            String nombre = usuario.getNombre();
+            String apellido = usuario.getApellido();
+            String password = usuario.getPassword();
+            UsuarioEntity.RolUsuario rol = usuario.getRol();
 
 
             if (rut == null || nombre == null || apellido == null || password == null) {
