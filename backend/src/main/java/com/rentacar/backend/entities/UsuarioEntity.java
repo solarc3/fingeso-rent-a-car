@@ -45,12 +45,13 @@ public class UsuarioEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RolUsuario rol;
+
     @Column(nullable = false)
     private String password;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sucursal_id")
-    private SucursalEntity sucursal;
+    //@ManyToOne(fetch = FetchType.LAZY)
+    //@JoinColumn(name = "sucursal_id", nullable = true)
+    //private SucursalEntity sucursal;
 
 
 }

@@ -120,10 +120,10 @@ VALUES ('20147258-K', 'Roberto', 'Sánchez', 'client123', false, 4, 'ARRENDATARI
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('21369852-4', 'Carmen', 'Muñoz', 'worker123', false,  5, 'TRABAJADOR');
 
-INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra,sucursal_id,rol)
+INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra, sucursal_id,rol)
 VALUES ('21480741-6', 'Tomas', 'Carcamo', 'contraseña', false, 1, 'TRABAJADOR');
 
-INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra,sucursal_id,rol)
+INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra, sucursal_id,rol)
 VALUES ('20750423-8', 'Martin', 'Fuentes', 'admin123', false, 1, 'ADMINISTRADOR');
 -- Reservas
 INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)

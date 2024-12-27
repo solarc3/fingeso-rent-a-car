@@ -3,6 +3,7 @@ package com.rentacar.backend.controllers;
 import com.rentacar.backend.dto.UsuarioDTO;
 import com.rentacar.backend.dto.UsuarioLoginDTO;
 import com.rentacar.backend.dto.UsuarioRegistroDTO;
+import com.rentacar.backend.dto.UsuarioRespuestaDTO;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
 import com.rentacar.backend.services.SucursalService;
@@ -147,12 +148,21 @@ public class UsuarioController {
                         .body("Usuario en lista negra");
                 }
                 // si llegamos aqui todo ok
-                return ResponseEntity.ok(user);
+                //return ResponseEntity.ok(user);
+                UsuarioRespuestaDTO respuesta = new UsuarioRespuestaDTO();
+                respuesta.setId(user.getId());
+                respuesta.setNombre(user.getNombre());
+                respuesta.setApellido(user.getApellido());
+                respuesta.setRol(user.getRol().name());
+
+                return ResponseEntity.ok(respuesta);
 
             } else {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body("Credenciales invalidas");
             }
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body("Error de validacion: " + e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(e.getMessage());

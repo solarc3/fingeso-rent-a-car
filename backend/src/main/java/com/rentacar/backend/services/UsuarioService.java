@@ -76,14 +76,17 @@ public class UsuarioService {
             usuario.setPassword(usuarioDTO.getPassword());
         }
         if (usuarioDTO.getRol() != null) {
-            usuario.setRol(UsuarioEntity.RolUsuario.valueOf(usuarioDTO.getRol()));
+            usuario.setRol(usuarioDTO.getRol());
         }
 
         // Handle sucursal assignment
         if (usuarioDTO.getSucursalId() != null) {
             SucursalEntity sucursal = sucursalRepository.findById(usuarioDTO.getSucursalId())
                     .orElseThrow(() -> new RuntimeException("Sucursal no encontrada con ID: " + usuarioDTO.getSucursalId()));
-            usuario.setSucursal(sucursal);
+
+            //usuario.setSucursal(sucursal);
+            sucursal.getEmpleados().add(usuario);
+            sucursalRepository.save(sucursal);
         }
 
         usuario.setEstaEnListaNegra(usuarioDTO.isEstaEnListaNegra());
@@ -129,7 +132,7 @@ public class UsuarioService {
         SucursalEntity sucursal = sucursalRepository.findById(sucursalId)
                 .orElseThrow(() -> new RuntimeException("Sucursal no encontrada con ID: " + sucursalId));
 
-        usuario.setSucursal(sucursal);
+        //usuario.setSucursal(sucursal);
         return usuarioRepository.save(usuario);
     }
     
