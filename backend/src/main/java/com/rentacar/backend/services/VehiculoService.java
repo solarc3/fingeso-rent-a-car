@@ -71,7 +71,6 @@ public class VehiculoService {
         vehiculo.setPatente(patente);
         vehiculo.setPrecioArriendo(precio);
         vehiculo.setAnio(anio);
-        vehiculo.setSucursal(sucursal);
         vehiculo.setEstado(estado != null ? estado : VehiculoEntity.EstadoVehiculo.DISPONIBLE);
         vehiculo.setDisponible(estado == VehiculoEntity.EstadoVehiculo.DISPONIBLE);
 

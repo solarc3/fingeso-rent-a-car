@@ -27,6 +27,15 @@ public class UsuarioController {
         this.usuarioService = usuarioService;
         this.sucursalService = sucursalService;
     }
+    @PutMapping("/{id}/sucursal")
+    public ResponseEntity<?> asignarSucursal(@PathVariable Long id, @RequestParam Long sucursalId) {
+        try {
+            UsuarioEntity usuario = usuarioService.asignarSucursal(id, sucursalId);
+            return ResponseEntity.ok(usuario);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 
     @PostMapping("/crear")
     public ResponseEntity<?> crearUsuario(@RequestBody Map<String, Object> usuario) {
@@ -37,13 +46,7 @@ public class UsuarioController {
             String password = (String) usuario.get("password");
             UsuarioEntity.RolUsuario rol = UsuarioEntity.RolUsuario.valueOf((String) usuario.get("rol"));
 
-            SucursalEntity sucursal = null;
-            if (usuario.get("sucursalId") != null) {
-                Long sucursalId = Long.valueOf(usuario.get("sucursalId")
-                                                   .toString());
-                sucursal = sucursalService.obtenerSucursalPorId(sucursalId);
-            }
-            
+
             if (rut == null || nombre == null || apellido == null || password == null) {
                 return ResponseEntity.badRequest()
                     .body("Todos los campos son requeridos");
@@ -54,9 +57,7 @@ public class UsuarioController {
                 nombre,
                 apellido,
                 password,
-                rol,
-                sucursal
-                                                                    );
+                rol);
 
             return ResponseEntity.ok()
                 .body(nuevoUsuario);
@@ -127,7 +128,7 @@ public class UsuarioController {
         try {
             String rut = credentials.getRut();
             String password = credentials.getPassword();
-            String rol = credentials.getRol();
+            String rol = String.valueOf(credentials.getRol());
 
             if (rut == null || password == null || rol == null) {
                 return ResponseEntity.badRequest()

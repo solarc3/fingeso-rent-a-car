@@ -48,17 +48,9 @@ public class UsuarioEntity {
     @Column(nullable = false)
     private String password;
 
-    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
-    @JsonIgnoreProperties({"usuario", "vehiculo"})
-    private List<ValoracionEntity> valoraciones;
-
-    @OneToMany(mappedBy = "usuario", fetch = FetchType.EAGER)
-    @JsonIgnoreProperties({"usuario", "vehiculo", "sucursal"})
-    private List<ReservaEntity> reservas;
-
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sucursal_id")
-    @JsonIgnoreProperties({"empleados", "vehiculos", "reservas"})
     private SucursalEntity sucursal;
+
 
 }

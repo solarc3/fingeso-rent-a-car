@@ -3,6 +3,7 @@ package com.rentacar.backend.services;
 import com.rentacar.backend.dto.UsuarioDTO;
 import com.rentacar.backend.entities.*;
 import com.rentacar.backend.repositories.ReservaRepository;
+import com.rentacar.backend.repositories.SucursalRepository;
 import com.rentacar.backend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,11 +18,13 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final ReservaRepository reservaRepository;
+    private final SucursalRepository sucursalRepository;
 
     @Autowired
-    public UsuarioService(UsuarioRepository usuarioRepository, ReservaRepository reservaRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, ReservaRepository reservaRepository, SucursalRepository sucursalRepository) {
         this.usuarioRepository = usuarioRepository;
         this.reservaRepository = reservaRepository;
+        this.sucursalRepository = sucursalRepository;
     }
 
     public UsuarioEntity obtenerUsuarioPorId(Long id) {
@@ -32,8 +35,7 @@ public class UsuarioService {
 
     //Crear nuevo usuario
     public UsuarioEntity crearUsuario(String rut, String nombre, String apellido,
-                                      String password, UsuarioEntity.RolUsuario rol,
-                                      SucursalEntity sucursal) {
+                                      String password, UsuarioEntity.RolUsuario rol) {
         if (usuarioRepository.findByRut(rut)
             .isPresent()) {
             throw new RuntimeException("Ya existe un usuario con RUT " + rut);
@@ -72,7 +74,7 @@ public class UsuarioService {
         }
 
         UsuarioEntity usuario = usuarioExistente.get();
-        // Update only non-null fields
+
         if (usuarioDTO.getNombre() != null) {
             usuario.setNombre(usuarioDTO.getNombre());
         }
@@ -85,6 +87,14 @@ public class UsuarioService {
         if (usuarioDTO.getRol() != null) {
             usuario.setRol(UsuarioEntity.RolUsuario.valueOf(usuarioDTO.getRol()));
         }
+
+        // Handle sucursal assignment
+        if (usuarioDTO.getSucursalId() != null) {
+            SucursalEntity sucursal = sucursalRepository.findById(usuarioDTO.getSucursalId())
+                    .orElseThrow(() -> new RuntimeException("Sucursal no encontrada con ID: " + usuarioDTO.getSucursalId()));
+            usuario.setSucursal(sucursal);
+        }
+
         usuario.setEstaEnListaNegra(usuarioDTO.isEstaEnListaNegra());
 
         return usuarioRepository.save(usuario);
@@ -119,6 +129,17 @@ public class UsuarioService {
         } catch (Exception e) {
             throw new RuntimeException("Error al eliminar el usuario: " + e.getMessage());
         }
+    }
+    //Asignar sucursal a un usuario al momento de crear un usuario.
+    public UsuarioEntity asignarSucursal(Long usuarioId, Long sucursalId) {
+        UsuarioEntity usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + usuarioId));
+
+        SucursalEntity sucursal = sucursalRepository.findById(sucursalId)
+                .orElseThrow(() -> new RuntimeException("Sucursal no encontrada con ID: " + sucursalId));
+
+        usuario.setSucursal(sucursal);
+        return usuarioRepository.save(usuario);
     }
     
     public List<UsuarioEntity> obtenerTrabajadores() {
