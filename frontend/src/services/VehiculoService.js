@@ -27,9 +27,7 @@ export const useVehiculoService = () => {
         precioArriendo: vehiculo.precioArriendo,
         estado: vehiculo.estado,
         acriss: acriss,
-        sucursal: {
-          id: Number(vehiculo.sucursal)
-        }
+        sucursalId: vehiculo.sucursal
       };
 
       console.log('Enviando datos del vehículo:', vehiculoData);

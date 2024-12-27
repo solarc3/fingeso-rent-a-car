@@ -6,6 +6,9 @@ import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.repositories.VehiculoRepository;
 import com.rentacar.backend.services.SucursalService;
 import com.rentacar.backend.services.VehiculoService;
+import com.rentacar.backend.dto.VehiculoDTO;
+import com.rentacar.backend.dto.FallaVehiculoDTO;
+import com.rentacar.backend.dto.SucursalDTO;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -46,11 +49,9 @@ public class VehiculoController {
                 dto.getPatente(),
                 dto.getPrecioArriendo(),
                 dto.getAnio(),
-                dto.getEstado(),
-                dto.getSucursal()
-                    .getId()
-                                                                   );
+                dto.getEstado());
 
+            sucursalService.agregarVehiculo(vehiculo.getId(), dto.getSucursalId());
             return ResponseEntity.ok(modelMapper.map(vehiculo, VehiculoDTO.class));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -127,37 +128,6 @@ public class VehiculoController {
     }
 }
 
-@Data
-@NoArgsConstructor
-class VehiculoDTO {
-    private Long id;
-    private String marca;
-    private String modelo;
-    private String acriss;
-    private String patente;
-    private BigDecimal precioArriendo;
-    private Integer anio;
-    private VehiculoEntity.EstadoVehiculo estado;
-    private SucursalDTO sucursal;
-}
 
-@Data
-@NoArgsConstructor
-class SucursalDTO {
-    private Long id;
-    private String nombre;
-    private String direccion;
-    private String telefono;
-    private String email;
-}
 
-@Data
-@NoArgsConstructor
-class FallaVehiculoDTO {
-    private Long vehiculoId;
-    private String tipo;
-    private String severidad;
-    private String descripcion;
-    private Long reportadoPorId;
-}
 

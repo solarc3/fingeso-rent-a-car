@@ -12,4 +12,5 @@ public class UsuarioRegistroDTO {
     private String apellido;
     private String password;
     private UsuarioEntity.RolUsuario rol;
+    private Long sucursalId;
 }

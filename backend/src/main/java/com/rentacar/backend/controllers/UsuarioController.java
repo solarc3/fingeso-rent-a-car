@@ -22,12 +22,12 @@ import java.util.Optional;
 public class UsuarioController {
 
     private final UsuarioService usuarioService;
-    private final ModelMapper mapper;
+    private final SucursalService sucursalService;
 
     @Autowired
-    public UsuarioController(UsuarioService usuarioService, ModelMapper mapper) {
+    public UsuarioController(UsuarioService usuarioService, SucursalService sucursalService) {
         this.usuarioService = usuarioService;
-        this.mapper = mapper;
+        this.sucursalService = sucursalService;
     }
     @PutMapping("/{id}/sucursal")
     public ResponseEntity<?> asignarSucursal(@PathVariable Long id, @RequestParam Long sucursalId) {
@@ -48,7 +48,6 @@ public class UsuarioController {
             String password = usuario.getPassword();
             UsuarioEntity.RolUsuario rol = usuario.getRol();
 
-
             if (rut == null || nombre == null || apellido == null || password == null) {
                 return ResponseEntity.badRequest()
                     .body("Todos los campos son requeridos");
@@ -60,6 +59,12 @@ public class UsuarioController {
                 apellido,
                 password,
                 rol);
+
+            if (usuario.getSucursalId() != null) {
+                Long sucursalId = Long.valueOf(usuario.getSucursalId()
+                        .toString());
+                sucursalService.agregarEmpleado(nuevoUsuario.getId(), sucursalId);
+            }
 
             return ResponseEntity.ok()
                 .body(nuevoUsuario);
@@ -153,6 +158,7 @@ public class UsuarioController {
                 respuesta.setId(user.getId());
                 respuesta.setNombre(user.getNombre());
                 respuesta.setApellido(user.getApellido());
+                respuesta.setRut(user.getRut());
                 respuesta.setRol(user.getRol().name());
 
                 return ResponseEntity.ok(respuesta);

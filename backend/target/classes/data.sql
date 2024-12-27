@@ -97,25 +97,25 @@ INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucu
 VALUES ('14353454-5', 'Diego', 'Gomez', 'worker123', false, 1, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('00000000-0', 'Felipe', 'Cubillos', 'client123', true,  1, 'ARRENDATARIO');
+VALUES ('00000000-0', 'Felipe', 'Cubillos', 'client123', true,  null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('15789456-0', 'Ana', 'Martinez', 'worker123', false, 2, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('16852147-2', 'Carlos', 'Rodriguez', 'client123', false,  2, 'ARRENDATARIO');
+VALUES ('16852147-2', 'Carlos', 'Rodriguez', 'client123', false,  null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('17963258-6', 'Maria', 'López', 'worker123', false, 3, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('18741852-6', 'Juan', 'Pérez', 'client123', true,  3, 'ARRENDATARIO');
+VALUES ('18741852-6', 'Juan', 'Pérez', 'client123', true,  null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('19852963-K', 'Patricia', 'González', 'worker123', false,  4, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('20147258-K', 'Roberto', 'Sánchez', 'client123', false, 4, 'ARRENDATARIO');
+VALUES ('20147258-K', 'Roberto', 'Sánchez', 'client123', false, null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('21369852-4', 'Carmen', 'Muñoz', 'worker123', false,  5, 'TRABAJADOR');

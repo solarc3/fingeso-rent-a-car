@@ -1,15 +1,14 @@
 package com.rentacar.backend.dto;
 
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
-public class UsuarioRespuestaDTO {
+public class SucursalDTO {
     private Long id;
     private String nombre;
-    private String apellido;
-    private String rut;
-    private String rol;
+    private String direccion;
+    private String telefono;
+    private String email;
 }
