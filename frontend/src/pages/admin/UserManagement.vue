@@ -56,11 +56,9 @@
           >
             <v-select
               v-model="filters.estado"
-              :items="[
-                { text: 'Todos', value: 'TODOS' },
-                { text: 'Activos', value: 'ACTIVO' },
-                { text: 'Lista Negra', value: 'LISTA_NEGRA' }
-              ]"
+              :items="estados"
+              item-title="text"
+              item-value="value"
               label="Estado"
               clearable
               hide-details
@@ -253,7 +251,11 @@ const headers = [
 ];
 
 const roles = ['ADMINISTRADOR', 'TRABAJADOR', 'ARRENDATARIO'];
-const estados = ['ACTIVO', 'INACTIVO', 'LISTA_NEGRA'];
+const estados = [
+  { value: 'TODOS', text: 'Todos' },
+  { value: 'ACTIVO', text: 'Activos' },
+  { value: 'LISTA_NEGRA', text: 'Lista Negra' }
+];
 
 const filters = ref({
   search: '',

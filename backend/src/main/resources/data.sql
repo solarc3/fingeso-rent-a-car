@@ -121,7 +121,7 @@ INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucu
 VALUES ('21369852-4', 'Carmen', 'Muñoz', 'worker123', false,  5, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra, sucursal_id,rol)
-VALUES ('21480741-6', 'Tomas', 'Carcamo', 'contraseña', false, 1, 'TRABAJADOR');
+VALUES ('21480741-6', 'Tomas', 'Carcamo', 'contraseña', false, 1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra, sucursal_id,rol)
 VALUES ('20750423-8', 'Martin', 'Fuentes', 'admin123', false, 1, 'ADMINISTRADOR');
