@@ -10,4 +10,6 @@ import java.util.Optional;
 @Repository
 public interface SucursalRepository extends JpaRepository<SucursalEntity, Long> {
 
+    Optional<SucursalEntity> findByVehiculosContains(VehiculoEntity vehiculo);
+
 }

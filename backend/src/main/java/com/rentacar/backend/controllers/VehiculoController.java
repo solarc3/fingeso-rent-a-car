@@ -51,7 +51,7 @@ public class VehiculoController {
                 dto.getAnio(),
                 dto.getEstado());
 
-            sucursalService.agregarVehiculo(vehiculo.getId(), dto.getSucursalId());
+            sucursalService.agregarVehiculo(vehiculo.getId(), dto.getSucursal().getId());
             return ResponseEntity.ok(modelMapper.map(vehiculo, VehiculoDTO.class));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
@@ -63,7 +63,7 @@ public class VehiculoController {
     public ResponseEntity<List<VehiculoDTO>> listarVehiculos() {
         List<VehiculoEntity> vehiculos = vehiculoService.obtenerTodos();
         List<VehiculoDTO> vehiculosDTO = vehiculos.stream()
-            .map(vehiculo -> modelMapper.map(vehiculo, VehiculoDTO.class))
+            .map(this::toDTO)
             .collect(Collectors.toList());
         return ResponseEntity.ok(vehiculosDTO);
     }
@@ -78,7 +78,7 @@ public class VehiculoController {
                 .toList();
 
             List<VehiculoDTO> vehiculosDTO = vehiculos.stream()
-                .map(vehiculo -> modelMapper.map(vehiculo, VehiculoDTO.class))
+                .map(this::toDTO)
                 .collect(Collectors.toList());
 
             return ResponseEntity.ok(vehiculosDTO);
@@ -125,6 +125,16 @@ public class VehiculoController {
             return ResponseEntity.badRequest()
                 .build();
         }
+    }
+
+    // Convertir Entidad -> DTO
+    public VehiculoDTO toDTO(VehiculoEntity vehiculo) {
+        VehiculoDTO vehiculoDTO = modelMapper.map(vehiculo, VehiculoDTO.class);
+
+        // Buscar la sucursal a la que pertenece para setear el atributo en el dto
+        vehiculoDTO.setSucursal(modelMapper.map(sucursalService.encontrarSucursal(vehiculo),
+                SucursalDTO.class));
+        return vehiculoDTO;
     }
 }
 

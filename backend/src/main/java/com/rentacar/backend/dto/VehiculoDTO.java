@@ -18,6 +18,6 @@ public class VehiculoDTO {
     private BigDecimal precioArriendo;
     private Integer anio;
     private VehiculoEntity.EstadoVehiculo estado;
-    private Long sucursalId;
+    private SucursalDTO sucursal;
 }
 

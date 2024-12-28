@@ -87,6 +87,7 @@ public class SucursalService {
         sucursal.setEmail(email);
         return sucursalRepository.save(sucursal);
     }
+
     public void eliminarSucursalPorId(Long id) throws Exception {
         if (!sucursalRepository.existsById(id)) {
             throw new Exception("Sucursal no encontrada con Id: " + id);
@@ -94,5 +95,12 @@ public class SucursalService {
         sucursalRepository.deleteById(id);
     }
 
+    public SucursalEntity encontrarSucursal(VehiculoEntity vehiculo) {
+        Optional<SucursalEntity> sucursal = sucursalRepository.findByVehiculosContains(vehiculo);
+        if (sucursal.isEmpty()) {
+            throw new RuntimeException("El vehiculo no tiene sucursal asignada");
+        }
+        return sucursal.get();
+    }
 
 }

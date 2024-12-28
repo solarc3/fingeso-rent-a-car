@@ -1,6 +1,7 @@
 package com.rentacar.backend.services;
 
 import ch.qos.logback.classic.Logger;
+import com.rentacar.backend.dto.VehiculoDTO;
 import com.rentacar.backend.entities.*;
 import com.rentacar.backend.repositories.*;
 import jakarta.transaction.Transactional;
