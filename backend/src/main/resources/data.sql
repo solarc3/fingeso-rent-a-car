@@ -125,23 +125,18 @@ VALUES ('21480741-6', 'Tomas', 'Carcamo', 'contraseña', false, 1, 'ADMINISTRADO
 
 INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra, sucursal_id,rol)
 VALUES ('20750423-8', 'Martin', 'Fuentes', 'admin123', false, 1, 'ADMINISTRADOR');
+
 -- Reservas
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-09 23:58:00', '2025-01-06 00:00:00', 100000.00, 'PENDIENTE', 1, 1, 1);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-09 23:57:00', '2024-01-05 00:00:00', 90000.00, 'CONFIRMADA', 2, 2, 1);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-15 10:00:00', '2024-12-20 10:00:00', 85000.00, 'PENDIENTE', 4, 3, 2);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-16 15:00:00', '2024-12-23 15:00:00', 120000.00, 'PENDIENTE', 5, 5, 2);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-20 09:00:00', '2024-12-27 09:00:00', 75000.00, 'PENDIENTE', 6, 6, 3);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-22 14:00:00', '2024-12-29 14:00:00', 95000.00, 'CONFIRMADA', 8, 7, 4);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-25 11:00:00', '2025-01-01 11:00:00', 130000.00, 'PENDIENTE', 9, 8, 4);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-28 16:00:00', '2025-01-04 16:00:00', 98000.00, 'PENDIENTE', 10, 9, 5);
+INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id, sucursal_devolucion_id)
+VALUES
+    ('2024-12-09 23:58:00', '2025-01-06 00:00:00', 100000.00, 'PENDIENTE', 1, 1, 1, 1),
+    ('2024-12-09 23:57:00', '2024-01-05 00:00:00', 90000.00, 'CONFIRMADA', 2, 2, 1, 2),
+    ('2024-12-15 10:00:00', '2024-12-20 10:00:00', 85000.00, 'PENDIENTE', 4, 3, 2, 1),
+    ('2024-12-16 15:00:00', '2024-12-23 15:00:00', 120000.00, 'PENDIENTE', 5, 5, 2, 2),
+    ('2024-12-25 11:00:00', '2025-01-01 11:00:00', 130000.00, 'PENDIENTE', 9, 8, 4, 3),
+    ('2024-12-20 09:00:00', '2024-12-27 09:00:00', 75000.00, 'PENDIENTE', 6, 6, 3, 1),
+    ('2024-12-22 14:00:00', '2024-12-29 14:00:00', 95000.00, 'CONFIRMADA', 8, 7, 4, 4),
+    ('2024-12-28 16:00:00', '2025-01-04 16:00:00', 98000.00, 'PENDIENTE', 10, 9, 5, 5);
 
 -- Valoraciones
 INSERT INTO valoraciones (puntuacion, comentario, usuario_id, vehiculo_id)

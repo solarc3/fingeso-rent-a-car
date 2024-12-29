@@ -38,8 +38,4 @@ public class SucursalEntity {
     @OneToMany
     @JoinColumn(name = "sucursal_id")
     private List<VehiculoEntity> vehiculos;
-
-    @OneToMany
-    @JoinColumn(name = "sucursal_id")
-    private List<ReservaEntity> reservas;
 }

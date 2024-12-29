@@ -1,11 +1,13 @@
 package com.rentacar.backend.controllers;
 
+import com.rentacar.backend.dto.ReservaDTO;
 import com.rentacar.backend.entities.ReservaEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.services.ReservaService;
 import com.rentacar.backend.services.UsuarioService;
 import com.rentacar.backend.services.VehiculoService;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reserva")
@@ -22,12 +25,14 @@ public class ReservaController {
     private final ReservaService reservaService;
     private final VehiculoService vehiculoService;
     private final UsuarioService usuarioService;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public ReservaController(ReservaService reservaService, VehiculoService vehiculoService, UsuarioService usuarioService) {
+    public ReservaController(ReservaService reservaService, VehiculoService vehiculoService, UsuarioService usuarioService, ModelMapper modelMapper) {
         this.reservaService = reservaService;
         this.vehiculoService = vehiculoService;
         this.usuarioService = usuarioService;
+        this.modelMapper = modelMapper;
     }
 
     @PostMapping("/crear")
@@ -56,8 +61,12 @@ public class ReservaController {
     }
 
     @GetMapping("/obtener")
-    public List<ReservaEntity> obtenerReservas() {
-        return reservaService.obtenerReservas();
+    public List<ReservaDTO> obtenerReservas() {
+        List<ReservaEntity> reservas = reservaService.obtenerReservas();
+        List<ReservaDTO> r = reservas.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+        return r;
     }
 
     @GetMapping("/obtener/porUsuario")
@@ -113,5 +122,9 @@ public class ReservaController {
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
+    }
+
+    public ReservaDTO toDTO(ReservaEntity reservaEntity) {
+        return modelMapper.map(reservaEntity, ReservaDTO.class);
     }
 }

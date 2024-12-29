@@ -49,9 +49,4 @@ public class UsuarioEntity {
     @Column(nullable = false)
     private String password;
 
-    //@ManyToOne(fetch = FetchType.LAZY)
-    //@JoinColumn(name = "sucursal_id", nullable = true)
-    //private SucursalEntity sucursal;
-
-
 }

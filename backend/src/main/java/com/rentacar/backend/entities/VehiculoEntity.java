@@ -46,16 +46,6 @@ public class VehiculoEntity {
     @Column(name = "precio_arriendo", nullable = false)
     private BigDecimal precioArriendo;
 
-    /*@ManyToOne(fetch = FetchType.EAGER)
-    @JoinColumn(name = "sucursal_id")
-    @JsonIgnoreProperties({"vehiculos", "empleados", "reservas"})
-    private SucursalEntity sucursal;
-
-    @OneToMany(mappedBy = "vehiculo", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JsonIgnoreProperties({"vehiculo", "usuario"})
-    private List<ValoracionEntity> valoraciones; */
-    
-
     private boolean disponible;
 
     @Enumerated(EnumType.STRING)

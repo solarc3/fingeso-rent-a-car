@@ -21,13 +21,12 @@ public class ValoracionEntity {
 
     @Column(nullable = false)
     private String comentario;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "usuario_id")
-    @JsonIgnoreProperties({"valoraciones", "reservas", "sucursal"})
     private UsuarioEntity usuario;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "vehiculo_id")
-    @JsonIgnoreProperties({"valoraciones", "reservas", "sucursal"})
     private VehiculoEntity vehiculo;
 }
