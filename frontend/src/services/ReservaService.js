@@ -65,11 +65,24 @@ export const useReservaService = () => {
     }
   };
 
+  const generarReporte = async (fechaInicio, fechaFin) => {
+    try {
+      const response = await axiosInstance.get('/api/reserva/reporte', {
+        params: { fechaInicio, fechaFin },
+        responseType: 'arraybuffer'
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || 'Error generando reporte';
+    }
+  };
+
   return {
     crearReserva,
     obtenerReservas,
     obtenerReservasPorUsuario,
     actualizarEstado,
-    extenderReserva
+    extenderReserva,
+    generarReporte
   };
 };

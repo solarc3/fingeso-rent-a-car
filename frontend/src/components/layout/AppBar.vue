@@ -54,6 +54,18 @@
         >
           Gestionar Vehículos
         </v-btn>
+
+        <v-btn
+          class="mx-2"
+          @click="openReport"
+        >
+          <v-icon start>
+            mdi-file-chart
+          </v-icon>
+          Reporte de Ventas
+        </v-btn>
+
+        <SalesReport ref="reportDialog" />
       </template>
 
       <!-- Menu trabajador -->
@@ -194,6 +206,7 @@
 </template>
 <script setup>
 import {ref} from 'vue';
+import SalesReport from '@/components/admin/SalesReport.vue';
 import {useAuthStore} from '@/stores/auth';
 import {useRouter} from 'vue-router';
 
@@ -241,6 +254,13 @@ const handleLogout = async () => {
     showSnackbar.value = true;
   }
 };
+
+const reportDialog = ref(null);
+
+const openReport = () => {
+  reportDialog.value?.open();
+};
+
 </script>
 
 <style scoped>

@@ -1,5 +1,11 @@
 package com.rentacar.backend.services;
 
+import com.lowagie.text.Document;
+import com.lowagie.text.Font;
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfWriter;
+import com.lowagie.text.pdf.PdfPTable;
+import com.rentacar.backend.dto.ReporteVentasDTO;
 import com.rentacar.backend.entities.ReservaEntity;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
@@ -13,12 +19,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.ByteArrayOutputStream;
 import java.time.Duration;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReservaService {
@@ -116,6 +125,65 @@ public class ReservaService {
             vehiculoId, fechaInicio, fechaFin
                                                                                                       );
         return reservasExistentes.isEmpty();
+    }
+
+    private ReporteVentasDTO generarDatosReporte() {
+        ReporteVentasDTO reporte = new ReporteVentasDTO();
+
+        // Calcular totales
+        List<ReservaEntity> reservas = reservaRepository.findAll();
+        reporte.setTotalReservas(reservas.size());
+        reporte.setIngresoTotal(reservas.stream()
+                .map(ReservaEntity::getCosto)
+                .reduce(BigDecimal.ZERO, BigDecimal::add));
+
+        // Calcular reservas por estado
+        Map<String, Integer> reservasPorEstado = reservas.stream()
+                .collect(Collectors.groupingBy(
+                        r -> r.getEstado().toString(),
+                        Collectors.collectingAndThen(Collectors.counting(), Long::intValue)
+                ));
+        reporte.setReservasPorEstado(reservasPorEstado);
+
+        // Agregar más estadísticas...
+
+        return reporte;
+    }
+
+    public byte[] generarReporteVentasPDF() throws Exception {
+        ReporteVentasDTO datos = generarDatosReporte();
+        Document document = new Document();
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+
+        PdfWriter.getInstance(document, out);
+        document.open();
+
+        // Título
+        Font titleFont = FontFactory.getFont(FontFactory.HELVETICA, 10, Font.BOLD);
+        Paragraph title = new Paragraph("Reporte de Ventas", titleFont);
+        title.setAlignment(Element.ALIGN_CENTER);
+        document.add(title);
+        document.add(new Paragraph("\n"));
+
+        // Resumen general
+        document.add(new Paragraph("Resumen General"));
+        document.add(new Paragraph("Total de Reservas: " + datos.getTotalReservas()));
+        document.add(new Paragraph("Ingreso Total: $" + datos.getIngresoTotal()));
+
+        // Tabla de reservas por estado
+        PdfPTable estadosTable = new PdfPTable(2);
+        estadosTable.addCell("Estado");
+        estadosTable.addCell("Cantidad");
+        datos.getReservasPorEstado().forEach((estado, cantidad) -> {
+            estadosTable.addCell(estado);
+            estadosTable.addCell(cantidad.toString());
+        });
+        document.add(estadosTable);
+
+        // Más secciones del reporte...
+
+        document.close();
+        return out.toByteArray();
     }
 
 }

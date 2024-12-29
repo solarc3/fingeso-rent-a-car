@@ -9,6 +9,9 @@ import com.rentacar.backend.services.UsuarioService;
 import com.rentacar.backend.services.VehiculoService;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -121,6 +124,19 @@ public class ReservaController {
             return ResponseEntity.ok(reservas);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/reporte")
+    public ResponseEntity<byte[]> generarReporteVentas() {
+        try {
+            byte[] report = reservaService.generarReporteVentasPDF();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("filename", "reporte-ventas.pdf");
+            return new ResponseEntity<>(report, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 

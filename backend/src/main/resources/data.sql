@@ -91,7 +91,7 @@ INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucu
 VALUES ('21284189-7', 'Ignacio', 'Solar', 'admin123', false,  1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('21461391-3', 'Felipe', 'toilet', 'admin123', false, 1, 'ADMINISTRADOR');
+VALUES ('21461391-3', 'Felipe', 'Cubillos', 'admin123', false, 1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
 VALUES ('14353454-5', 'Diego', 'Gomez', 'worker123', false, 1, 'TRABAJADOR');
@@ -136,7 +136,10 @@ VALUES
     ('2024-12-25 11:00:00', '2025-01-01 11:00:00', 130000.00, 'PENDIENTE', 9, 8, 4, 3),
     ('2024-12-20 09:00:00', '2024-12-27 09:00:00', 75000.00, 'PENDIENTE', 6, 6, 3, 1),
     ('2024-12-22 14:00:00', '2024-12-29 14:00:00', 95000.00, 'CONFIRMADA', 8, 7, 4, 4),
-    ('2024-12-28 16:00:00', '2025-01-04 16:00:00', 98000.00, 'PENDIENTE', 10, 9, 5, 5);
+    ('2024-12-28 16:00:00', '2025-01-04 16:00:00', 98000.00, 'PENDIENTE', 10, 9, 5, 5),
+    ('2024-12-21 16:00:00', '2025-12-28 16:00:00', 108000.00, 'COMPLETADA', 2, 10, 5, 5),
+    ('2024-12-15 15:00:00', '2024-12-27 15:00:00', 120000.00, 'COMPLETADA', 5, 12, 2, 2);
+
 
 -- Valoraciones
 INSERT INTO valoraciones (puntuacion, comentario, usuario_id, vehiculo_id)
