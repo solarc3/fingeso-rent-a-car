@@ -78,14 +78,14 @@ public class ReservaController {
     @GetMapping("/obtener/porUsuario")
     public ResponseEntity<?> obtenerReservasPorUsuario(@RequestParam Long id) {
         try {
-        UsuarioEntity u = usuarioService.obtenerUsuarioPorId(id);
-        List<ReservaEntity> reservas = reservaService.obtenerReservasDeUsuario(u);
+            UsuarioEntity u = usuarioService.obtenerUsuarioPorId(id);
+            List<ReservaEntity> reservas = reservaService.obtenerReservasDeUsuario(u);
 
-        List<UsuarioReservaDTO> reservasDTO = reservas.stream()
-                    .map(this::toUsuarioReservaDTO)
-                    .collect(Collectors.toList());
-        return ResponseEntity.ok().body(reservasDTO);
-        }catch (Exception e) {
+            List<ReservaDTO> reservasDTO = reservas.stream()
+                        .map(this::toDTO)
+                        .collect(Collectors.toList());
+            return ResponseEntity.ok().body(reservasDTO);
+        } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -155,11 +155,7 @@ public class ReservaController {
     public ReservaDTO toDTO(ReservaEntity reservaEntity) {
         return modelMapper.map(reservaEntity, ReservaDTO.class);
     }
-
-
-    public UsuarioReservaDTO toUsuarioReservaDTO(ReservaEntity reservaEntity) {
-    return modelMapper.map(reservaEntity, UsuarioReservaDTO.class);}
-
+    
 
 public ReservaPorVehiculoDTO toReservaPorVehiculoDTO(ReservaEntity reservaEntity) {
     return modelMapper.map(reservaEntity, ReservaPorVehiculoDTO.class);}
