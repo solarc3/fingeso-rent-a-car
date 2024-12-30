@@ -19,7 +19,8 @@ public class ReservaDTO {
     // Maybe
     private ReservaEntity.EstadoReserva estado;
     // Si o si
-    private UsuarioDTO usuario;
+    private UsuarioReservaDTO usuario;
+    //private UsuarioDTO usuario; //Falla de seguridad, porque usuarioDTO contiene contraseña
     private VehiculoDTO vehiculo;
     private SucursalDTO sucursal;
     // Maybe, sucursalDevolucion

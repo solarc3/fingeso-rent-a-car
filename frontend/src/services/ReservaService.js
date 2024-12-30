@@ -77,12 +77,24 @@ export const useReservaService = () => {
     }
   };
 
+  const obtenerReservasPorVehiculo = async (vehicleID)=>{
+    try {
+      const {data} = await axiosInstance.get('api/reserva/obtener/porVehiculo', {
+        params: {id: vehicleID}
+      });
+      return data;
+      }catch(error){
+        throw error.response.data;
+    }
+  };
+
   return {
     crearReserva,
     obtenerReservas,
     obtenerReservasPorUsuario,
     actualizarEstado,
     extenderReserva,
-    generarReporte
+    generarReporte,
+    obtenerReservasPorVehiculo
   };
 };

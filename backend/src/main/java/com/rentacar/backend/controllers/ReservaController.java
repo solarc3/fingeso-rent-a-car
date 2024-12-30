@@ -1,12 +1,14 @@
 package com.rentacar.backend.controllers;
 
 import com.rentacar.backend.dto.ReservaDTO;
+import com.rentacar.backend.dto.ReservaPorVehiculoDTO;
 import com.rentacar.backend.entities.ReservaEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.services.ReservaService;
 import com.rentacar.backend.services.UsuarioService;
 import com.rentacar.backend.services.VehiculoService;
+import com.rentacar.backend.dto.UsuarioReservaDTO;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -14,6 +16,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -75,10 +78,14 @@ public class ReservaController {
     @GetMapping("/obtener/porUsuario")
     public ResponseEntity<?> obtenerReservasPorUsuario(@RequestParam Long id) {
         try {
-            UsuarioEntity u = usuarioService.obtenerUsuarioPorId(id);
-            List<ReservaEntity> reservas = reservaService.obtenerReservasDeUsuario(u);
-            return ResponseEntity.ok().body(reservas);
-        } catch (Exception e) {
+        UsuarioEntity u = usuarioService.obtenerUsuarioPorId(id);
+        List<ReservaEntity> reservas = reservaService.obtenerReservasDeUsuario(u);
+
+        List<UsuarioReservaDTO> reservasDTO = reservas.stream()
+                    .map(this::toUsuarioReservaDTO)
+                    .collect(Collectors.toList());
+        return ResponseEntity.ok().body(reservasDTO);
+        }catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -98,7 +105,10 @@ public class ReservaController {
         try {
             VehiculoEntity v = vehiculoService.obtenerVehiculoPorId(id);
             List<ReservaEntity> reservas = reservaService.obtenerReservasDeVehiculo(v);
-            return ResponseEntity.ok().body(reservas);
+            List<ReservaPorVehiculoDTO> reservasDTO = reservas.stream()
+                    .map(this::toReservaPorVehiculoDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok().body(reservasDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -117,6 +127,8 @@ public class ReservaController {
         }
     }
 
+    //Segun yo, es dificil agregar DTOS, porque en el frontend se recibe el parametro y se hace un put,
+    //Generar estado, usa el getmapping pero entrega un put, entonces es a evaluar si es necesario.
     @GetMapping("/estado/{estado}")
     public ResponseEntity<?> obtenerPorEstado(@PathVariable ReservaEntity.EstadoReserva estado) {
         try {
@@ -143,4 +155,12 @@ public class ReservaController {
     public ReservaDTO toDTO(ReservaEntity reservaEntity) {
         return modelMapper.map(reservaEntity, ReservaDTO.class);
     }
+
+
+    public UsuarioReservaDTO toUsuarioReservaDTO(ReservaEntity reservaEntity) {
+    return modelMapper.map(reservaEntity, UsuarioReservaDTO.class);}
+
+
+public ReservaPorVehiculoDTO toReservaPorVehiculoDTO(ReservaEntity reservaEntity) {
+    return modelMapper.map(reservaEntity, ReservaPorVehiculoDTO.class);}
 }

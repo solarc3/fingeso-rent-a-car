@@ -1,6 +1,7 @@
 package com.rentacar.backend.controllers;
 
 import com.rentacar.backend.dto.UsuarioDTO;
+import com.rentacar.backend.dto.UsuarioPruebaDTO;
 import com.rentacar.backend.dto.UsuarioLoginDTO;
 import com.rentacar.backend.dto.UsuarioRegistroDTO;
 import com.rentacar.backend.dto.UsuarioRespuestaDTO;
@@ -11,11 +12,14 @@ import com.rentacar.backend.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.modelmapper.ModelMapper;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/usuario")
@@ -23,12 +27,15 @@ public class UsuarioController {
 
     private final UsuarioService usuarioService;
     private final SucursalService sucursalService;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public UsuarioController(UsuarioService usuarioService, SucursalService sucursalService) {
+    public UsuarioController(UsuarioService usuarioService, SucursalService sucursalService,ModelMapper modelMapper) {
         this.usuarioService = usuarioService;
         this.sucursalService = sucursalService;
+        this.modelMapper = modelMapper;
     }
+
     @PutMapping("/{id}/sucursal")
     public ResponseEntity<?> asignarSucursal(@PathVariable Long id, @RequestParam Long sucursalId) {
         try {
@@ -50,15 +57,15 @@ public class UsuarioController {
 
             if (rut == null || nombre == null || apellido == null || password == null) {
                 return ResponseEntity.badRequest()
-                    .body("Todos los campos son requeridos");
+                        .body("Todos los campos son requeridos");
             }
 
             UsuarioEntity nuevoUsuario = usuarioService.crearUsuario(
-                rut,
-                nombre,
-                apellido,
-                password,
-                rol);
+                    rut,
+                    nombre,
+                    apellido,
+                    password,
+                    rol);
 
             if (usuario.getSucursalId() != null) {
                 Long sucursalId = Long.valueOf(usuario.getSucursalId()
@@ -67,17 +74,23 @@ public class UsuarioController {
             }
 
             return ResponseEntity.ok()
-                .body(nuevoUsuario);
+                    .body(nuevoUsuario);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(e.getMessage());
+                    .body(e.getMessage());
         }
     }
 
+
+    //IMPLEMENTAR DTO DESDE AQUI A ABAJO?
     @GetMapping("/trabajadores")
     public ResponseEntity<?> obtenerTrabajadores() {
         try {
-            return ResponseEntity.ok(usuarioService.obtenerTrabajadores());
+            List<UsuarioEntity> trabajadores = usuarioService.obtenerTrabajadores();
+            List<UsuarioPruebaDTO> trabajadoresDTO = trabajadores.stream()
+                    .map(this::toUsuarioPruebaDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(trabajadoresDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(e.getMessage());
@@ -87,7 +100,11 @@ public class UsuarioController {
     @GetMapping("/administradores")
     public ResponseEntity<?> obtenerAdministradores() {
         try {
-            return ResponseEntity.ok(usuarioService.obtenerAdministradores());
+            List<UsuarioEntity> administradores = usuarioService.obtenerAdministradores();
+            List<UsuarioPruebaDTO> administradoresDTO = administradores.stream()
+                    .map(this::toUsuarioPruebaDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(administradoresDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(e.getMessage());
@@ -97,7 +114,11 @@ public class UsuarioController {
     @GetMapping("/arrendatarios")
     public ResponseEntity<?> obtenerArrendatarios() {
         try {
-            return ResponseEntity.ok(usuarioService.obtenerArrendatarios());
+            List<UsuarioEntity> arrendatarios = usuarioService.obtenerArrendatarios();
+            List<UsuarioPruebaDTO> arrendatariosDTO = arrendatarios.stream()
+                    .map(this::toUsuarioPruebaDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(arrendatariosDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(e.getMessage());
@@ -173,5 +194,8 @@ public class UsuarioController {
             return ResponseEntity.badRequest()
                 .body(e.getMessage());
         }
+    }
+    public UsuarioPruebaDTO toUsuarioPruebaDTO(UsuarioEntity usuarioEntity){
+        return modelMapper.map(usuarioEntity, UsuarioPruebaDTO.class);
     }
 }
