@@ -158,3 +158,18 @@ INSERT INTO valoraciones (puntuacion, comentario, usuario_id, vehiculo_id)
 VALUES (5, 'Excelente SUV, muy espacioso', 9, 8);
 INSERT INTO valoraciones (puntuacion, comentario, usuario_id, vehiculo_id)
 VALUES (4, 'Buen rendimiento en carretera', 10, 9);
+
+-- Mantenimientos
+INSERT INTO mantenimientos (vehiculo_id, fecha_programada, fecha_realizada, tipo_mantenimiento, descripcion, estado, costo, tecnico_id)
+VALUES
+    -- TOYOTA COROLLA (ABCD01) - ID 2
+    (2, '2024-12-15 10:00:00', '2024-12-15 11:30:00', 'PREVENTIVO', 'Cambio de aceite y filtros', 'COMPLETADO', 45000.00, 3),
+
+    -- VOLKSWAGEN GOLF (FFRS66) - ID 7
+    (7, '2024-12-05 11:00:00', '2024-12-05 14:00:00', 'CORRECTIVO', 'Reparación sistema eléctrico', 'COMPLETADO', 21000.00, 7),
+
+    -- FORD ESCAPE (IIXY99) - ID 10
+    (10, '2024-12-10 13:00:00', '2024-12-10 17:00:00', 'CORRECTIVO', 'Cambio de bomba de agua', 'COMPLETADO', 20000.00, 11),
+
+    -- CHEVROLET SAIL (KKCD22) - ID 12
+    (12, '2024-12-05 09:00:00', '2024-12-05 09:00:00', 'PREVENTIVO', 'Mantenimiento 15,000 km', 'COMPLETADO', 35000.00, 7)

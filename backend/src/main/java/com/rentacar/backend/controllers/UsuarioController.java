@@ -4,7 +4,6 @@ import com.rentacar.backend.dto.UsuarioDTO;
 import com.rentacar.backend.dto.UsuarioPruebaDTO;
 import com.rentacar.backend.dto.UsuarioLoginDTO;
 import com.rentacar.backend.dto.UsuarioRegistroDTO;
-import com.rentacar.backend.dto.UsuarioRespuestaDTO;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
 import com.rentacar.backend.services.SucursalService;
@@ -175,7 +174,7 @@ public class UsuarioController {
                 }
                 // si llegamos aqui todo ok
                 //return ResponseEntity.ok(user);
-                UsuarioRespuestaDTO respuesta = new UsuarioRespuestaDTO();
+                UsuarioPruebaDTO respuesta = new UsuarioPruebaDTO();
                 respuesta.setId(user.getId());
                 respuesta.setNombre(user.getNombre());
                 respuesta.setApellido(user.getApellido());

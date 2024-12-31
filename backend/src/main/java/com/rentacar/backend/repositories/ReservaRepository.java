@@ -38,4 +38,10 @@ public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
     );
 
     List<ReservaEntity> findByVehiculoAndEstado(VehiculoEntity vehiculo, ReservaEntity.EstadoReserva estado);
+
+    List<ReservaEntity> findByFechaInicioBetweenAndEstadoIn(
+            LocalDateTime fechaInicio,
+            LocalDateTime fechaFin,
+            List<ReservaEntity.EstadoReserva> estados
+    );
 }

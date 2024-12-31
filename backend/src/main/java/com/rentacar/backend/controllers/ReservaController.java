@@ -140,9 +140,12 @@ public class ReservaController {
     }
 
     @GetMapping("/reporte")
-    public ResponseEntity<byte[]> generarReporteVentas() {
+    public ResponseEntity<byte[]> generarReporteVentas(
+            @RequestParam String fechaInicio,
+            @RequestParam String fechaFin
+    ) {
         try {
-            byte[] report = reservaService.generarReporteVentasPDF();
+            byte[] report = reservaService.generarReporteVentasPDF(fechaInicio, fechaFin);
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_PDF);
             headers.setContentDispositionFormData("filename", "reporte-ventas.pdf");

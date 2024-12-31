@@ -25,4 +25,5 @@ public class ReservaDTO {
     private SucursalDTO sucursal;
     // Maybe, sucursalDevolucion
     //private SucursalDTO sucursalDevolucion
+    private Long id;
 }
