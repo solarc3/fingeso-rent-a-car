@@ -115,11 +115,11 @@ public class VehiculoController {
         }
     }
 
-    @PostMapping("/{id}/falla")
-    public ResponseEntity<VehiculoDTO> reportarFalla(@PathVariable Long id, @RequestBody FallaVehiculoDTO dto) {
+    @PostMapping("/falla")
+    public ResponseEntity<VehiculoDTO> reportarFalla(@RequestBody FallaVehiculoDTO dto) {
         try {
             FallaVehiculoEntity falla = modelMapper.map(dto, FallaVehiculoEntity.class);
-            VehiculoEntity vehiculo = vehiculoService.reportarFalla(id, falla);
+            VehiculoEntity vehiculo = vehiculoService.reportarFalla(dto.getVehiculoId(), falla);
             return ResponseEntity.ok(modelMapper.map(vehiculo, VehiculoDTO.class));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
