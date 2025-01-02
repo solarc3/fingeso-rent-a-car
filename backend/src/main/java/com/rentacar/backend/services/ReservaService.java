@@ -99,7 +99,7 @@ public class ReservaService {
 
         // Actualizar estado del vehiculo
         VehiculoEntity vehiculo = reserva.getVehiculo();
-        vehiculo.setEstado(EstadoVehiculo.ARRENDADO);
+        //vehiculo.setEstado(EstadoVehiculo.ARRENDADO);
         vehiculoRepository.save(vehiculo);
 
         return reservaRepository.save(reserva);
