@@ -121,6 +121,7 @@ public class ReservaService {
         List<ReservaEntity> reservasExistentes = reservaRepository.findByVehiculoAndFechasSuperpuestas(
             vehiculoId, fechaInicio, fechaFin
                                                                                                       );
+        
         return reservasExistentes.isEmpty();
     }
 

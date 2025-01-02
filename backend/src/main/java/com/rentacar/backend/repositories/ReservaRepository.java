@@ -30,7 +30,9 @@ public interface ReservaRepository extends JpaRepository<ReservaEntity, Long> {
 
     @Query("SELECT r FROM ReservaEntity r WHERE r.vehiculo.id = :vehiculoId " +
             "AND ((r.fechaInicio BETWEEN :fechaInicio AND :fechaFin) OR " +
-            "(r.fechaFin BETWEEN :fechaInicio AND :fechaFin))")
+            "(r.fechaFin BETWEEN :fechaInicio AND :fechaFin)" +
+            "OR (:fechaInicio BETWEEN r.fechaInicio AND r.fechaFin)"  +
+            "OR (:fechaFin BETWEEN r.fechaInicio AND r.fechaFin))" )
     List<ReservaEntity> findByVehiculoAndFechasSuperpuestas(
             Long vehiculoId,
             LocalDateTime fechaInicio,
