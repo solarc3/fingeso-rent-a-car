@@ -1,4 +1,5 @@
 package com.rentacar.backend.dto;
+
 import com.rentacar.backend.entities.ReservaEntity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -8,7 +9,8 @@ import java.time.LocalDateTime;
 
 @Data
 @NoArgsConstructor
-public class ReservaPorVehiculoDTO {
+public class ReservaSimpleDTO {
+    private Long id;
     // Fechas
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
@@ -16,12 +18,4 @@ public class ReservaPorVehiculoDTO {
     private BigDecimal costo;
     // Maybe
     private ReservaEntity.EstadoReserva estado;
-    // Si o si
-    private UsuarioReservaDTO usuario;
-    //private UsuarioDTO usuario; //Falla de seguridad, porque usuarioDTO contiene contraseña
-    private VehiculoDTO vehiculo;
-    private SucursalDTO sucursal;
-    // Maybe, sucursalDevolucion
-    //private SucursalDTO sucursalDevolucion
-    private Long id;
 }

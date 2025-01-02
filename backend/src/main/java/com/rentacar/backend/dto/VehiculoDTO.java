@@ -4,6 +4,7 @@ import com.rentacar.backend.dto.SucursalDTO;
 import com.rentacar.backend.entities.VehiculoEntity;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import java.util.List;
 
 import java.math.BigDecimal;
 
@@ -19,5 +20,6 @@ public class VehiculoDTO {
     private Integer anio;
     private VehiculoEntity.EstadoVehiculo estado;
     private SucursalDTO sucursal;
+    private List<ReservaSimpleDTO> reservas;
 }
 

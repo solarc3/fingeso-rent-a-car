@@ -1,9 +1,11 @@
 package com.rentacar.backend.controllers;
 
+import com.rentacar.backend.dto.ReservaSimpleDTO;
 import com.rentacar.backend.entities.FallaVehiculoEntity;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.repositories.VehiculoRepository;
+import com.rentacar.backend.services.ReservaService;
 import com.rentacar.backend.services.SucursalService;
 import com.rentacar.backend.services.VehiculoService;
 import com.rentacar.backend.dto.VehiculoDTO;
@@ -31,12 +33,14 @@ public class VehiculoController {
     private final VehiculoService vehiculoService;
     private final SucursalService sucursalService;
     private final ModelMapper modelMapper;
+    private final ReservaService reservaService;
 
     @Autowired
-    public VehiculoController(VehiculoService vehiculoService, SucursalService sucursalService, ModelMapper modelMapper) {
+    public VehiculoController(VehiculoService vehiculoService, SucursalService sucursalService, ModelMapper modelMapper, ReservaService reservaService) {
         this.vehiculoService = vehiculoService;
         this.sucursalService = sucursalService;
         this.modelMapper = modelMapper;
+        this.reservaService = reservaService;
     }
 
     @PostMapping("/crear")
@@ -134,6 +138,14 @@ public class VehiculoController {
         // Buscar la sucursal a la que pertenece para setear el atributo en el dto
         vehiculoDTO.setSucursal(modelMapper.map(sucursalService.encontrarSucursal(vehiculo),
                 SucursalDTO.class));
+
+        // Buscar reservas del vehiculo XDXDXDXDmellamo felipe y soy autista
+        List<ReservaSimpleDTO> reservasDto = reservaService.obtenerReservasDeVehiculo(vehiculo)
+                .stream()
+                .map(r -> modelMapper.map(r, ReservaSimpleDTO.class))
+                .toList();
+
+        vehiculoDTO.setReservas(reservasDto);
         return vehiculoDTO;
     }
 }
