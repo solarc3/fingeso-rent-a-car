@@ -139,7 +139,6 @@ public class VehiculoController {
         vehiculoDTO.setSucursal(modelMapper.map(sucursalService.encontrarSucursal(vehiculo),
                 SucursalDTO.class));
 
-        // Buscar reservas del vehiculo XDXDXDXDmellamo felipe y soy autista
         List<ReservaSimpleDTO> reservasDto = reservaService.obtenerReservasDeVehiculo(vehiculo)
                 .stream()
                 .map(r -> modelMapper.map(r, ReservaSimpleDTO.class))
