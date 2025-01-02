@@ -11,6 +11,11 @@ import com.rentacar.backend.services.UsuarioService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.modelmapper.ModelMapper;
@@ -27,12 +32,13 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
     private final SucursalService sucursalService;
     private final ModelMapper modelMapper;
-
+    private final AuthenticationManager authenticationManager;
     @Autowired
-    public UsuarioController(UsuarioService usuarioService, SucursalService sucursalService,ModelMapper modelMapper) {
+    public UsuarioController(UsuarioService usuarioService, SucursalService sucursalService, ModelMapper modelMapper, AuthenticationManager authenticationManager) {
         this.usuarioService = usuarioService;
         this.sucursalService = sucursalService;
         this.modelMapper = modelMapper;
+        this.authenticationManager = authenticationManager;
     }
 
     @PutMapping("/{id}/sucursal")
@@ -153,45 +159,25 @@ public class UsuarioController {
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody UsuarioLoginDTO credentials) {
         try {
-            String rut = credentials.getRut();
-            String password = credentials.getPassword();
-            String rol = String.valueOf(credentials.getRol());
-
-            if (rut == null || password == null || rol == null) {
-                return ResponseEntity.badRequest()
-                    .body("RUT, contraseña y rol son requeridos");
-            }
-
-            Optional<UsuarioEntity> usuario = usuarioService.validarCredenciales(rut, password, rol);
-
-            if (usuario.isPresent()) {
-                UsuarioEntity user = usuario.get();
-
-                // check lista negra
-                if (user.isEstaEnListaNegra()) {
-                    return ResponseEntity.status(HttpStatus.FORBIDDEN)
-                        .body("Usuario en lista negra");
-                }
-                // si llegamos aqui todo ok
-                //return ResponseEntity.ok(user);
-                UsuarioPruebaDTO respuesta = new UsuarioPruebaDTO();
-                respuesta.setId(user.getId());
-                respuesta.setNombre(user.getNombre());
-                respuesta.setApellido(user.getApellido());
-                respuesta.setRut(user.getRut());
-                respuesta.setRol(user.getRol().name());
-
-                return ResponseEntity.ok(respuesta);
-
-            } else {
+            Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                    credentials.getRut(),
+                    credentials.getPassword()
+                ));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            UsuarioEntity usuario = (UsuarioEntity) authentication.getPrincipal();
+            if (!usuario.getRol().name().equals(credentials.getRol().name())) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Credenciales invalidas");
+                    .body("Rol no autorizado");
             }
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body("Error de validacion: " + e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            if (!usuario.isAccountNonLocked()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body("Usuario en lista negra");
+            }
+            return ResponseEntity.ok(usuario);
+        } catch (AuthenticationException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body("Credenciales inválidas");
         }
     }
     public UsuarioPruebaDTO toUsuarioPruebaDTO(UsuarioEntity usuarioEntity){

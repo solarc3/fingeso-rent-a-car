@@ -6,7 +6,12 @@ import com.rentacar.backend.repositories.ReservaRepository;
 import com.rentacar.backend.repositories.SucursalRepository;
 import com.rentacar.backend.repositories.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -14,17 +19,20 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
-public class UsuarioService {
+@Transactional
+public class UsuarioService implements UserDetailsService {
 
     private final UsuarioRepository usuarioRepository;
     private final ReservaRepository reservaRepository;
     private final SucursalRepository sucursalRepository;
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UsuarioService(UsuarioRepository usuarioRepository, ReservaRepository reservaRepository, SucursalRepository sucursalRepository) {
+    public UsuarioService(UsuarioRepository usuarioRepository, ReservaRepository reservaRepository, SucursalRepository sucursalRepository, PasswordEncoder passwordEncoder) {
         this.usuarioRepository = usuarioRepository;
         this.reservaRepository = reservaRepository;
         this.sucursalRepository = sucursalRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UsuarioEntity obtenerUsuarioPorId(Long id) {
@@ -33,28 +41,6 @@ public class UsuarioService {
         return usuario.get();
     }
 
-    //Crear nuevo usuario
-    public UsuarioEntity crearUsuario(String rut, String nombre, String apellido,
-                                      String password, UsuarioEntity.RolUsuario rol) {
-        if (usuarioRepository.findByRut(rut)
-            .isPresent()) {
-            throw new RuntimeException("Ya existe un usuario con RUT " + rut);
-        }
-
-        if (password == null || password.trim()
-            .isEmpty()) {
-            throw new RuntimeException("La contraseña no puede estar vacía");
-        }
-        UsuarioEntity usuario = new UsuarioEntity();
-        usuario.setRut(rut);
-        usuario.setNombre(nombre);
-        usuario.setApellido(apellido);
-        usuario.setPassword(password);
-        usuario.setEstaEnListaNegra(false);
-        usuario.setRol(rol);
-
-        return usuarioRepository.save(usuario);
-    }
 
     // Actualizar usuario que ya existe, por id
     public UsuarioEntity actualizarUsuario(Long id, UsuarioDTO usuarioDTO) {
@@ -152,18 +138,44 @@ public class UsuarioService {
         return usuarioRepository.findBysoftDelete(false);
     }
 
+    @Override
+    public UserDetails loadUserByUsername(String rut)
+        throws UsernameNotFoundException {
+        return usuarioRepository.findByRut(rut)
+            .orElseThrow(() ->
+                             new UsernameNotFoundException("Usuario no encontrado"));
+    }
 
-    public Optional<UsuarioEntity> validarCredenciales(String rut, String password, String rol) {
+    public UsuarioEntity crearUsuario(String rut, String nombre,
+                                      String apellido, String password, UsuarioEntity.RolUsuario rol) {
+        if (usuarioRepository.findByRut(rut).isPresent()) {
+            throw new RuntimeException("Usuario ya existe");
+        }
+
+        UsuarioEntity usuario = new UsuarioEntity();
+        usuario.setRut(rut);
+        usuario.setNombre(nombre);
+        usuario.setApellido(apellido);
+        usuario.setPassword(passwordEncoder.encode(password));
+        usuario.setRol(rol);
+        return usuarioRepository.save(usuario);
+    }
+
+    public Optional<UsuarioEntity> validarCredenciales(
+        String rut, String password, String rol) {
         Optional<UsuarioEntity> usuario = usuarioRepository.findByRut(rut);
-        //pasar el rol de string a enum
-        UsuarioEntity.RolUsuario rolUsuario = UsuarioEntity.RolUsuario.valueOf(rol);
-        if (usuario.isPresent() && usuario.get()
-            .getPassword()
-            .equals(password) && usuario.get()
-                                     .getRol() == rolUsuario && !usuario.get().isSoftDelete()) {
+
+        if (usuario.isPresent() &&
+            passwordEncoder.matches(password, usuario.get().getPassword()) &&
+            usuario.get().getRol().name().equals(rol) &&
+            !usuario.get().isSoftDelete()) {
             return usuario;
         }
 
         return Optional.empty();
     }
 }
+
+
+
+

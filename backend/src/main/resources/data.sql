@@ -88,43 +88,43 @@ VALUES
 ('PEUGEOT', 'EXPERT', 'MVAR', 'UUVW37', 2023, 145000.00, 3, true, 'DISPONIBLE');
 -- Usuarios
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('21284189-7', 'Ignacio', 'Solar', 'admin123', false,  1, 'ADMINISTRADOR');
+VALUES ('21284189-7', 'Ignacio', 'Solar', '$2a$10$/ANXxrh1KBSPYrL3SjHJseOMiONY8WF2ZurMhER2X8xeZXzaONkcO', false,  1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('21461391-3', 'Felipe', 'Cubillos', 'admin123', false, 1, 'ADMINISTRADOR');
+VALUES ('21461391-3', 'Felipe', 'Cubillos', '$2a$10$/ANXxrh1KBSPYrL3SjHJseOMiONY8WF2ZurMhER2X8xeZXzaONkcO', false, 1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('14353454-5', 'Diego', 'Gomez', 'worker123', false, 1, 'TRABAJADOR');
+VALUES ('14353454-5', 'Diego', 'Gomez', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false, 1, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('00000000-0', 'Felipe', 'Cubillos', 'client123', true,  null, 'ARRENDATARIO');
+VALUES ('00000000-0', 'Felipe', 'Cubillos', '$2a$10$wSgSKKEQGpPwgoc2P/LWgehbCsBRI1RPTtrqhultyfx54fKazHa76', true,  null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('15789456-0', 'Ana', 'Martinez', 'worker123', false, 2, 'TRABAJADOR');
+VALUES ('15789456-0', 'Ana', 'Martinez', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false, 2, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('16852147-2', 'Carlos', 'Rodriguez', 'client123', false,  null, 'ARRENDATARIO');
+VALUES ('16852147-2', 'Carlos', 'Rodriguez', '$2a$10$wSgSKKEQGpPwgoc2P/LWgehbCsBRI1RPTtrqhultyfx54fKazHa76', false,  null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('17963258-6', 'Maria', 'López', 'worker123', false, 3, 'TRABAJADOR');
+VALUES ('17963258-6', 'Maria', 'López', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false, 3, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('18741852-6', 'Juan', 'Pérez', 'client123', true,  null, 'ARRENDATARIO');
+VALUES ('18741852-6', 'Juan', 'Pérez', '$2a$10$wSgSKKEQGpPwgoc2P/LWgehbCsBRI1RPTtrqhultyfx54fKazHa76', true,  null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('19852963-K', 'Patricia', 'González', 'worker123', false,  4, 'TRABAJADOR');
+VALUES ('19852963-K', 'Patricia', 'González', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false,  4, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('20147258-K', 'Roberto', 'Sánchez', 'client123', false, null, 'ARRENDATARIO');
+VALUES ('20147258-K', 'Roberto', 'Sánchez', '$2a$10$wSgSKKEQGpPwgoc2P/LWgehbCsBRI1RPTtrqhultyfx54fKazHa76', false, null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('21369852-4', 'Carmen', 'Muñoz', 'worker123', false,  5, 'TRABAJADOR');
+VALUES ('21369852-4', 'Carmen', 'Muñoz', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false,  5, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra, sucursal_id,rol)
-VALUES ('21480741-6', 'Tomas', 'Carcamo', 'contraseña', false, 1, 'ADMINISTRADOR');
+VALUES ('21480741-6', 'Tomas', 'Carcamo', '$2a$10$.kAinMfqSY8k.jBrUlthO.T8LPMAT6KZQDXvmrUZTEY6CsLDd0EWq', false, 1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra, sucursal_id,rol)
-VALUES ('20750423-8', 'Martin', 'Fuentes', 'admin123', false, 1, 'ADMINISTRADOR');
+VALUES ('20750423-8', 'Martin', 'Fuentes', '$2a$10$/ANXxrh1KBSPYrL3SjHJseOMiONY8WF2ZurMhER2X8xeZXzaONkcO', false, 1, 'ADMINISTRADOR');
 
 -- Reservas
 INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id, sucursal_devolucion_id)
