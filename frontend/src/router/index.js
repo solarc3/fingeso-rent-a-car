@@ -41,7 +41,7 @@ const routes = [
         children: [
           {
             path: 'usuarios',
-            //component: () => import('@/pages/admin/UserManagement.vue')
+            component: () => import('@/pages/admin/UserManagement.vue')
           },
           {
             path: 'vehiculos',
@@ -60,7 +60,7 @@ const routes = [
         children: [
           {
             path: 'reservas',
-            //component: () => import('@/pages/worker/ReservationManagement.vue')
+            component: () => import('@/pages/admin/VehicleManagement.vue')
           }
         ]
       },

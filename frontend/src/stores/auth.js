@@ -1,6 +1,7 @@
-import {defineStore} from 'pinia';
-import {useUsuarioService} from '@/services/UsuarioService';
-import router from '@/router'; // Importar router si no lo tienes ya
+import { defineStore } from 'pinia';
+import { useUsuarioService } from '@/services/UsuarioService';
+import router from '@/router';
+import { encrypt, decrypt } from '@/utils/crypto';
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -13,6 +14,7 @@ export const useAuthStore = defineStore('auth', {
     isWorker: (state) => state.user?.rol === 'TRABAJADOR',
     isRenter: (state) => state.user?.rol === 'ARRENDATARIO',
   },
+
   actions: {
     async login(rut, password, rol) {
       try {
@@ -28,55 +30,39 @@ export const useAuthStore = defineStore('auth', {
     setUser(user) {
       this.user = user;
       this.isAuthenticated = true;
-      sessionStorage.setItem('auth', JSON.stringify({
+      // Encriptar datos antes de guardar
+      const encryptedData = encrypt({
         user: this.user,
         isAuthenticated: true
-      }));
+      });
+      sessionStorage.setItem('auth', encryptedData);
     },
+
     clearAuth() {
       this.user = null;
       this.isAuthenticated = false;
       sessionStorage.removeItem('auth');
     },
+
     logout() {
-      // 1. Limpiar el estado de Pinia
       this.clearAuth();
       router.push('/');
-
-      // 2. Limpiar sessionStorage
-      //sessionStorage.clear(); // Limpia todo el sessionStorage
-      // O si prefieres ser más específico:
-      // sessionStorage.removeItem('auth');
-
-      // 3. Limpiar localStorage si tienes algo guardado ahí
-      // localStorage.clear();
-      // O específico:
-      // localStorage.removeItem('userPreferences');
-
-
-      // 5. Resetear otros stores si es necesario
-      // Ejemplo: resetear store de carrito de compras
-      // const cartStore = useCartStore();
-      // cartStore.$reset();
-
-      // 6. Redireccionar a la página de inicio
-      //router.push('/');
-
-      // 7. Opcional: Recargar la pagina para limpiar la memoria
-      //window.location.reload();
     },
 
     initializeAuth() {
       try {
-        const auth = sessionStorage.getItem('auth');
-        if (auth) {
-          const {user, isAuthenticated} = JSON.parse(auth);
-          this.user = user;
-          this.isAuthenticated = isAuthenticated;
+        const encryptedAuth = sessionStorage.getItem('auth');
+        if (encryptedAuth) {
+
+          const decryptedData = decrypt(encryptedAuth);
+          if (decryptedData) {
+            this.user = decryptedData.user;
+            this.isAuthenticated = decryptedData.isAuthenticated;
+          }
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-        this.logout(); // Si hay error, hacer logout por seguridad
+        this.logout();
       }
     }
   }

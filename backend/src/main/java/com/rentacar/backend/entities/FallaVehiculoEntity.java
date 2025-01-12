@@ -32,8 +32,6 @@ public class FallaVehiculoEntity {
     @ManyToOne
     @JoinColumn(name = "reportado_por_id")
     private UsuarioEntity reportadoPor;
-
-    // Campo adicional para simplificar la API
     @Transient
     private Long reportadoPorId;
 }

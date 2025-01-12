@@ -31,6 +31,7 @@ public class MantenimientoEntity {
     @Column(nullable = false)
     private String estado; // PENDIENTE, EN_PROCESO, COMPLETADO, CANCELADO
 
+    @Column(nullable = false)
     private Double costo;
 
     @ManyToOne

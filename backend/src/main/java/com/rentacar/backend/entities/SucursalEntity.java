@@ -31,15 +31,11 @@ public class SucursalEntity {
     @Column(nullable = false)
     private String email;
 
-    @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER, cascade = CascadeType.ALL)
-    @JsonIgnoreProperties({"sucursal", "valoraciones", "reservas"})
+    @OneToMany
+    @JoinColumn(name = "sucursal_id")
     private List<UsuarioEntity> empleados;
 
-    @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER)
-    @JsonIgnoreProperties({"sucursal", "valoraciones", "reservas"})
+    @OneToMany
+    @JoinColumn(name = "sucursal_id")
     private List<VehiculoEntity> vehiculos;
-
-    @OneToMany(mappedBy = "sucursal", fetch = FetchType.EAGER)
-    @JsonIgnoreProperties({"sucursal", "usuario", "vehiculo"})
-    private List<ReservaEntity> reservas;
 }

@@ -1,7 +1,8 @@
-import {defineStore} from 'pinia';
 import {useVehiculoService} from '@/services/VehiculoService';
-import {useMetadataStore} from "@/stores/metadata.js";
 import {useMantenimientoService} from "@/services/MantenimientoService.js";
+import {defineStore} from 'pinia';
+import {useSearchStore} from './search';
+import {watch} from 'vue';
 
 export const useVehicleStore = defineStore('vehicle', {
   state: () => ({
@@ -9,30 +10,82 @@ export const useVehicleStore = defineStore('vehicle', {
     filteredVehicles: [],
     loading: false,
     error: null,
-    filters: {
-      marca: null,
-      sucursal: null,
-      tipoVehiculo: null,
-      transmision: null,
-      precioMinimo: 50000,
-      precioMaximo: 250000,
-      ordenarPor: null,
-      disponibilidad: 'TODOS',
-      fechas: {
-        inicio: new Date().toISOString(),
-        fin: new Date(Date.now() + 86400000).toISOString() // mañana
-      }
-    }, estadosMap: {
+    estadosMap: {
       'DISPONIBLE': 'Disponible',
       'NO_DISPONIBLE': 'No Disponible',
       'EN_MANTENCION': 'En Mantención',
       'EN_REPARACION': 'En Reparación',
       'ARRENDADO': 'Arrendado'
-    },
+    }
 
   }),
 
   actions: {
+    setupFilterWatchers() {
+      const searchStore = useSearchStore();
+
+      watch(
+        () => searchStore.filters,
+        (newFilters) => {
+          this.applySearchFilters({
+            ...newFilters,
+            precioMinimo: newFilters.rangoPrecio[0],
+            precioMaximo: newFilters.rangoPrecio[1]
+          });
+        },
+        {deep: true, immediate: true}
+      );
+    },
+    applySearchFilters(searchData) {
+      this.filteredVehicles = this.vehicles.filter(vehiculo => {
+        // Verificar fechas y reservas
+        if (searchData.fechas?.inicio && searchData.fechas?.fin) {
+          const disponible = this.isVehicleAvailableInDateRange(
+            vehiculo,
+            searchData.fechas.inicio,
+            searchData.fechas.fin
+          );
+          if (!disponible) return false;
+        }
+
+        // Filtros básicos - solo aplicar si no son null
+        if (searchData.marca && vehiculo.marca.toLowerCase() !== searchData.marca.toLowerCase()) return false;
+        if (searchData.sucursal?.id && (!vehiculo.sucursal || vehiculo.sucursal.id !== searchData.sucursal.id)) return false;
+        if (searchData.transmision && vehiculo.acriss.charAt(2) !== searchData.transmision) return false;
+        if (searchData.tipoVehiculo && vehiculo.acriss.charAt(0) !== searchData.tipoVehiculo) return false;
+        if (searchData.estado === 'DISPONIBLES' && vehiculo.estado !== 'DISPONIBLE') return false;
+
+        // Rango de precio
+        const precio = Number(vehiculo.precioArriendo);
+        if (searchData.rangoPrecio && Array.isArray(searchData.rangoPrecio)) {
+          if (precio < searchData.rangoPrecio[0] || precio > searchData.rangoPrecio[1]) return false;
+        }
+
+        return true;
+      });
+
+      // Aplicar ordenamiento si existe
+      if (searchData.ordenarPor) {
+        this.applySort(searchData.ordenarPor);
+      }
+    },
+
+    applySort(ordenarPor) {
+      switch (ordenarPor) {
+        case 'PRECIO_ASC':
+          this.filteredVehicles.sort((a, b) => Number(a.precioArriendo) - Number(b.precioArriendo));
+          break;
+        case 'PRECIO_DESC':
+          this.filteredVehicles.sort((a, b) => Number(b.precioArriendo) - Number(a.precioArriendo));
+          break;
+        case 'MARCA_ASC':
+          this.filteredVehicles.sort((a, b) => a.marca.localeCompare(b.marca));
+          break;
+        case 'MARCA_DESC':
+          this.filteredVehicles.sort((a, b) => b.marca.localeCompare(a.marca));
+          break;
+      }
+    },
     async getVehicleById(id) {
       if (this.vehicles.length === 0) {
         await this.fetchVehicles();
@@ -78,165 +131,6 @@ export const useVehicleStore = defineStore('vehicle', {
       }
     },
 
-    setFilters(filters) {
-      console.log('Setting filters:', filters);
-      this.filters = {
-        ...this.filters,
-        marca: filters.marca,
-        sucursal: filters.sucursal,
-        tipoVehiculo: filters.tipoVehiculo,
-        transmision: filters.transmision,
-        precioMinimo: filters.precioMinimo,
-        precioMaximo: filters.precioMaximo,
-        ordenarPor: filters.ordenarPor,
-        disponibilidad: filters.disponibilidad,
-        fechas: filters.fechas ? {
-          inicio: filters.fechas.inicio,
-          fin: filters.fechas.fin
-        } : null
-      };
-      this.applyFilters();
-    },
-
-    applyFilters() {
-      console.log('Applying filters with:', this.filters);
-
-      this.filteredVehicles = this.vehicles.filter(vehiculo => {
-        if (this.filters.fechas?.inicio && this.filters.fechas?.fin) {
-          const fechaInicio = new Date(this.filters.fechas.inicio);
-          const fechaFin = new Date(this.filters.fechas.fin);
-
-          // Verificar si hay reservas que se solapen
-          const tieneReservasSolapadas = vehiculo.reservas?.some(reserva => {
-            if (!['CONFIRMADA', 'EN_PROGRESO'].includes(reserva.estado)) {
-              return false;
-            }
-
-            const reservaInicio = new Date(reserva.fechaInicio);
-            const reservaFin = new Date(reserva.fechaFin);
-
-            return fechaInicio < reservaFin && reservaInicio < fechaFin;
-          });
-
-          if (tieneReservasSolapadas) {
-            return false;
-          }
-        }
-        // Si el filtro es solo DISPONIBLES
-        if (this.filters.disponibilidad === 'DISPONIBLES') {
-          // Verificar disponibilidad actual
-          if (vehiculo.estado !== 'DISPONIBLE') {
-            return false;
-          }
-
-          // Si hay fechas especificadas, verificar disponibilidad en ese rango
-          if (this.filters.fechas) {
-            const disponible = this.isVehicleAvailableInDateRange(
-              vehiculo,
-              this.filters.fechas.inicio,
-              this.filters.fechas.fin
-            );
-            if (!disponible) return false;
-          }
-        } else {
-          // Si es TODOS, aun asi excluimos los que están en mantencion o reparacion
-          if (['EN_MANTENCION', 'EN_REPARACION'].includes(vehiculo.estado)) {
-            return false;
-          }
-        }
-
-        // Filtro por marca
-        if (this.filters.marca &&
-          vehiculo.marca.toLowerCase() !== this.filters.marca.toLowerCase()) {
-          return false;
-        }
-
-        // Filtro por sucursal
-        if (this.filters.sucursal &&
-          (!vehiculo.sucursal || vehiculo.sucursal.id !== this.filters.sucursal.id)) {
-          return false;
-        }
-
-        // Filtro por tipo de transmision
-        if (this.filters.transmision) {
-          const transmision = vehiculo.acriss.charAt(2);
-          if (transmision !== this.filters.transmision) {
-            return false;
-          }
-        }
-
-        // Filtro por tipo de vehiculo
-        if (this.filters.tipoVehiculo) {
-          const tipoVehiculo = vehiculo.acriss.charAt(0);
-          if (tipoVehiculo !== this.filters.tipoVehiculo) {
-            return false;
-          }
-        }
-
-        // Filtro por rango de precio
-        const precio = Number(vehiculo.precioArriendo);
-        if (precio < this.filters.precioMinimo || precio > this.filters.precioMaximo) {
-          return false;
-        }
-
-        // Verificar disponibilidad por fechas si están especificadas
-        if (this.filters.fechas && this.filters.fechas.inicio && this.filters.fechas.fin) {
-          const fechaInicio = new Date(this.filters.fechas.inicio);
-          const fechaFin = new Date(this.filters.fechas.fin);
-          const ahora = new Date();
-
-          // Verificar que las fechas sean futuras
-          if (fechaInicio < ahora) {
-            return false;
-          }
-
-          // Verificar si hay reservas que se solapen
-          if (vehiculo.reservas && Array.isArray(vehiculo.reservas)) {
-            const tieneReservasSolapadas = vehiculo.reservas.some(reserva => {
-              // Solo considerar reservas confirmadas o en progreso
-              if (!['CONFIRMADA', 'EN_PROGRESO'].includes(reserva.estado)) {
-                return false;
-              }
-
-              const reservaInicio = new Date(reserva.fechaInicio);
-              const reservaFin = new Date(reserva.fechaFin);
-
-              return (fechaInicio < reservaFin && reservaInicio < fechaFin);
-            });
-
-            if (tieneReservasSolapadas) {
-              return false;
-            }
-          }
-        }
-
-        return true;
-      });
-
-      // Aplicar ordenamiento
-      if (this.filters.ordenarPor) {
-        switch (this.filters.ordenarPor.valor) {
-          case 'PRECIO_ASC':
-            this.filteredVehicles.sort((a, b) => a.precioArriendo - b.precioArriendo);
-            break;
-          case 'PRECIO_DESC':
-            this.filteredVehicles.sort((a, b) => b.precioArriendo - a.precioArriendo);
-            break;
-          case 'MARCA_ASC':
-            this.filteredVehicles.sort((a, b) => a.marca.localeCompare(b.marca));
-            break;
-          case 'MARCA_DESC':
-            this.filteredVehicles.sort((a, b) => b.marca.localeCompare(a.marca));
-            break;
-        }
-      }
-
-      console.log('Vehículos filtrados:', this.filteredVehicles);
-    },
-    updateFilter(filterName, value) {
-      this.filters[filterName] = value;
-      this.applyFilters();
-    },
     isVehicleAvailableInDateRange(vehiculo, fechaInicio, fechaFin) {
       if (!vehiculo.reservas || !Array.isArray(vehiculo.reservas)) {
         return true;
@@ -254,34 +148,6 @@ export const useVehicleStore = defineStore('vehicle', {
 
         return inicio < reservaFin && reservaInicio < fin;
       });
-    },
-    clearFilters() {
-      const metadataStore = useMetadataStore();
-
-      // Crear fechas por defecto
-      const fechaRetiro = new Date();
-      const fechaDevolucion = new Date();
-      fechaDevolucion.setDate(fechaDevolucion.getDate() + 1); // Mañana
-
-      this.filters = {
-        marca: null,
-        sucursal: null,
-        tipoVehiculo: null,
-        transmision: null,
-        precioMinimo: metadataStore.precioMinimo,
-        precioMaximo: metadataStore.precioMaximo,
-        ordenarPor: null,
-        disponibilidad: 'TODOS',
-        fechas: {
-          inicio: fechaRetiro.toISOString(),
-          fin: fechaDevolucion.toISOString()
-        }
-      };
-
-      this.filteredVehicles = this.vehicles.filter(vehiculo =>
-        vehiculo.estado !== 'EN_MANTENCION' &&
-        vehiculo.estado !== 'EN_REPARACION'
-      );
     },
     async createVehicle(vehicleData) {
       this.loading = true;

@@ -1,11 +1,19 @@
 package com.rentacar.backend.controllers;
 
+import com.rentacar.backend.dto.ReservaSimpleDTO;
 import com.rentacar.backend.entities.FallaVehiculoEntity;
 import com.rentacar.backend.entities.SucursalEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.repositories.VehiculoRepository;
+import com.rentacar.backend.services.ReservaService;
 import com.rentacar.backend.services.SucursalService;
 import com.rentacar.backend.services.VehiculoService;
+import com.rentacar.backend.dto.VehiculoDTO;
+import com.rentacar.backend.dto.FallaVehiculoDTO;
+import com.rentacar.backend.dto.SucursalDTO;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -17,88 +25,67 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/vehiculo")
 public class VehiculoController {
     private final VehiculoService vehiculoService;
     private final SucursalService sucursalService;
-    private final VehiculoRepository vehiculoRepository;
+    private final ModelMapper modelMapper;
+    private final ReservaService reservaService;
 
     @Autowired
-    public VehiculoController(VehiculoService vehiculoService, SucursalService sucursalService, VehiculoRepository vehiculoRepository) {
+    public VehiculoController(VehiculoService vehiculoService, SucursalService sucursalService, ModelMapper modelMapper, ReservaService reservaService) {
         this.vehiculoService = vehiculoService;
         this.sucursalService = sucursalService;
-        this.vehiculoRepository = vehiculoRepository;
+        this.modelMapper = modelMapper;
+        this.reservaService = reservaService;
     }
 
     @PostMapping("/crear")
-    public ResponseEntity<?> crearVehiculo(@RequestBody Map<String, Object> vehiculoData) {
+    public ResponseEntity<VehiculoDTO> crearVehiculo(@RequestBody VehiculoDTO dto) {
         try {
-            Long sucursalId;
-            if (vehiculoData.get("sucursal") instanceof Number) {
-                sucursalId = ((Number) vehiculoData.get("sucursal")).longValue();
-            } else if (vehiculoData.get("sucursal") instanceof Map) {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> sucursalMap = (Map<String, Object>) vehiculoData.get("sucursal");
-                sucursalId = ((Number) sucursalMap.get("id")).longValue();
-            } else {
-                throw new IllegalArgumentException("Formato de sucursal inválido");
-            }
+            VehiculoEntity vehiculo = vehiculoService.crearVehiculo(
+                dto.getMarca(),
+                dto.getModelo(),
+                dto.getAcriss(),
+                dto.getPatente(),
+                dto.getPrecioArriendo(),
+                dto.getAnio(),
+                dto.getEstado());
 
-            VehiculoEntity nuevoVehiculo = vehiculoService.crearVehiculo(
-                (String) vehiculoData.get("marca"),
-                (String) vehiculoData.get("modelo"),
-                (String) vehiculoData.get("acriss"),
-                (String) vehiculoData.get("patente"),
-                new BigDecimal(vehiculoData.get("precioArriendo")
-                                   .toString()),
-                (Integer) vehiculoData.get("anio"),
-                VehiculoEntity.EstadoVehiculo.valueOf((String) vehiculoData.get("estado")),
-                sucursalId
-                                                                        );
-
-            return ResponseEntity.ok(nuevoVehiculo);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest()
-                .body(e.getMessage());
+            sucursalService.agregarVehiculo(vehiculo.getId(), dto.getSucursal().getId());
+            return ResponseEntity.ok(modelMapper.map(vehiculo, VehiculoDTO.class));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body("Error al crear el vehículo: " + e.getMessage());
+            return ResponseEntity.badRequest()
+                .build();
         }
     }
 
-
     @GetMapping("/listing")
-    public ResponseEntity<List<VehiculoEntity>> obtenerVehiculos() {
-        List<VehiculoEntity> vehiculos = vehiculoRepository.findAllWithSucursales();
-
-        vehiculos.forEach(v -> {
-            if (v.getSucursal() != null) {
-                v.getSucursal()
-                    .getId();
-                v.getSucursal()
-                    .getNombre();
-            }
-        });
-
-        return ResponseEntity.ok(vehiculos);
+    public ResponseEntity<List<VehiculoDTO>> listarVehiculos() {
+        List<VehiculoEntity> vehiculos = vehiculoService.obtenerTodos();
+        List<VehiculoDTO> vehiculosDTO = vehiculos.stream()
+            .map(this::toDTO)
+            .collect(Collectors.toList());
+        return ResponseEntity.ok(vehiculosDTO);
     }
 
-
     @GetMapping("/listing/enSucursal")
-    public ResponseEntity<List<VehiculoEntity>> obtenerVehiculosDisponiblesEnSucursal(@RequestParam Long id) {
+    public ResponseEntity<List<VehiculoDTO>> obtenerVehiculosDisponiblesEnSucursal(@RequestParam Long id) {
         try {
             SucursalEntity sucursal = sucursalService.obtenerSucursalPorId(id);
-            List<VehiculoEntity> vSucursal = vehiculoService.obtenerVehiculosPorSucursal(sucursal);
-
-            // filtrar vehiculos disponibles
-            List<VehiculoEntity> vSucursalDisp = vSucursal.stream()
+            List<VehiculoEntity> vehiculos = vehiculoService.obtenerVehiculosPorSucursal(sucursal)
+                .stream()
                 .filter(v -> v.getEstado() == VehiculoEntity.EstadoVehiculo.DISPONIBLE)
                 .toList();
 
-            return ResponseEntity.ok()
-                .body(vSucursalDisp);
+            List<VehiculoDTO> vehiculosDTO = vehiculos.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+
+            return ResponseEntity.ok(vehiculosDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .build();
@@ -110,71 +97,58 @@ public class VehiculoController {
         try {
             vehiculoService.eliminarVehiculoPorId(id);
             return ResponseEntity.ok()
-                .body("Vehiculo eliminado correctamente");
+                .body("Vehículo eliminado correctamente");
         } catch (Exception e) {
             return ResponseEntity.badRequest()
                 .body(e.getMessage());
         }
     }
 
-    // actualizar precio y estado, los dos unicos atributos variables en el tiempo
     @PutMapping("/actualizar")
-    public ResponseEntity<?> actualizarVehiculo(@RequestBody VehiculoEntity vehiculo) {
+    public ResponseEntity<VehiculoDTO> actualizarVehiculo(@RequestBody VehiculoDTO dto) {
         try {
-            vehiculoService.actualizarPrecioArriendoVehiculoPorId(vehiculo.getId(),
-                                                                  vehiculo.getPrecioArriendo());
-            VehiculoEntity v = vehiculoService.actualizarEstadoVehiculoPorId(vehiculo.getId(),
-                                                                             String.valueOf(vehiculo.getEstado()));
-            return ResponseEntity.ok()
-                .body(v);
-        } catch (Exception e) {
-            return ResponseEntity.badRequest()
-                .body(vehiculo);
-        }
-    }
+            VehiculoEntity vehiculo = vehiculoService.obtenerVehiculoPorId(dto.getId());
+            vehiculo.setPrecioArriendo(dto.getPrecioArriendo());
+            vehiculo.setEstado(dto.getEstado());
 
-    @PostMapping("/{id}/falla")
-    public ResponseEntity<?> reportarFalla(@PathVariable Long id, @RequestBody FallaVehiculoEntity falla) {
-        try {
-            VehiculoEntity vehiculo = vehiculoService.reportarFalla(id, falla);
-            return ResponseEntity.ok(vehiculo);
+            VehiculoEntity vehiculoActualizado = vehiculoService.actualizarVehiculo(vehiculo);
+            return ResponseEntity.ok(modelMapper.map(vehiculoActualizado, VehiculoDTO.class));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body(e.getMessage());
+                .build();
         }
     }
 
     @PostMapping("/falla")
-    public ResponseEntity<?> reportarFalla(@RequestBody Map<String, Object> fallaData) {
+    public ResponseEntity<VehiculoDTO> reportarFalla(@RequestBody FallaVehiculoDTO dto) {
         try {
-            if (!fallaData.containsKey("vehiculoId") ||
-                !fallaData.containsKey("tipo") ||
-                !fallaData.containsKey("severidad") ||
-                !fallaData.containsKey("descripcion") ||
-                !fallaData.containsKey("reportadoPorId")) {
-                return ResponseEntity.badRequest()
-                    .body("Faltan campos requeridos");
-            }
-
-            Long vehiculoId = Long.parseLong(fallaData.get("vehiculoId")
-                                                 .toString());
-
-            FallaVehiculoEntity falla = new FallaVehiculoEntity();
-            falla.setTipo(fallaData.get("tipo")
-                              .toString());
-            falla.setSeveridad(fallaData.get("severidad")
-                                   .toString());
-            falla.setDescripcion(fallaData.get("descripcion")
-                                     .toString());
-            falla.setReportadoPorId(Long.parseLong(fallaData.get("reportadoPorId")
-                                                       .toString()));
-
-            VehiculoEntity vehiculo = vehiculoService.reportarFalla(vehiculoId, falla);
-            return ResponseEntity.ok(vehiculo);
+            FallaVehiculoEntity falla = modelMapper.map(dto, FallaVehiculoEntity.class);
+            VehiculoEntity vehiculo = vehiculoService.reportarFalla(dto.getVehiculoId(), falla);
+            return ResponseEntity.ok(modelMapper.map(vehiculo, VehiculoDTO.class));
         } catch (Exception e) {
             return ResponseEntity.badRequest()
-                .body("Error: " + e.getMessage());
+                .build();
         }
     }
+
+    // Convertir Entidad -> DTO
+    public VehiculoDTO toDTO(VehiculoEntity vehiculo) {
+        VehiculoDTO vehiculoDTO = modelMapper.map(vehiculo, VehiculoDTO.class);
+
+        // Buscar la sucursal a la que pertenece para setear el atributo en el dto
+        vehiculoDTO.setSucursal(modelMapper.map(sucursalService.encontrarSucursal(vehiculo),
+                SucursalDTO.class));
+
+        List<ReservaSimpleDTO> reservasDto = reservaService.obtenerReservasDeVehiculo(vehiculo)
+                .stream()
+                .map(r -> modelMapper.map(r, ReservaSimpleDTO.class))
+                .toList();
+
+        vehiculoDTO.setReservas(reservasDto);
+        return vehiculoDTO;
+    }
 }
+
+
+
 

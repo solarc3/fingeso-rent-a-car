@@ -42,21 +42,17 @@ public class ReservaEntity {
 
     @ManyToOne
     @JoinColumn(name = "usuario_id")
-    @JsonIgnoreProperties({"reservas", "valoraciones", "sucursal"})
     private UsuarioEntity usuario;
 
     @ManyToOne
     @JoinColumn(name = "vehiculo_id")
-    @JsonIgnoreProperties({"reservas", "valoraciones", "sucursal"})
     private VehiculoEntity vehiculo;
 
     @ManyToOne
     @JoinColumn(name = "sucursal_id")
-    @JsonIgnoreProperties({"reservas", "vehiculos", "empleados"})
     private SucursalEntity sucursal;
 
     @ManyToOne
     @JoinColumn(name = "sucursal_devolucion_id")  // New field for return location
-    @JsonIgnoreProperties({"reservas", "vehiculos", "empleados"})
     private SucursalEntity sucursalDevolucion;
 }

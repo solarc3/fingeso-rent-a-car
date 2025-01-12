@@ -8,15 +8,15 @@ export const useUsuarioService = () => {
         nombre: usuario.nombre,
         apellido: usuario.apellido,
         password: usuario.password,
-        rol: 'ARRENDATARIO', // default
-        sucursalId: usuario.sucursalId // opcional
+        rol: usuario.rol,
+        sucursalId: usuario.sucursalId
       });
       return data;
     } catch (error) {
       if (error.response) {
         switch (error.response.status) {
           case 400:
-            throw new Error(error.response.data || 'Datos invalidos');
+            throw new Error(error.response.data || 'Datos inválidos');
           default:
             throw new Error('Error en el servidor');
         }
@@ -24,12 +24,13 @@ export const useUsuarioService = () => {
       throw error;
     }
   };
+
   const obtenerTrabajadores = async () => {
     try {
       const {data} = await axiosInstance.get('/api/usuario/trabajadores');
       return data;
     } catch (error) {
-      throw error.response.data;
+      throw new Error(error.response?.data || 'Error al obtener trabajadores');
     }
   };
 
@@ -38,7 +39,7 @@ export const useUsuarioService = () => {
       const {data} = await axiosInstance.get('/api/usuario/administradores');
       return data;
     } catch (error) {
-      throw error.response.data;
+      throw new Error(error.response?.data || 'Error al obtener administradores');
     }
   };
 
@@ -47,29 +48,45 @@ export const useUsuarioService = () => {
       const {data} = await axiosInstance.get('/api/usuario/arrendatarios');
       return data;
     } catch (error) {
-      throw error.response.data;
+      throw new Error(error.response?.data || 'Error al obtener arrendatarios');
     }
   };
 
   const eliminarUsuario = async (id) => {
     try {
-      const {data} = await axiosInstance.delete('/api/usuario/eliminar', {
-        params: {id}
+      const response = await axiosInstance.delete(`/api/usuario/eliminar`, {
+        params: { id }
       });
-      return data;
+
+      if (response.status === 200) {
+        return response.data;
+      }
+
+      throw new Error(response.data?.error || 'Error al eliminar usuario');
     } catch (error) {
-      throw error.response.data;
+      if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
+      }
+      throw new Error('Error al eliminar usuario');
     }
   };
 
-  const actualizarUsuario = async (id, usuario) => {
+  const actualizarUsuario = async (id, userData) => {
     try {
-      const {data} = await axiosInstance.put('/api/usuario/actualizar', usuario);
+      const usuarioDTO = {
+        nombre: userData.nombre,
+        apellido: userData.apellido,
+        rol: userData.rol,
+        estaEnListaNegra: userData.estaEnListaNegra
+      };
+
+      const { data } = await axiosInstance.put(`/api/usuario/actualizar?id=${id}`, usuarioDTO);
       return data;
     } catch (error) {
-      throw error.response.data;
+      throw new Error(error.response?.data || 'Error al actualizar usuario');
     }
   };
+
   const login = async (rut, password, rol) => {
     try {
       const {data} = await axiosInstance.post('/api/usuario/login', {

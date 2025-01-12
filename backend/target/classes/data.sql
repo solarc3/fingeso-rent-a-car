@@ -88,52 +88,58 @@ VALUES
 ('PEUGEOT', 'EXPERT', 'MVAR', 'UUVW37', 2023, 145000.00, 3, true, 'DISPONIBLE');
 -- Usuarios
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('21284189-7', 'Ignacio', 'Solar', 'admin123', false, 1, 'ADMINISTRADOR');
+VALUES ('21284189-7', 'Ignacio', 'Solar', '$2a$10$/ANXxrh1KBSPYrL3SjHJseOMiONY8WF2ZurMhER2X8xeZXzaONkcO', false,  1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('14353454-5', 'Diego', 'Gomez', 'worker123', false, 1, 'TRABAJADOR');
+VALUES ('21461391-3', 'Felipe', 'Cubillos', '$2a$10$/ANXxrh1KBSPYrL3SjHJseOMiONY8WF2ZurMhER2X8xeZXzaONkcO', false, 1, 'ADMINISTRADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('00000000-0', 'Felipe', 'Cubillos', 'client123', true, 1, 'ARRENDATARIO');
+VALUES ('14353454-5', 'Diego', 'Gomez', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false, 1, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('15789456-0', 'Ana', 'Martinez', 'worker123', false, 2, 'TRABAJADOR');
+VALUES ('00000000-0', 'Felipe', 'Cubillos', '$2a$10$wSgSKKEQGpPwgoc2P/LWgehbCsBRI1RPTtrqhultyfx54fKazHa76', true,  null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('16852147-2', 'Carlos', 'Rodriguez', 'client123', false, 2, 'ARRENDATARIO');
+VALUES ('15789456-0', 'Ana', 'Martinez', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false, 2, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('17963258-6', 'Maria', 'López', 'worker123', false, 3, 'TRABAJADOR');
+VALUES ('16852147-2', 'Carlos', 'Rodriguez', '$2a$10$wSgSKKEQGpPwgoc2P/LWgehbCsBRI1RPTtrqhultyfx54fKazHa76', false,  null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('18741852-6', 'Juan', 'Pérez', 'client123', true, 3, 'ARRENDATARIO');
+VALUES ('17963258-6', 'Maria', 'López', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false, 3, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('19852963-K', 'Patricia', 'González', 'worker123', false, 4, 'TRABAJADOR');
+VALUES ('18741852-6', 'Juan', 'Pérez', '$2a$10$wSgSKKEQGpPwgoc2P/LWgehbCsBRI1RPTtrqhultyfx54fKazHa76', true,  null, 'ARRENDATARIO');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('20147258-K', 'Roberto', 'Sánchez', 'client123', false, 4, 'ARRENDATARIO');
+VALUES ('19852963-K', 'Patricia', 'González', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false,  4, 'TRABAJADOR');
 
 INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
-VALUES ('21369852-4', 'Carmen', 'Muñoz', 'worker123', false, 5, 'TRABAJADOR');
+VALUES ('20147258-K', 'Roberto', 'Sánchez', '$2a$10$wSgSKKEQGpPwgoc2P/LWgehbCsBRI1RPTtrqhultyfx54fKazHa76', false, null, 'ARRENDATARIO');
+
+INSERT INTO usuarios (rut, nombre, apellido, password, esta_en_lista_negra, sucursal_id, rol)
+VALUES ('21369852-4', 'Carmen', 'Muñoz', '$2a$10$/3DuP/ZCLcA72COQReJSyesMFo/dO.GoyGZikUqQEk43ztT7eHr7O', false,  5, 'TRABAJADOR');
+
+INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra, sucursal_id,rol)
+VALUES ('21480741-6', 'Tomas', 'Carcamo', '$2a$10$.kAinMfqSY8k.jBrUlthO.T8LPMAT6KZQDXvmrUZTEY6CsLDd0EWq', false, 1, 'ADMINISTRADOR');
+
+INSERT INTO usuarios (rut, nombre, apellido , password, esta_en_lista_negra, sucursal_id,rol)
+VALUES ('20750423-8', 'Martin', 'Fuentes', '$2a$10$/ANXxrh1KBSPYrL3SjHJseOMiONY8WF2ZurMhER2X8xeZXzaONkcO', false, 1, 'ADMINISTRADOR');
 
 -- Reservas
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-09 23:58:00', '2025-01-06 00:00:00', 100000.00, 'PENDIENTE', 1, 1, 1);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-09 23:57:00', '2024-01-05 00:00:00', 90000.00, 'CONFIRMADA', 2, 2, 1);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-15 10:00:00', '2024-12-20 10:00:00', 85000.00, 'PENDIENTE', 4, 3, 2);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-16 15:00:00', '2024-12-23 15:00:00', 120000.00, 'PENDIENTE', 5, 5, 2);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-20 09:00:00', '2024-12-27 09:00:00', 75000.00, 'PENDIENTE', 6, 6, 3);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-22 14:00:00', '2024-12-29 14:00:00', 95000.00, 'CONFIRMADA', 8, 7, 4);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-25 11:00:00', '2025-01-01 11:00:00', 130000.00, 'PENDIENTE', 9, 8, 4);
-INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id)
-VALUES ('2024-12-28 16:00:00', '2025-01-04 16:00:00', 98000.00, 'PENDIENTE', 10, 9, 5);
+INSERT INTO reservas (fecha_inicio, fecha_fin, costo, estado, usuario_id, vehiculo_id, sucursal_id, sucursal_devolucion_id)
+VALUES
+    ('2024-12-09 23:58:00', '2025-01-06 00:00:00', 100000.00, 'PENDIENTE', 1, 1, 1, 1),
+    ('2024-12-09 23:57:00', '2024-01-05 00:00:00', 90000.00, 'CONFIRMADA', 2, 2, 1, 2),
+    ('2024-12-15 10:00:00', '2024-12-20 10:00:00', 85000.00, 'PENDIENTE', 4, 3, 2, 1),
+    ('2024-12-16 15:00:00', '2024-12-23 15:00:00', 120000.00, 'PENDIENTE', 5, 5, 2, 2),
+    ('2024-12-25 11:00:00', '2025-01-01 11:00:00', 130000.00, 'PENDIENTE', 9, 8, 4, 3),
+    ('2024-12-20 09:00:00', '2024-12-27 09:00:00', 75000.00, 'PENDIENTE', 6, 6, 3, 1),
+    ('2024-12-22 14:00:00', '2024-12-29 14:00:00', 95000.00, 'CONFIRMADA', 8, 7, 4, 4),
+    ('2024-12-28 16:00:00', '2025-01-04 16:00:00', 98000.00, 'PENDIENTE', 10, 9, 5, 5),
+    ('2024-12-21 16:00:00', '2025-12-28 16:00:00', 108000.00, 'COMPLETADA', 2, 10, 5, 5),
+    ('2024-12-15 15:00:00', '2024-12-27 15:00:00', 120000.00, 'COMPLETADA', 5, 12, 2, 2);
+
 
 -- Valoraciones
 INSERT INTO valoraciones (puntuacion, comentario, usuario_id, vehiculo_id)
@@ -152,3 +158,18 @@ INSERT INTO valoraciones (puntuacion, comentario, usuario_id, vehiculo_id)
 VALUES (5, 'Excelente SUV, muy espacioso', 9, 8);
 INSERT INTO valoraciones (puntuacion, comentario, usuario_id, vehiculo_id)
 VALUES (4, 'Buen rendimiento en carretera', 10, 9);
+
+-- Mantenimientos
+INSERT INTO mantenimientos (vehiculo_id, fecha_programada, fecha_realizada, tipo_mantenimiento, descripcion, estado, costo, tecnico_id)
+VALUES
+    -- TOYOTA COROLLA (ABCD01) - ID 2
+    (2, '2024-12-15 10:00:00', '2024-12-15 11:30:00', 'PREVENTIVO', 'Cambio de aceite y filtros', 'COMPLETADO', 45000.00, 3),
+
+    -- VOLKSWAGEN GOLF (FFRS66) - ID 7
+    (7, '2024-12-05 11:00:00', '2024-12-05 14:00:00', 'CORRECTIVO', 'Reparación sistema eléctrico', 'COMPLETADO', 21000.00, 7),
+
+    -- FORD ESCAPE (IIXY99) - ID 10
+    (10, '2024-12-10 13:00:00', '2024-12-10 17:00:00', 'CORRECTIVO', 'Cambio de bomba de agua', 'COMPLETADO', 20000.00, 11),
+
+    -- CHEVROLET SAIL (KKCD22) - ID 12
+    (12, '2024-12-05 09:00:00', '2024-12-05 09:00:00', 'PREVENTIVO', 'Mantenimiento 15,000 km', 'COMPLETADO', 35000.00, 7)

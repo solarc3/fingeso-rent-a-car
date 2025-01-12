@@ -6,11 +6,6 @@ export const useVehiculoService = () => {
       const {data} = await axiosInstance.get('/api/vehiculo/listing');
       console.log('Datos crudos del backend:', data);
 
-      // Verificar la estructura de cada vehículo
-      data.forEach(vehiculo => {
-        console.log('Sucursal del vehículo:', vehiculo.id, vehiculo.sucursal);
-      });
-
       return data;
     } catch (error) {
       console.error('Error obteniendo vehículos:', error);
@@ -20,7 +15,6 @@ export const useVehiculoService = () => {
 
   const crearVehiculo = async (vehiculo) => {
     try {
-      // Generar código ACRISS basado en el tipo de vehículo y transmisión
       const acriss = generateAcrissCode(vehiculo.tipoVehiculo, vehiculo.transmision);
 
       const vehiculoData = {
@@ -32,7 +26,7 @@ export const useVehiculoService = () => {
         transmision: vehiculo.transmision,
         precioArriendo: vehiculo.precioArriendo,
         estado: vehiculo.estado,
-        acriss: acriss, // Agregar el código ACRISS
+        acriss: acriss,
         sucursal: {
           id: Number(vehiculo.sucursal)
         }
@@ -96,6 +90,8 @@ export const useVehiculoService = () => {
       throw error.response?.data || error;
     }
   };
+
+
 
   return {
     obtenerVehiculos,

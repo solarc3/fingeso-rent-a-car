@@ -1,20 +1,29 @@
 package com.rentacar.backend.controllers;
 
+import com.rentacar.backend.dto.ReservaDTO;
+import com.rentacar.backend.dto.ReservaPorVehiculoDTO;
 import com.rentacar.backend.entities.ReservaEntity;
 import com.rentacar.backend.entities.UsuarioEntity;
 import com.rentacar.backend.entities.VehiculoEntity;
 import com.rentacar.backend.services.ReservaService;
 import com.rentacar.backend.services.UsuarioService;
 import com.rentacar.backend.services.VehiculoService;
+import com.rentacar.backend.dto.UsuarioReservaDTO;
+import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/reserva")
@@ -22,12 +31,14 @@ public class ReservaController {
     private final ReservaService reservaService;
     private final VehiculoService vehiculoService;
     private final UsuarioService usuarioService;
+    private final ModelMapper modelMapper;
 
     @Autowired
-    public ReservaController(ReservaService reservaService, VehiculoService vehiculoService, UsuarioService usuarioService) {
+    public ReservaController(ReservaService reservaService, VehiculoService vehiculoService, UsuarioService usuarioService, ModelMapper modelMapper) {
         this.reservaService = reservaService;
         this.vehiculoService = vehiculoService;
         this.usuarioService = usuarioService;
+        this.modelMapper = modelMapper;
     }
 
     @PostMapping("/crear")
@@ -56,8 +67,12 @@ public class ReservaController {
     }
 
     @GetMapping("/obtener")
-    public List<ReservaEntity> obtenerReservas() {
-        return reservaService.obtenerReservas();
+    public List<ReservaDTO> obtenerReservas() {
+        List<ReservaEntity> reservas = reservaService.obtenerReservas();
+        List<ReservaDTO> r = reservas.stream()
+                .map(this::toDTO)
+                .collect(Collectors.toList());
+        return r;
     }
 
     @GetMapping("/obtener/porUsuario")
@@ -65,7 +80,11 @@ public class ReservaController {
         try {
             UsuarioEntity u = usuarioService.obtenerUsuarioPorId(id);
             List<ReservaEntity> reservas = reservaService.obtenerReservasDeUsuario(u);
-            return ResponseEntity.ok().body(reservas);
+
+            List<ReservaDTO> reservasDTO = reservas.stream()
+                        .map(this::toDTO)
+                        .collect(Collectors.toList());
+            return ResponseEntity.ok().body(reservasDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -86,7 +105,10 @@ public class ReservaController {
         try {
             VehiculoEntity v = vehiculoService.obtenerVehiculoPorId(id);
             List<ReservaEntity> reservas = reservaService.obtenerReservasDeVehiculo(v);
-            return ResponseEntity.ok().body(reservas);
+            List<ReservaPorVehiculoDTO> reservasDTO = reservas.stream()
+                    .map(this::toReservaPorVehiculoDTO)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok().body(reservasDTO);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
@@ -105,6 +127,8 @@ public class ReservaController {
         }
     }
 
+    //Segun yo, es dificil agregar DTOS, porque en el frontend se recibe el parametro y se hace un put,
+    //Generar estado, usa el getmapping pero entrega un put, entonces es a evaluar si es necesario.
     @GetMapping("/estado/{estado}")
     public ResponseEntity<?> obtenerPorEstado(@PathVariable ReservaEntity.EstadoReserva estado) {
         try {
@@ -114,4 +138,28 @@ public class ReservaController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @GetMapping("/reporte")
+    public ResponseEntity<byte[]> generarReporteVentas(
+            @RequestParam String fechaInicio,
+            @RequestParam String fechaFin
+    ) {
+        try {
+            byte[] report = reservaService.generarReporteVentasPDF(fechaInicio, fechaFin);
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_PDF);
+            headers.setContentDispositionFormData("filename", "reporte-ventas.pdf");
+            return new ResponseEntity<>(report, headers, HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+        }
+    }
+
+    public ReservaDTO toDTO(ReservaEntity reservaEntity) {
+        return modelMapper.map(reservaEntity, ReservaDTO.class);
+    }
+    
+
+public ReservaPorVehiculoDTO toReservaPorVehiculoDTO(ReservaEntity reservaEntity) {
+    return modelMapper.map(reservaEntity, ReservaPorVehiculoDTO.class);}
 }

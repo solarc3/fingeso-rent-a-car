@@ -65,11 +65,36 @@ export const useReservaService = () => {
     }
   };
 
+  const generarReporte = async (fechaInicio, fechaFin) => {
+    try {
+      const response = await axiosInstance.get('/api/reserva/reporte', {
+        params: { fechaInicio, fechaFin },
+        responseType: 'arraybuffer'
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || 'Error generando reporte';
+    }
+  };
+
+  const obtenerReservasPorVehiculo = async (vehicleID)=>{
+    try {
+      const {data} = await axiosInstance.get('api/reserva/obtener/porVehiculo', {
+        params: {id: vehicleID}
+      });
+      return data;
+      }catch(error){
+        throw error.response.data;
+    }
+  };
+
   return {
     crearReserva,
     obtenerReservas,
     obtenerReservasPorUsuario,
     actualizarEstado,
-    extenderReserva
+    extenderReserva,
+    generarReporte,
+    obtenerReservasPorVehiculo
   };
 };

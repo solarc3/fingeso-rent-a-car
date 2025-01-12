@@ -19,7 +19,7 @@ public interface VehiculoRepository extends JpaRepository<VehiculoEntity, Long> 
 
     List<VehiculoEntity> findByAcrissLike(String acriss);
 
-    List<VehiculoEntity> findBySucursal(SucursalEntity sucursal);
+    //List<VehiculoEntity> findBySucursal(SucursalEntity sucursal);
 
     List<VehiculoEntity> findByPrecioArriendoBetween(BigDecimal min, BigDecimal max);
 
@@ -29,8 +29,8 @@ public interface VehiculoRepository extends JpaRepository<VehiculoEntity, Long> 
     List<String> findDistinctMarcas();
 
 
-    @Query("SELECT v FROM VehiculoEntity v LEFT JOIN FETCH v.sucursal")
-    List<VehiculoEntity> findAllWithSucursales();
+   // @Query("SELECT v FROM VehiculoEntity v LEFT JOIN FETCH v.sucursal")
+    //List<VehiculoEntity> findAllWithSucursales();
 
 
 }

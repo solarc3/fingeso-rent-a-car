@@ -1,6 +1,7 @@
 package com.rentacar.backend.services;
 
 import ch.qos.logback.classic.Logger;
+import com.rentacar.backend.dto.VehiculoDTO;
 import com.rentacar.backend.entities.*;
 import com.rentacar.backend.repositories.*;
 import jakarta.transaction.Transactional;
@@ -51,7 +52,7 @@ public class VehiculoService {
      */
     public VehiculoEntity crearVehiculo(String marca, String modelo, String acriss,
                                         String patente, BigDecimal precio, Integer anio,
-                                        VehiculoEntity.EstadoVehiculo estado, Long sucursalId) {
+                                        VehiculoEntity.EstadoVehiculo estado) {
         // Validar precio
         if (precio.compareTo(BigDecimal.ZERO) < 0) {
             throw new IllegalArgumentException("Precio inválido");
@@ -61,8 +62,8 @@ public class VehiculoService {
         String acrissValidado = validarAcriss(acriss) ? acriss : "ECMR";
 
         // Buscar la sucursal
-        SucursalEntity sucursal = sucursalRepository.findById(sucursalId)
-            .orElseThrow(() -> new IllegalArgumentException("Sucursal no encontrada"));
+        //SucursalEntity sucursal = sucursalRepository.findById(sucursalId)
+        //    .orElseThrow(() -> new IllegalArgumentException("Sucursal no encontrada"));
 
         VehiculoEntity vehiculo = new VehiculoEntity();
         vehiculo.setMarca(marca);
@@ -71,7 +72,6 @@ public class VehiculoService {
         vehiculo.setPatente(patente);
         vehiculo.setPrecioArriendo(precio);
         vehiculo.setAnio(anio);
-        vehiculo.setSucursal(sucursal);
         vehiculo.setEstado(estado != null ? estado : VehiculoEntity.EstadoVehiculo.DISPONIBLE);
         vehiculo.setDisponible(estado == VehiculoEntity.EstadoVehiculo.DISPONIBLE);
 
@@ -108,8 +108,10 @@ public class VehiculoService {
      * @param sucursal Sucursal a buscar
      * @return Lista de vehículos en esa sucursal
      */
+
     public List<VehiculoEntity> obtenerVehiculosPorSucursal(SucursalEntity sucursal) {
-        List<VehiculoEntity> v = vehiculoRepository.findBySucursal(sucursal);
+        List<VehiculoEntity> v = sucursal.getVehiculos();
+                //vehiculoRepository.findBySucursal(sucursal);
         if (v.isEmpty()) throw new RuntimeException("No hay vehiculos en la sucursal " + sucursal.getNombre());
         return v;
     }
@@ -226,6 +228,14 @@ public class VehiculoService {
         historialRepository.save(historial);
 
         return vehiculo;
+    }
+
+    public List<VehiculoEntity> obtenerTodos() {
+        return vehiculoRepository.findAll();
+    }
+
+    public VehiculoEntity actualizarVehiculo(VehiculoEntity vehiculo) {
+        return vehiculoRepository.save(vehiculo);
     }
 
 }
